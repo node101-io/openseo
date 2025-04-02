@@ -1,5 +1,5 @@
 {
-  "name": "cosmos-hub-validator-timeline",
+  "name": "openseo",
   "version": "1.0.0",
   "description": "OpenSeo offers a novel approach to SEO verification by harnessing the power of cryptographic proofs.",
   "main": "app.ts",
@@ -11,6 +11,7 @@
   "author": "node101",
   "license": "MIT",
   "dependencies": {
+    "@node101/merkle-tree": "^0.0.8",
     "async": "^3.2.6",
     "axios": "^1.7.9",
     "body-parser": "^1.20.3",
@@ -21,13 +22,17 @@
     "mongodb": "^6.13.0",
     "node-fetch": "^3.3.2",
     "validator": "^13.9.0",
-    "tsx": "^4.19.3"
+    "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.1",
     "@types/mongoose": "^5.11.97",
     "@types/node": "^22.13.4",
     "mongoose": "^8.12.0",
+    "nodemon": "^3.1.9",
     "ts-node": "^10.9.2",
+    "tsx": "^4.19.3",
     "typescript": "^5.8.2"
   },
   "type": "module"
