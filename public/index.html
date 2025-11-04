@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>ZK-SEO Proof Demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        :root {
+            color-scheme: light dark;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        main {
+            width: min(900px, 92vw);
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            border-radius: 20px;
+            padding: 32px 40px 40px;
+            box-shadow: 0 30px 80px rgba(15, 23, 42, 0.5);
+        }
+
+        .input-group {
+            margin-bottom: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .input-group label {
+            font-size: 14px;
+            color: #cbd5f5;
+            font-weight: 600;
+        }
+
+        .input-group input {
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            background: rgba(15, 23, 42, 0.65);
+            color: #f8fafc;
+            font-size: 15px;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: rgba(96, 165, 250, 0.8);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+        }
+
+        h1 {
+            margin-top: 0;
+            margin-bottom: 18px;
+            font-size: 28px;
+        }
+
+        p.description {
+            margin: 0 0 24px;
+            color: #cbd5f5;
+            line-height: 1.5;
+        }
+
+        #dropZone {
+            border: 2px dashed rgba(96, 165, 250, 0.6);
+            border-radius: 16px;
+            padding: 48px 30px;
+            text-align: center;
+            transition: background 0.2s ease, border-color 0.2s ease;
+            cursor: pointer;
+            background: rgba(30, 41, 59, 0.7);
+        }
+
+        #dropZone.hover {
+            border-color: rgba(96, 165, 250, 1);
+            background: rgba(30, 64, 175, 0.25);
+        }
+
+        #dropZone strong {
+            display: block;
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        #status {
+            margin-top: 24px;
+            font-weight: 600;
+            color: #93c5fd;
+        }
+
+        #summary {
+            margin-top: 28px;
+            background: rgba(15, 23, 42, 0.65);
+            border-radius: 16px;
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            padding: 20px 24px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 18px;
+        }
+
+        th, td {
+            border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+            padding: 10px 12px;
+            text-align: left;
+            font-size: 15px;
+        }
+
+        th {
+            color: #cbd5f5;
+            font-weight: 600;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border-radius: 999px;
+            padding: 4px 12px;
+            background: rgba(59, 130, 246, 0.15);
+            color: #bfdbfe;
+            font-size: 13px;
+        }
+
+        .status-success {
+            color: #4ade80;
+            font-weight: 600;
+        }
+
+        .status-error {
+            color: #f87171;
+            font-weight: 600;
+        }
+
+        .metrics {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-top: 8px;
+        }
+
+        .metric {
+            flex: 1 1 180px;
+            background: rgba(30, 41, 59, 0.8);
+            border-radius: 12px;
+            padding: 12px 16px;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        .metric span {
+            display: block;
+            font-size: 12px;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: #94a3b8;
+            margin-bottom: 4px;
+        }
+
+        .metric strong {
+            font-size: 18px;
+            color: #f8fafc;
+        }
+
+        @media (max-width: 640px) {
+            main {
+                padding: 24px;
+            }
+
+            #dropZone {
+                padding: 36px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <h1>ZK-SEO Proof Demo</h1>
+        <p class="description">
+            Drag and drop your HTML file below to generate Noir-based proofs for your selected keyword and compute ZK scores.
+        </p>
+
+        <div class="input-group">
+            <label for="keywordInput">Doğrulanacak kelime</label>
+            <input id="keywordInput" type="text" placeholder="örn. seo" autocomplete="off">
+        </div>
+
+        <div id="dropZone">
+            <strong>Drop your HTML file here</strong>
+            <span>or click to select a file</span>
+        </div>
+        <input id="fileInput" type="file" accept=".html,text/html" hidden>
+
+        <div id="status"></div>
+        <div id="summary" hidden></div>
+    </main>
+
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const keywordInput = document.getElementById('keywordInput');
+        const statusEl = document.getElementById('status');
+        const summaryEl = document.getElementById('summary');
+
+        const preventDefaults = (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+        };
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, event => {
+                preventDefaults(event);
+                dropZone.classList.add('hover');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, event => {
+                preventDefaults(event);
+                dropZone.classList.remove('hover');
+            });
+        });
+
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        dropZone.addEventListener('drop', event => {
+            const file = event.dataTransfer.files[0];
+            handleFile(file);
+        });
+
+        fileInput.addEventListener('change', event => {
+            const file = event.target.files[0];
+            handleFile(file);
+            fileInput.value = '';
+        });
+
+        function handleFile(file) {
+            if (!file) {
+                return;
+            }
+
+            const keyword = keywordInput.value.trim();
+            if (!keyword) {
+                statusEl.textContent = 'Please enter a keyword to verify before uploading.';
+                summaryEl.hidden = true;
+                summaryEl.innerHTML = '';
+                return;
+            }
+
+            const isHtml = file.type === 'text/html' || file.name.toLowerCase().endsWith('.html');
+            if (!isHtml) {
+                statusEl.textContent = 'Please upload an HTML file only.';
+                summaryEl.hidden = true;
+                summaryEl.innerHTML = '';
+                return;
+            }
+
+            uploadFile(file, keyword);
+        }
+
+        async function uploadFile(file, keyword) {
+            statusEl.textContent = `Proof processing started for "${keyword}". Please wait...`;
+            summaryEl.hidden = true;
+            summaryEl.innerHTML = '';
+
+            const formData = new FormData();
+            formData.append('htmlFile', file);
+            formData.append('keyword', keyword);
+
+            try {
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const payload = await response.json();
+
+                if (!response.ok || !payload.success) {
+                    throw new Error(payload.error || 'An unexpected error occurred.');
+                }
+
+                renderSummary(payload.summary);
+            } catch (error) {
+                console.error('Upload error:', error);
+                statusEl.textContent = `Error: ${error.message}`;
+                summaryEl.hidden = true;
+                summaryEl.innerHTML = '';
+            }
+        }
+
+        function renderSummary(summary) {
+            statusEl.textContent = 'Proof processing finished.';
+
+            const totalScore = summary?.total_zk_score ?? 0;
+            const documentLength = summary?.document_length ?? 0;
+            const metaEntries = summary?.meta_entries ?? 0;
+            const keywordsProcessed = summary?.keywords_processed ?? summary?.total_words ?? 0;
+            const successCount = summary?.successful_proofs ?? 0;
+            const failCount = summary?.failed_proofs ?? 0;
+            const targetKeyword = summary?.target_keyword ?? (keywordInput.value.trim() || '-');
+            const durationMs = summary?.processing_time_ms ?? 0;
+            const durationText = durationMs ? `${(durationMs / 1000).toFixed(1)} seconds` : 'Unknown';
+
+            const results = Array.isArray(summary?.results) ? summary.results : [];
+
+            let tableRows = '';
+
+            if (results.length === 0) {
+                tableRows = '<tr><td colspan="6">No keywords processed.</td></tr>';
+            } else {
+                tableRows = results.map(result => {
+                    const statusClass = result.success ? 'status-success' : 'status-error';
+                    const statusText = result.success ? 'Success' : 'Failed';
+                    const detailText = result.success ? (result.output_file || '-') : (result.error || '-');
+                    const indicesText = Array.isArray(result.indices) && result.indices.length
+                        ? result.indices.join(', ')
+                        : '-';
+                    const metaSourcesText = Array.isArray(result.sources) && result.sources.length
+                        ? Array.from(new Set(result.sources)).join(', ')
+                        : '-';
+                    return `
+                        <tr>
+                            <td>${result.word}</td>
+                            <td>${result.score ?? 0}</td>
+                            <td>${metaSourcesText}</td>
+                            <td>${indicesText}</td>
+                            <td class="${statusClass}">${statusText}</td>
+                            <td>${detailText}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            summaryEl.hidden = false;
+            summaryEl.innerHTML = `
+                <h2>Proof Summary</h2>
+                <div class="metrics">
+                    <div class="metric">
+                        <span>Total ZK Score</span>
+                        <strong>${totalScore}</strong>
+                    </div>
+                    <div class="metric">
+                        <span>Document Characters (Meta)</span>
+                        <strong>${documentLength}</strong>
+                    </div>
+                    <div class="metric">
+                        <span>Meta Entries</span>
+                        <strong>${metaEntries}</strong>
+                    </div>
+                    <div class="metric">
+                        <span>Target Keyword</span>
+                        <strong>${targetKeyword}</strong>
+                    </div>
+                    <div class="metric">
+                        <span>Successful Proofs</span>
+                        <strong>${successCount}</strong>
+                    </div>
+                    <div class="metric">
+                        <span>Failed Proofs</span>
+                        <strong>${failCount}</strong>
+                    </div>
+                    <div class="metric">
+                        <span>Keywords Processed</span>
+                        <strong>${keywordsProcessed}</strong>
+                    </div>
+                    <div class="metric">
+                        <span>Total Time</span>
+                        <strong>${durationText}</strong>
+                    </div>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Word</th>
+                            <th>ZK Score</th>
+                            <th>Meta Tags</th>
+                            <th>Indices</th>
+                            <th>Proof</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tableRows}
+                    </tbody>
+                </table>
+            `;
+        }
+    </script>
+</body>
+</html>

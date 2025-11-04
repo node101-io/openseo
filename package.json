@@ -1,0 +1,23 @@
+{
+  "name": "zk-seo-parser",
+  "version": "1.0.0",
+  "description": "HTML Parser for ZK-SEO Scoring System",
+  "type": "module",
+  "scripts": {
+    "parse": "node src/parser.js",
+    "prove": "nargo prove",
+    "verify": "nargo verify",
+    "prove-all": "node src/proveAll.js",
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "jsdom": "^24.0.0",
+    "crypto": "*",
+    "express": "^4.19.2",
+    "multer": "^1.4.5-lts.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0"
+  }
+}
+
