@@ -30,7 +30,7 @@ function normalizeKeyword(keyword) {
     return firstToken ?? '';
 }
 
-function extractDocumentData(htmlContent) {
+function extractMetaTags(htmlContent) {
     const dom = new JSDOM(htmlContent);
     const { document } = dom.window;
 
@@ -55,20 +55,11 @@ function extractDocumentData(htmlContent) {
         });
     }
 
-    const documentText = metaEntries.map(entry => entry.text).join(' ');
-    const documentChars = Array.from(documentText).map(char => BigInt(char.charCodeAt(0)));
-
-    if (documentChars.length > MAX_CHARS) {
-        throw new Error(`Meta content contains ${documentChars.length} characters which exceeds the maximum supported ${MAX_CHARS}.`);
-    }
-
     const wordMap = new Map();
 
-    let cursor = 0;
-    for (let idx = 0; idx < metaEntries.length; idx++) {
-        const { text, label } = metaEntries[idx];
+    for (const metaEntry of metaEntries) {
+        const { text, label } = metaEntry;
         const tokens = text.split(' ');
-        let offset = 0;
 
         for (const token of tokens) {
             if (token.length === 0) {
@@ -76,32 +67,60 @@ function extractDocumentData(htmlContent) {
             }
 
             if (!wordMap.has(token)) {
-                const keywordChars = Array.from(token).map(char => BigInt(char.charCodeAt(0)));
-                if (keywordChars.length > MAX_KEYWORD_LENGTH) {
-                    throw new Error(`Keyword "${token}" exceeds maximum supported length ${MAX_KEYWORD_LENGTH}.`);
-                }
-
-                wordMap.set(token, {
-                    keywordChars,
-                    indices: [],
-                    sources: []
-                });
+                wordMap.set(token, true);
             }
-
-            const entry = wordMap.get(token);
-            entry.indices.push(cursor + offset);
-            entry.sources.push(label);
-
-            offset += token.length + 1;
-        }
-
-        cursor += text.length;
-        if (idx < metaEntries.length - 1) {
-            cursor += 1; 
         }
     }
 
-    return { documentText, documentChars, wordMap, metaCount: metaEntries.length };
+    return { wordMap, metaCount: metaEntries.length };
+}
+
+function extractFullDocumentData(htmlContent, keyword) {
+    const dom = new JSDOM(htmlContent);
+    const { document } = dom.window;
+    const bodyElement = document.documentElement;
+    const fullText = bodyElement ? bodyElement.textContent || bodyElement.innerText || '' : '';
+    const titleElement = document.querySelector('title');
+    const titleText = titleElement ? titleElement.textContent || '' : '';
+    const allText = (titleText + ' ' + fullText).trim();
+
+    const sanitizedText = sanitizeText(allText);
+    
+    if (!sanitizedText) {
+        throw new Error('No text content found in HTML document.');
+    }
+
+    const documentChars = Array.from(sanitizedText).map(char => BigInt(char.charCodeAt(0)));
+    if (documentChars.length > MAX_CHARS) {
+        throw new Error(`Full document content contains ${documentChars.length} characters which exceeds the maximum supported ${MAX_CHARS}.`);
+    }
+
+    const keywordChars = Array.from(keyword).map(char => BigInt(char.charCodeAt(0)));
+    if (keywordChars.length > MAX_KEYWORD_LENGTH) {
+        throw new Error(`Keyword "${keyword}" exceeds maximum supported length ${MAX_KEYWORD_LENGTH}.`);
+    }
+
+    const indices = [];
+    const keywordLength = keyword.length;
+
+    for (let i = 0; i <= sanitizedText.length - keywordLength; i++) {
+        const substring = sanitizedText.substring(i, i + keywordLength);
+        if (substring === keyword) {
+            const beforeChar = i > 0 ? sanitizedText[i - 1] : ' ';
+            const afterChar = i + keywordLength < sanitizedText.length ? sanitizedText[i + keywordLength] : ' ';
+            
+            if ((beforeChar === ' ' || i === 0) && (afterChar === ' ' || i + keywordLength === sanitizedText.length)) {
+                indices.push(i);
+            }
+        }
+    }
+
+    return {
+        documentText: sanitizedText,
+        documentChars,
+        keywordChars,
+        indices
+    };
 }
 
 function padArray(values, targetLength, padValue) {
@@ -240,11 +259,7 @@ export function proveAllWords(htmlFilePath, targetKeywordInput = '') {
     console.log('ZK-SEO Verification Generator');
 
     const htmlContent = fs.readFileSync(htmlFilePath, 'utf-8');
-    const { documentText, documentChars, wordMap, metaCount } = extractDocumentData(htmlContent);
-
-    console.log(`document characters: ${documentChars.length}`);
-    console.log(`meta entries processed: ${metaCount}`);
-    console.log(`unique keywords in meta: ${wordMap.size}`);
+    const { wordMap: metaWordMap, metaCount } = extractMetaTags(htmlContent);
 
     const targetKeyword = normalizeKeyword(targetKeywordInput);
     if (!targetKeyword) {
@@ -252,11 +267,17 @@ export function proveAllWords(htmlFilePath, targetKeywordInput = '') {
     }
 
     console.log(`target keyword: "${targetKeyword}"`);
-    if (!wordMap.has(targetKeyword)) {
+    if (!metaWordMap.has(targetKeyword)) {
         throw new Error(`Keyword "${targetKeyword}" is not present in the meta tags.`);
     }
 
-    const entriesToProcess = [[targetKeyword, wordMap.get(targetKeyword)]];
+    const { documentText, documentChars, keywordChars, indices } = extractFullDocumentData(htmlContent, targetKeyword);
+    console.log(`indices: ${indices.join(', ')}`);
+
+    if (indices.length === 0) {
+        throw new Error(`Keyword "${targetKeyword}" was found in meta tags but not found in the full document content.`);
+    }
+
     const documentLength = documentChars.length;
     const paddedDocumentChars = padArray(documentChars, MAX_CHARS, 0n);
     const documentCharsString = arrayToTomlList(paddedDocumentChars);
@@ -268,28 +289,24 @@ export function proveAllWords(htmlFilePath, targetKeywordInput = '') {
     }
     const results = [];
 
-    for (const [word, data] of entriesToProcess) {
-        console.log(`\nKeyword: "${word}"`);
-        console.log(`    occurrences: ${data.indices.length}`);
-        console.log(`    indices: ${data.indices.join(', ')}`);
-        console.log(`    meta sources: ${data.sources.join(', ')}`);
+    console.log(`\nKeyword: "${targetKeyword}"`);
+    console.log(`    indices: ${indices.join(', ')}`);
 
-        const result = generateProofForKeyword({
-            word,
-            keywordChars: data.keywordChars,
-            indices: data.indices,
-            sources: data.sources,
-            documentCharsString,
-            documentLength,
-            outputDir
-        });
+    const result = generateProofForKeyword({
+        word: targetKeyword,
+        keywordChars,
+        indices,
+        sources: ['full_document'], 
+        documentCharsString,
+        documentLength,
+        outputDir
+    });
 
-        results.push({
-            ...result,
-            indices: [...data.indices],
-            sources: [...data.sources]
-        });
-    }
+    results.push({
+        ...result,
+        indices: [...indices],
+        sources: ['full_document']
+    });
 
     const totalScore = results
         .filter(r => r.success)
@@ -302,16 +319,17 @@ export function proveAllWords(htmlFilePath, targetKeywordInput = '') {
         proof_system: 'Noir Character Index Verification',
         document_length: documentLength,
         meta_entries: metaCount,
-        unique_keywords: wordMap.size,
-        keywords_processed: entriesToProcess.length,
+        unique_keywords_in_meta: metaWordMap.size,
+        keywords_processed: results.length,
         target_keyword: targetKeyword || null,
-        total_words: entriesToProcess.length,
+        total_words: results.length,
         successful_proofs: results.filter(r => r.success).length,
         failed_proofs: results.filter(r => !r.success).length,
         verified_proofs: results.filter(r => r.verified).length,
         total_zk_score: totalScore,
         processing_time_ms: Date.now() - startedAt,
         output_directory: outputDir,
+        search_strategy: 'meta_tag_then_full_document',
         results
     };
 
@@ -325,8 +343,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     const args = process.argv.slice(2);
 
     if (args.length < 2) {
-        console.log('Kullanım: node src/proveAll.js <html-dosyasi> <kelime>');
-        console.log('Örnek: node src/proveAll.js example.html seo');
+        console.log('Usage: node src/proveAll.js <html> <word>');
+        console.log('Example: node src/proveAll.js example.html seo');
         process.exit(1);
     }
     const [htmlFile, keywordInput] = args;
