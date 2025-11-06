@@ -3,6 +3,7 @@ import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+
 import { proveAllWords } from './proveAll.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -16,10 +17,11 @@ const upload = multer({
 
 const uploadFields = upload.fields([
     { name: 'htmlFile', maxCount: 1 },
-    { name: 'keyword', maxCount: 1 } //sonradan artırılır kelimeler parse edilir array e atılır tek tek bakılır sonuç bir döndürülür => 'hello', 'world'
+    { name: 'keyword', maxCount: 1 }
 ]);
 
 let isProcessing = false;
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
