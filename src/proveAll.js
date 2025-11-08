@@ -312,16 +312,39 @@ export async function proveAllWords(htmlFilePathOrContent, targetKeywordInput = 
     const merkleRoot = stats.rootHash || '0x0';
 
     console.log(`\nMerkle Tree Statistics:`);
-    const targetKeyword = normalizeKeyword(targetKeywordInput);
-    if (!targetKeyword) {
-        throw new Error('Keyword is required for verification.');
+    console.log(`  Root Hash: ${merkleRoot.substring(0, 16)}...`);
+    console.log(`  Unique Keywords: ${stats.totalKeywords}`);
+    const keywordInputs = targetKeywordInput.trim().split(/[\s,]+/).filter(k => k.length > 0);
+    
+    if (keywordInputs.length === 0) {
+        throw new Error('At least one keyword is required for verification.');
     }
 
-    if (!wordMap.has(targetKeyword)) {
-        throw new Error(`Keyword "${targetKeyword}" is not present in the HTML document.`);
+    const entriesToProcess = [];
+    const foundKeywords = [];
+    const notFoundKeywords = [];
+    
+    for (const keywordInput of keywordInputs) {
+        const normalized = normalizeKeyword(keywordInput);
+        if (!normalized) {
+            console.warn(`⚠️  Skipping invalid keyword: "${keywordInput}"`);
+            continue;
+        }
+        
+        if (!wordMap.has(normalized)) {
+            notFoundKeywords.push(normalized);
+            console.warn(`❌ Keyword "${normalized}" not found in HTML`);
+            continue;
+        }
+        
+        foundKeywords.push(normalized);
+        entriesToProcess.push([normalized, wordMap.get(normalized)]);
+    }
+    
+    if (entriesToProcess.length === 0) {
+        throw new Error(`None of the provided keywords were found in the HTML document. Not found: ${notFoundKeywords.join(', ')}`);
     }
 
-    const entriesToProcess = [[targetKeyword, wordMap.get(targetKeyword)]];
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const outputDir = `proofs_batch_${timestamp}`;
 
@@ -373,7 +396,9 @@ export async function proveAllWords(htmlFilePathOrContent, targetKeywordInput = 
         merkle_tree_file: merkleTreePath,
         unique_keywords: wordMap.size,
         keywords_processed: entriesToProcess.length,
-        target_keyword: targetKeyword || null,
+        target_keywords: foundKeywords,  
+        keywords_found: foundKeywords,
+        keywords_not_found: notFoundKeywords,
         total_words: entriesToProcess.length,
         total_occurrences: totalOccurrences,
         successful_proofs: results.filter(r => r.success).length,
@@ -391,7 +416,8 @@ export async function proveAllWords(htmlFilePathOrContent, targetKeywordInput = 
     summary.summary_path = summaryPath;
 
     console.log(`Merkle Root Hash: ${merkleRoot.substring(0, 32)}...`);
-    console.log(`Target Keyword: ${targetKeyword}`);
+    console.log(`Target Keywords: ${foundKeywords.join(', ')}`);
+    console.log(`Total Weighted ZK Score: ${totalScore}`);
     return summary;
 }
 
@@ -399,12 +425,12 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     const args = process.argv.slice(2);
 
     if (args.length < 2) {
-        console.log('Usage: node src/proveAll.js <html> <word>');
-        console.log('Example: node src/proveAll.js example.html blockchain');
+        console.log('Usage: node src/proveAll.js <html> <keywords>');
         process.exit(1);
     }
 
-    const [htmlFile, keywordInput] = args;
+    const htmlFile = args[0];
+    const keywordInput = args.slice(1).join(' ');  
     
     (async () => {
         try {
