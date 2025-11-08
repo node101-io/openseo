@@ -1,0 +1,798 @@
+{
+  "root": {
+    "tag": "html",
+    "content": "",
+    "hash": "95ff5f0055c8d2563801e5da816641eee6b161081993d05712a59854078a3856",
+    "weight": 1,
+    "keywords": [],
+    "childCount": 2,
+    "children": [
+      {
+        "tag": "head",
+        "content": "",
+        "hash": "91a6fcdb3bb1244a09c725006c5483f673462aa1a51d56800cabf1610f9492bf",
+        "weight": 1,
+        "keywords": [],
+        "childCount": 7,
+        "children": [
+          {
+            "tag": "meta",
+            "content": "",
+            "hash": "5ca4742fd90391a466678356b3d1942a1ab00202d9090fa2847da898dc45a374",
+            "weight": 7,
+            "keywords": [],
+            "childCount": 0,
+            "children": []
+          },
+          {
+            "tag": "meta",
+            "content": "width device width initial scale 1 0",
+            "hash": "7b15a9b81d90348e0256cbae9f6be491e08d66c75e5233b82db5d93de1f25cbd",
+            "weight": 7,
+            "keywords": [
+              "width",
+              "device",
+              "initial",
+              "scale",
+              "1",
+              "0"
+            ],
+            "childCount": 0,
+            "children": []
+          },
+          {
+            "tag": "title",
+            "content": "koza dao admin panel",
+            "hash": "41580563696a2c4b97281f97f5068e4e5e09fe03a24d0df927a77aa519483aa0",
+            "weight": 10,
+            "keywords": [
+              "koza",
+              "dao",
+              "admin",
+              "panel"
+            ],
+            "childCount": 1,
+            "children": [
+              {
+                "tag": "text",
+                "content": "koza dao admin panel",
+                "hash": "e5d2a6996ac1988f62e3c027fbb12976af6827e161626d3c8f0aab44eb2d9b6e",
+                "weight": 1,
+                "keywords": [
+                  "koza",
+                  "dao",
+                  "admin",
+                  "panel"
+                ],
+                "childCount": 0,
+                "children": []
+              }
+            ]
+          },
+          {
+            "tag": "meta",
+            "content": "admin koza dao yönetim",
+            "hash": "88f6bc9e5c27cbeb0c6057700828a6c6db8759bf0c66d2096df47d659db3607b",
+            "weight": 7,
+            "keywords": [
+              "admin",
+              "koza",
+              "dao",
+              "yönetim"
+            ],
+            "childCount": 0,
+            "children": []
+          },
+          {
+            "tag": "link",
+            "content": "",
+            "hash": "66e1a14e564dd4f985a16652c9dfea8ceedc329b9d60d1de3b45156a6be904b0",
+            "weight": 1,
+            "keywords": [],
+            "childCount": 0,
+            "children": []
+          },
+          {
+            "tag": "link",
+            "content": "",
+            "hash": "20ebf877b37914a6c66f2240fef18a0175ee1588913c1e9f44e28b7cf0da1b74",
+            "weight": 1,
+            "keywords": [],
+            "childCount": 0,
+            "children": []
+          },
+          {
+            "tag": "link",
+            "content": "",
+            "hash": "b0720a30e416b836140e0e56ce1024ba27528bb2c09fc73ba4eea07880bf48a0",
+            "weight": 1,
+            "keywords": [],
+            "childCount": 0,
+            "children": []
+          }
+        ]
+      },
+      {
+        "tag": "body",
+        "content": "",
+        "hash": "47ebc4e6b36ffc4574fa1229764f3d27e83f217ac9354726395b5d749b62af60",
+        "weight": 1,
+        "keywords": [],
+        "childCount": 1,
+        "children": [
+          {
+            "tag": "div",
+            "content": "",
+            "hash": "182a29571eec494cf92a20fac276ad1b52fb296bfbad5bab21b6dc1f49fc903e",
+            "weight": 2,
+            "keywords": [],
+            "childCount": 2,
+            "children": [
+              {
+                "tag": "header",
+                "content": "",
+                "hash": "a477f486398d375a0dfecb59c393d464158f2ac9c02d4f8e493338a965492380",
+                "weight": 1,
+                "keywords": [],
+                "childCount": 1,
+                "children": [
+                  {
+                    "tag": "div",
+                    "content": "",
+                    "hash": "0933f76ddfe9de0e17d3cc418ef4be3ff5606b2f3912d4411f7c55b7cc012f24",
+                    "weight": 2,
+                    "keywords": [],
+                    "childCount": 1,
+                    "children": [
+                      {
+                        "tag": "div",
+                        "content": "",
+                        "hash": "e566ea07bb2d5bbfd60d6a219cad54e1cdf9a245e4e966e39ca12789bab5ee6f",
+                        "weight": 2,
+                        "keywords": [],
+                        "childCount": 1,
+                        "children": [
+                          {
+                            "tag": "div",
+                            "content": "",
+                            "hash": "a8605b8d56d99dc0de8f035033aad0a362704e03593f3b8c64517e54475a69ac",
+                            "weight": 2,
+                            "keywords": [],
+                            "childCount": 2,
+                            "children": [
+                              {
+                                "tag": "h1",
+                                "content": "koza dao",
+                                "hash": "be031dcf366473edd4f38ccfdda6d565c6c565eb1cba717169170b67ae3db654",
+                                "weight": 10,
+                                "keywords": [
+                                  "koza",
+                                  "dao"
+                                ],
+                                "childCount": 1,
+                                "children": [
+                                  {
+                                    "tag": "text",
+                                    "content": "koza dao",
+                                    "hash": "99d69a4a13445ec87f1cdb9512edfc488c6522a4968f9f417f6aed34490459dd",
+                                    "weight": 1,
+                                    "keywords": [
+                                      "koza",
+                                      "dao"
+                                    ],
+                                    "childCount": 0,
+                                    "children": []
+                                  }
+                                ]
+                              },
+                              {
+                                "tag": "p",
+                                "content": "admin panel",
+                                "hash": "9b4f1974db6a8c1277d95d99f4c4bed23f86437d0c6e91afc16ac557e6d6b9ce",
+                                "weight": 3,
+                                "keywords": [
+                                  "admin",
+                                  "panel"
+                                ],
+                                "childCount": 1,
+                                "children": [
+                                  {
+                                    "tag": "text",
+                                    "content": "admin panel",
+                                    "hash": "b530a40cc5a4d95e269d5cef0f20a25d21e649846ae636fdb09d3ade409854e6",
+                                    "weight": 1,
+                                    "keywords": [
+                                      "admin",
+                                      "panel"
+                                    ],
+                                    "childCount": 0,
+                                    "children": []
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "tag": "main",
+                "content": "",
+                "hash": "06487a6b307f04f18e87425afa4168abaa4de467582e74486a165f9cc57d1d0b",
+                "weight": 1,
+                "keywords": [],
+                "childCount": 2,
+                "children": [
+                  {
+                    "tag": "div",
+                    "content": "",
+                    "hash": "f2c334428b21a459d3f8553e93a88a4a2528746011dbb2000ba73413c7874782",
+                    "weight": 2,
+                    "keywords": [],
+                    "childCount": 1,
+                    "children": [
+                      {
+                        "tag": "form",
+                        "content": "",
+                        "hash": "ceb54c2c8f9942081e17e1244e825d454832d1b0d73e09eef283aff216ad52c1",
+                        "weight": 1,
+                        "keywords": [],
+                        "childCount": 2,
+                        "children": [
+                          {
+                            "tag": "div",
+                            "content": "",
+                            "hash": "c7632deeb6a1b78505d39843e1abbcf007f1ce14d6bea1ecad2cf398fbdac2d3",
+                            "weight": 2,
+                            "keywords": [],
+                            "childCount": 2,
+                            "children": [
+                              {
+                                "tag": "label",
+                                "content": "admin şifresi",
+                                "hash": "d555dd24656162bbe9dd8401828baa314d57ff0108bb6d36cf18c9bae773819f",
+                                "weight": 1,
+                                "keywords": [
+                                  "admin",
+                                  "şifresi"
+                                ],
+                                "childCount": 1,
+                                "children": [
+                                  {
+                                    "tag": "text",
+                                    "content": "admin şifresi",
+                                    "hash": "d7dfc91e3e1a20a1af95ba4bd76578501d624840bde5ae63f32c85d451dd1908",
+                                    "weight": 1,
+                                    "keywords": [
+                                      "admin",
+                                      "şifresi"
+                                    ],
+                                    "childCount": 0,
+                                    "children": []
+                                  }
+                                ]
+                              },
+                              {
+                                "tag": "input",
+                                "content": "",
+                                "hash": "28b72a1693109ac74b117fe7dcca012173a788a4e12b39b97483f0d38246f664",
+                                "weight": 1,
+                                "keywords": [],
+                                "childCount": 0,
+                                "children": []
+                              }
+                            ]
+                          },
+                          {
+                            "tag": "button",
+                            "content": "",
+                            "hash": "79b398cc1c881a88dfff4f626f9f88b2c106173828a3a42135acbf63748d5b52",
+                            "weight": 1,
+                            "keywords": [],
+                            "childCount": 1,
+                            "children": [
+                              {
+                                "tag": "span",
+                                "content": "giriş yap",
+                                "hash": "262e7b211f496795bc90dc8d6eb23897df76348b8b5755145dfe3c2e9be477c2",
+                                "weight": 2,
+                                "keywords": [
+                                  "giriş",
+                                  "yap"
+                                ],
+                                "childCount": 1,
+                                "children": [
+                                  {
+                                    "tag": "text",
+                                    "content": "giriş yap",
+                                    "hash": "a4d75480ca27eb65664531f93676492cecf552ca182c9d84346dd9a8447e956e",
+                                    "weight": 1,
+                                    "keywords": [
+                                      "giriş",
+                                      "yap"
+                                    ],
+                                    "childCount": 0,
+                                    "children": []
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "tag": "div",
+                    "content": "",
+                    "hash": "eff1390366947e6d9c0950a08b71e7c092c13834251420998559f1633b832088",
+                    "weight": 2,
+                    "keywords": [],
+                    "childCount": 4,
+                    "children": [
+                      {
+                        "tag": "div",
+                        "content": "",
+                        "hash": "49fcde8e371680d7f4be7537a84327a986e4e776ef8a4be56e1c62a9b8d97fc6",
+                        "weight": 2,
+                        "keywords": [],
+                        "childCount": 2,
+                        "children": [
+                          {
+                            "tag": "h2",
+                            "content": "yıldönümü anıları",
+                            "hash": "64fae1c51afa509c493a0cd8792824ef882fc5425d02750cc79dc4940695355e",
+                            "weight": 8,
+                            "keywords": [
+                              "yıldönümü",
+                              "anıları"
+                            ],
+                            "childCount": 1,
+                            "children": [
+                              {
+                                "tag": "text",
+                                "content": "yıldönümü anıları",
+                                "hash": "3d7e46be4e85de1f4960eb83c8e4640fa9c185d1046e4d33ea4873be6b9dc263",
+                                "weight": 1,
+                                "keywords": [
+                                  "yıldönümü",
+                                  "anıları"
+                                ],
+                                "childCount": 0,
+                                "children": []
+                              }
+                            ]
+                          },
+                          {
+                            "tag": "div",
+                            "content": "",
+                            "hash": "6797a0b6a91b5d63df2b10993901edefba2dd332032aafa49b0857e8665a497f",
+                            "weight": 2,
+                            "keywords": [],
+                            "childCount": 3,
+                            "children": [
+                              {
+                                "tag": "button",
+                                "content": "yenile",
+                                "hash": "251ee3ce7cbcc6f140fd7458c5486234f7fa03031587c79abe2f89b534d8144f",
+                                "weight": 1,
+                                "keywords": [
+                                  "yenile"
+                                ],
+                                "childCount": 1,
+                                "children": [
+                                  {
+                                    "tag": "text",
+                                    "content": "yenile",
+                                    "hash": "b409f3fe3c6aadfb8adcf86c943f4d4c1494765ecc14b032020206ba0c9c821a",
+                                    "weight": 1,
+                                    "keywords": [
+                                      "yenile"
+                                    ],
+                                    "childCount": 0,
+                                    "children": []
+                                  }
+                                ]
+                              },
+                              {
+                                "tag": "button",
+                                "content": "dışa aktar",
+                                "hash": "15aba0d21c5fb60d431feb9b87e550ec0c4756576fa1939028a72f2f861784d9",
+                                "weight": 1,
+                                "keywords": [
+                                  "dışa",
+                                  "aktar"
+                                ],
+                                "childCount": 1,
+                                "children": [
+                                  {
+                                    "tag": "text",
+                                    "content": "dışa aktar",
+                                    "hash": "49c78d39e6f399e12444ced8f4b4cd6eae35b36a059635f10d71c5cfe0e2d6ab",
+                                    "weight": 1,
+                                    "keywords": [
+                                      "dışa",
+                                      "aktar"
+                                    ],
+                                    "childCount": 0,
+                                    "children": []
+                                  }
+                                ]
+                              },
+                              {
+                                "tag": "button",
+                                "content": "tümünü sil",
+                                "hash": "a46ba6c7106d45ca1bdf30b2f0e3d38ea204ca2465d68401802a1aa393750cb5",
+                                "weight": 1,
+                                "keywords": [
+                                  "tümünü",
+                                  "sil"
+                                ],
+                                "childCount": 1,
+                                "children": [
+                                  {
+                                    "tag": "text",
+                                    "content": "tümünü sil",
+                                    "hash": "814d7eb66be07948ec5a945c59bb55eb85048dbd24b271553f18df5c5b8d5615",
+                                    "weight": 1,
+                                    "keywords": [
+                                      "tümünü",
+                                      "sil"
+                                    ],
+                                    "childCount": 0,
+                                    "children": []
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "tag": "div",
+                        "content": "",
+                        "hash": "dee0cee9640073f031459cf56eb19e5081a6b351a4606faed18fa791524d61de",
+                        "weight": 2,
+                        "keywords": [],
+                        "childCount": 3,
+                        "children": [
+                          {
+                            "tag": "div",
+                            "content": "",
+                            "hash": "801e24fa7bbbb5a73002a1e76a755a184bb603d91cb5a4821755266537558ab7",
+                            "weight": 2,
+                            "keywords": [],
+                            "childCount": 2,
+                            "children": [
+                              {
+                                "tag": "div",
+                                "content": "",
+                                "hash": "ea150ca131f592ab2f93d6acc973d01a6873720c1bfb840ae02682bec071f17e",
+                                "weight": 2,
+                                "keywords": [],
+                                "childCount": 0,
+                                "children": []
+                              },
+                              {
+                                "tag": "div",
+                                "content": "",
+                                "hash": "27d8c6731acd965b8f55291aea9baac5c55164b554e702ae19b55dd88798a4a2",
+                                "weight": 2,
+                                "keywords": [],
+                                "childCount": 2,
+                                "children": [
+                                  {
+                                    "tag": "div",
+                                    "content": "0",
+                                    "hash": "2d82a0502dd3013c9ab062dc619ba658bb17d477258b68a318e89a4a7b950c47",
+                                    "weight": 2,
+                                    "keywords": [
+                                      "0"
+                                    ],
+                                    "childCount": 1,
+                                    "children": [
+                                      {
+                                        "tag": "text",
+                                        "content": "0",
+                                        "hash": "a33745a51996fc0c35ab845246860dc0bdad6fb830af46041b1babf0c66194a3",
+                                        "weight": 1,
+                                        "keywords": [
+                                          "0"
+                                        ],
+                                        "childCount": 0,
+                                        "children": []
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "tag": "div",
+                                    "content": "toplam anı",
+                                    "hash": "fb93e3233862a3a9e473483ae986f4a5edb59619a74c4402ab3e377aa5a9e849",
+                                    "weight": 2,
+                                    "keywords": [
+                                      "toplam",
+                                      "anı"
+                                    ],
+                                    "childCount": 1,
+                                    "children": [
+                                      {
+                                        "tag": "text",
+                                        "content": "toplam anı",
+                                        "hash": "16f2feea76df596dd489706da5c85f767e524b63c80fc1e4faa0879f34c9a05d",
+                                        "weight": 1,
+                                        "keywords": [
+                                          "toplam",
+                                          "anı"
+                                        ],
+                                        "childCount": 0,
+                                        "children": []
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "tag": "div",
+                            "content": "",
+                            "hash": "e0f7c228aa3c3319529377bfc275b588c3d56c991d14f5da904b95d7f3ec3ca4",
+                            "weight": 2,
+                            "keywords": [],
+                            "childCount": 2,
+                            "children": [
+                              {
+                                "tag": "div",
+                                "content": "",
+                                "hash": "ea150ca131f592ab2f93d6acc973d01a6873720c1bfb840ae02682bec071f17e",
+                                "weight": 2,
+                                "keywords": [],
+                                "childCount": 0,
+                                "children": []
+                              },
+                              {
+                                "tag": "div",
+                                "content": "",
+                                "hash": "7fd80536edb2cc2f02386ac624900b889fd86d5f51b634998dcfbc2ac002fe71",
+                                "weight": 2,
+                                "keywords": [],
+                                "childCount": 2,
+                                "children": [
+                                  {
+                                    "tag": "div",
+                                    "content": "0",
+                                    "hash": "b4c73b8251a9c42591825da30f98dd8512b5843f93a1013639ecd270146d2fa3",
+                                    "weight": 2,
+                                    "keywords": [
+                                      "0"
+                                    ],
+                                    "childCount": 1,
+                                    "children": [
+                                      {
+                                        "tag": "text",
+                                        "content": "0",
+                                        "hash": "a33745a51996fc0c35ab845246860dc0bdad6fb830af46041b1babf0c66194a3",
+                                        "weight": 1,
+                                        "keywords": [
+                                          "0"
+                                        ],
+                                        "childCount": 0,
+                                        "children": []
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "tag": "div",
+                                    "content": "katılımcı",
+                                    "hash": "440bddbff9aba40430c7e57c28f629232db8c448678cafd5d1d40f4f0c4b467a",
+                                    "weight": 2,
+                                    "keywords": [
+                                      "katılımcı"
+                                    ],
+                                    "childCount": 1,
+                                    "children": [
+                                      {
+                                        "tag": "text",
+                                        "content": "katılımcı",
+                                        "hash": "ed54aae85447a81c39ee5d36a5ef89513f3b577bd25c9ef6af05a9118b8b8b35",
+                                        "weight": 1,
+                                        "keywords": [
+                                          "katılımcı"
+                                        ],
+                                        "childCount": 0,
+                                        "children": []
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "tag": "div",
+                            "content": "",
+                            "hash": "a5772c2262553676d9cac0af145d2951232db0f36d1f7c6ed80e03ce0f1948e5",
+                            "weight": 2,
+                            "keywords": [],
+                            "childCount": 2,
+                            "children": [
+                              {
+                                "tag": "div",
+                                "content": "",
+                                "hash": "ea150ca131f592ab2f93d6acc973d01a6873720c1bfb840ae02682bec071f17e",
+                                "weight": 2,
+                                "keywords": [],
+                                "childCount": 0,
+                                "children": []
+                              },
+                              {
+                                "tag": "div",
+                                "content": "",
+                                "hash": "05107af0471af1970bdbe991d6347173adc2ac22651ef2474fa8a4ea8b31b898",
+                                "weight": 2,
+                                "keywords": [],
+                                "childCount": 2,
+                                "children": [
+                                  {
+                                    "tag": "div",
+                                    "content": "0",
+                                    "hash": "a7702d07c44faaab34a355421a762ee9875edb8c880471c89e61ad788906688c",
+                                    "weight": 2,
+                                    "keywords": [
+                                      "0"
+                                    ],
+                                    "childCount": 1,
+                                    "children": [
+                                      {
+                                        "tag": "text",
+                                        "content": "0",
+                                        "hash": "a33745a51996fc0c35ab845246860dc0bdad6fb830af46041b1babf0c66194a3",
+                                        "weight": 1,
+                                        "keywords": [
+                                          "0"
+                                        ],
+                                        "childCount": 0,
+                                        "children": []
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "tag": "div",
+                                    "content": "bugünkü anılar",
+                                    "hash": "3c816ad53318bc3eaaec7b9f2cdd3d088568040dac4e829a2de1662525192a9f",
+                                    "weight": 2,
+                                    "keywords": [
+                                      "bugünkü",
+                                      "anılar"
+                                    ],
+                                    "childCount": 1,
+                                    "children": [
+                                      {
+                                        "tag": "text",
+                                        "content": "bugünkü anılar",
+                                        "hash": "20d8c553af3604bdf6a7fd42afafe2375e6cee4cc021a27d8723813ca388a81e",
+                                        "weight": 1,
+                                        "keywords": [
+                                          "bugünkü",
+                                          "anılar"
+                                        ],
+                                        "childCount": 0,
+                                        "children": []
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "tag": "div",
+                        "content": "",
+                        "hash": "40a90ef796bf227df31a6b023c4d7859f037094fd955bf4f815e92734cc548b9",
+                        "weight": 2,
+                        "keywords": [],
+                        "childCount": 0,
+                        "children": []
+                      },
+                      {
+                        "tag": "div",
+                        "content": "",
+                        "hash": "cca333c380860ddf8fc4c8a2f58d28040415724c1c0c46c9409d3ad7117ed520",
+                        "weight": 2,
+                        "keywords": [],
+                        "childCount": 2,
+                        "children": [
+                          {
+                            "tag": "a",
+                            "content": "ana sayfa",
+                            "hash": "d384de29f9c5f3b5650f6dca22c0f16d11f80e83d5c371ed73b2968831896426",
+                            "weight": 6,
+                            "keywords": [
+                              "ana",
+                              "sayfa"
+                            ],
+                            "childCount": 1,
+                            "children": [
+                              {
+                                "tag": "text",
+                                "content": "ana sayfa",
+                                "hash": "2deae988eca6aefc55c370593938f46f392290ab225b585407ee191643caae55",
+                                "weight": 1,
+                                "keywords": [
+                                  "ana",
+                                  "sayfa"
+                                ],
+                                "childCount": 0,
+                                "children": []
+                              }
+                            ]
+                          },
+                          {
+                            "tag": "button",
+                            "content": "çıkış yap",
+                            "hash": "40c8cbd326f54a74b7d33f42ec6ea2d649810d7b6d4bc3897a5467c0581552b1",
+                            "weight": 1,
+                            "keywords": [
+                              "çıkış",
+                              "yap"
+                            ],
+                            "childCount": 1,
+                            "children": [
+                              {
+                                "tag": "text",
+                                "content": "çıkış yap",
+                                "hash": "ac74c924910abbc15820e54f8fbf7d4a466681daea53690623b293ec606d721a",
+                                "weight": 1,
+                                "keywords": [
+                                  "çıkış",
+                                  "yap"
+                                ],
+                                "childCount": 0,
+                                "children": []
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "stats": {
+    "totalNodes": 69,
+    "totalKeywords": 29,
+    "rootHash": "95ff5f0055c8d2563801e5da816641eee6b161081993d05712a59854078a3856",
+    "tagDistribution": {
+      "html": 1,
+      "head": 1,
+      "meta": 3,
+      "title": 1,
+      "text": 17,
+      "link": 3,
+      "body": 1,
+      "div": 27,
+      "header": 1,
+      "h1": 1,
+      "p": 1,
+      "main": 1,
+      "form": 1,
+      "label": 1,
+      "input": 1,
+      "button": 5,
+      "span": 1,
+      "h2": 1,
+      "a": 1
+    }
+  }
+}

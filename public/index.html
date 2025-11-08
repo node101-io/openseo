@@ -202,10 +202,9 @@
 </head>
 <body>
     <main>
-        <h1>🌳 ZK-SEO Proof Demo with Merkle Tree</h1>
+        <h1>ZK-SEO Proof Demo with Merkle Tree</h1>
         <p class="description">
             Convert your HTML into a Merkle Tree and generate ZK proofs using tag-weighted keyword scoring.
-            Each tag type carries a different weight (h1=10, title=10, meta=7, p=3, etc.).
         </p>
 
         <div class="input-group">
@@ -306,6 +305,7 @@
                 if (!response.ok || !payload.success) {
                     throw new Error(payload.error || 'An unexpected error occurred.');
                 }
+                console.log("response", payload.summary);
 
                 renderSummary(payload.summary);
             } catch (error) {
@@ -342,18 +342,15 @@
                     const statusClass = result.success ? 'status-success' : 'status-error';
                     const statusText = result.success ? 'Success' : 'Failed';
                     const detailText = result.success ? (result.output_file || '-') : (result.error || '-');
-                    const occurrences = result.occurrences ?? result.indices?.length ?? 0;
+                    const occurrences = result.occurrences ?? 0;
                     const weightedScore = result.score ?? 0;
+                    const verified = result.verified ? '✅' : '❌';
                     
                     // Tag distribution
                     const tagDist = result.tagDistribution || {};
                     const tagBadges = Object.entries(tagDist)
                         .map(([tag, count]) => `<span class="tag-badge">${tag}(${count})</span>`)
                         .join(' ');
-                    
-                    const indicesText = Array.isArray(result.indices) && result.indices.length
-                        ? result.indices.slice(0, 5).join(', ') + (result.indices.length > 5 ? '...' : '')
-                        : '-';
                         
                     return `
                         <tr>
@@ -361,8 +358,7 @@
                             <td>${occurrences}</td>
                             <td><strong>${weightedScore}</strong></td>
                             <td style="line-height: 1.8;">${tagBadges || '-'}</td>
-                            <td style="font-size: 12px;">${indicesText}</td>
-                            <td class="${statusClass}">${statusText}</td>
+                            <td class="${statusClass}">${statusText} ${verified}</td>
                             <td style="font-size: 12px;">${detailText}</td>
                         </tr>
                     `;
@@ -371,10 +367,10 @@
 
             summaryEl.hidden = false;
             summaryEl.innerHTML = `
-                <h2>🔐 Proof Summary</h2>
+                <h2>Proof Summary</h2>
                 <div class="metrics">
                     <div class="metric" style="flex: 1 1 100%;">
-                        <span>🏆 Weighted ZK Score</span>
+                        <span>Weighted ZK Score</span>
                         <strong style="font-size: 24px; color: #60a5fa;">${totalScore}</strong>
                     </div>
                     <div class="metric">
@@ -386,7 +382,7 @@
                         <strong>${totalOccurrences}</strong>
                     </div>
                     <div class="metric">
-                        <span>🌳 Merkle Tree Nodes</span>
+                        <span>Merkle Tree Nodes</span>
                         <strong>${merkleNodes}</strong>
                     </div>
                     <div class="metric">
@@ -394,19 +390,19 @@
                         <strong>${documentLength}</strong>
                     </div>
                     <div class="metric">
-                        <span>✅ Successful Proofs</span>
+                        <span>Successful Proofs</span>
                         <strong class="status-success">${successCount}</strong>
                     </div>
                     <div class="metric">
-                        <span>❌ Failed Proofs</span>
+                        <span>Failed Proofs</span>
                         <strong class="status-error">${failCount}</strong>
                     </div>
                     <div class="metric">
-                        <span>⏱️ Total Time</span>
+                        <span>Total Time</span>
                         <strong>${durationText}</strong>
                     </div>
                     <div class="metric" style="flex: 1 1 100%;">
-                        <span>🔐 Merkle Root Hash</span>
+                        <span> Merkle Root Hash</span>
                         <strong style="font-size: 11px; word-break: break-all;">${merkleRootHash.substring(0, 32)}...</strong>
                     </div>
                 </div>
@@ -419,7 +415,6 @@
                             <th>Count</th>
                             <th>Score</th>
                             <th>Tag Distribution</th>
-                            <th>Indices</th>
                             <th>Proof</th>
                             <th>Details</th>
                         </tr>
@@ -428,10 +423,6 @@
                         ${tableRows}
                     </tbody>
                 </table>
-                
-                <div style="margin-top: 20px; padding: 16px; background: rgba(59, 130, 246, 0.1); border-radius: 12px; border-left: 4px solid #3b82f6;">
-                    <strong>ℹ️ Tag Weights:</strong> title/h1=10, h2=8, h3=6, meta=7, a=6, strong/b=5, p=3, span/div=2
-                </div>
             `;
         }
     </script>

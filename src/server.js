@@ -1,9 +1,7 @@
 import express from 'express';
 import multer from 'multer';
-import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-
 import { proveAllWords } from './proveAll.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -24,19 +22,7 @@ let isProcessing = false;
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '..', 'public')));
-
-app.get('/api/status', (req, res) => {
-    res.json({ processing: isProcessing });
-});
-
-app.post('/api/upload', uploadFields, (req, res) => {
-    if (isProcessing) {
-        return res.status(429).json({
-            success: false,
-            error: 'A proof process is already running. Please wait.'
-        });
-    }
-
+app.post('/api/upload', uploadFields, async (req, res) => {
     const fileEntry = req.files?.htmlFile?.[0];
     if (!fileEntry) {
         return res.status(400).json({
@@ -64,13 +50,9 @@ app.post('/api/upload', uploadFields, (req, res) => {
 
     isProcessing = true;
 
-    const uploadsDir = path.join(__dirname, '..', 'uploads');
-    fs.mkdirSync(uploadsDir, { recursive: true });
-    const tempFilePath = path.join(uploadsDir, `upload-${Date.now()}.html`);
-
     try {
-        fs.writeFileSync(tempFilePath, fileEntry.buffer.toString('utf-8'));
-        const summary = proveAllWords(tempFilePath, keywordInput);
+        const htmlContent = fileEntry.buffer.toString('utf-8');
+        const summary = await proveAllWords(htmlContent, keywordInput, true);
         res.json({ success: true, summary });
     } catch (error) {
         console.error('Proof generation error:', error);
@@ -78,11 +60,6 @@ app.post('/api/upload', uploadFields, (req, res) => {
         res.status(statusCode).json({ success: false, error: error.message });
     } finally {
         isProcessing = false;
-        try {
-            fs.unlinkSync(tempFilePath);
-        } catch (cleanupError) {
-            console.warn('Temporary file could not be deleted:', cleanupError.message);
-        }
     }
 });
 

@@ -108,6 +108,23 @@ export class MerkleNode {
         });
     }
 
+    // Get path from this node to root
+    getPathToRoot() {
+        const path = [];
+        let current = this;
+        
+        while (current) {
+            path.push({
+                tag: current.tagName,
+                hash: current.hash,
+                contentHash: current.contentHash
+            });
+            current = current.parent;
+        }
+        
+        return path; 
+    }
+
     toJSON() {
         return {
             tag: this.tagName,
@@ -199,22 +216,39 @@ export class MerkleTree {
         }
     }
 
-    //create witness array for keyword
+    //create witness array for keyword 
     buildWitnessArray(keyword) {
         const keywordHash = hashKeyword(keyword);
-        const witnessArray = [];
         const matchingNodes = [];
+        const witnessPaths = [];  
 
         //find keyword
         for (const node of this.allNodes) {
-        if (node.keywords.has(keyword)) {
+            if (node.keywords.has(keyword)) {
                 if (node.contentHash) {
-                    witnessArray.push(keywordHash);
+                    const hasTextChild = node.children.some(child => 
+                        child.tagName === 'text' && child.keywords.has(keyword)
+                    );
+                    
+                    if (hasTextChild) {
+                        continue;
+                    }
+                    
+                    const path = node.getPathToRoot();
+                    witnessPaths.push({
+                        nodeHash: node.hash,
+                        contentHash: node.contentHash,
+                        path: path.map(p => p.hash),  
+                        pathTags: path.map(p => p.tag)  
+                    });
+                    
                     matchingNodes.push({
                         node,
                         contentHash: node.contentHash,
+                        nodeHash: node.hash,
                         tag: node.tagName,
-                        weight: node.weight
+                        weight: node.weight,
+                        merklePath: path
                     });
                 }
             }
@@ -222,9 +256,9 @@ export class MerkleTree {
 
         return {
             keywordHash,
-            witnessArray,
+            witnessPaths,  
             matchingNodes,
-            witnessCount: witnessArray.length
+            witnessCount: witnessPaths.length
         };
     }
 
@@ -323,4 +357,3 @@ export function parseHTMLToMerkleTree(htmlContent) {
 
     return tree;
 }
-
