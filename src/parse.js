@@ -1,6 +1,12 @@
 import { JSDOM } from 'jsdom';
 import crypto from 'crypto';
 
+export const MerkleTreeType = {
+    DOM_DIRECT: 'dom_direct',     
+    BALANCED: 'balanced',          
+    SPARSE: 'sparse'             
+};
+
 export const TAG_WEIGHTS = {
     'title': 10,
     'h1': 10,
@@ -266,7 +272,7 @@ export class MerkleTree {
         for (const node of this.allNodes) {
             node.findKeywords();
 
-            // Keyword index'ini güncelle
+            // Keyword indexi güncelle
             for (const [keyword, positions] of node.keywords.entries()) {
                 if (!this.keywordIndex.has(keyword)) {
                     this.keywordIndex.set(keyword, []);
@@ -346,14 +352,105 @@ export class MerkleTree {
     }
 }
 
-export function parseHTMLToMerkleTree(htmlContent) {
+// Balanced Tree
+function buildBalancedMerkleTree(rootNode, merkleTreeInstance) {
+    const leaves = [];
+    function collectNodes(node) {
+        if (node) {
+            leaves.push(node);
+            for (const child of node.children) {
+                collectNodes(child);
+            }
+        }
+    }
+    
+    collectNodes(rootNode);
+    
+    // Dengeli ağaç için yaprak sayısını 2'nin kuvvetine tamamla
+    const targetLength = Math.pow(2, Math.ceil(Math.log2(leaves.length || 1)));
+    while (leaves.length < targetLength) {
+        // Boş node 
+        const emptyNode = new MerkleNode('empty', '', {});
+        emptyNode.hash = '0'.repeat(64);
+        emptyNode.contentHash = '0'.repeat(64);
+        leaves.push(emptyNode);
+        merkleTreeInstance.allNodes.push(emptyNode);
+    }
+    
+    return rootNode;
+}
+
+// Sparse Merkle Tree
+function buildSparseMerkleTree(rootNode, merkleTreeInstance) {
+    const SPARSE_DEPTH = 10;
+    const sparseNodes = new Map();
+    
+    function assignSparsePosition(node, depth = 0, position = 0) {
+        if (!node || depth >= SPARSE_DEPTH) return;
+        
+        const key = `${depth}-${position}`;
+        sparseNodes.set(key, node);
+        
+        node.children.forEach((child, idx) => {
+            const childPos = position * 2 + idx;
+            assignSparsePosition(child, depth + 1, childPos);
+        });
+    }
+    
+    assignSparsePosition(rootNode);
+    
+    // Boş pozisyonları doldur
+    for (let d = 0; d < SPARSE_DEPTH; d++) {
+        const nodesInLevel = Math.pow(2, d);
+        for (let p = 0; p < nodesInLevel; p++) {
+            const key = `${d}-${p}`;
+            if (!sparseNodes.has(key)) {
+                const emptyNode = new MerkleNode('empty', '', {});
+                emptyNode.hash = '0'.repeat(64);
+                emptyNode.contentHash = '0'.repeat(64);
+                sparseNodes.set(key, emptyNode);
+            }
+        }
+    }
+    
+    return rootNode;
+}
+
+export function parseHTMLToMerkleTree(htmlContent, treeType = MerkleTreeType.DOM_DIRECT) {
+    const startTime = performance.now();
+    
     const dom = new JSDOM(htmlContent);
     const { document } = dom.window;
     const tree = new MerkleTree();
     const htmlElement = document.documentElement;
+    
     tree.root = tree.buildFromDOM(htmlElement);
+    
+    switch(treeType) {
+        case MerkleTreeType.BALANCED:
+            console.log('Building Balanced Merkle Tree...');
+            tree.root = buildBalancedMerkleTree(tree.root, tree);
+            break;
+        case MerkleTreeType.SPARSE:
+            console.log('Building Sparse Merkle Tree...');
+            tree.root = buildSparseMerkleTree(tree.root, tree);
+            break;
+        case MerkleTreeType.DOM_DIRECT:
+        default:
+            console.log('Building Direct DOM Merkle Tree...');
+            break;
+    }
+    
     tree.computeHashes();
     tree.indexKeywords();
+    
+    const conversionTime = performance.now() - startTime;
+    
+    tree.metadata = {
+        treeType,
+        conversionTime,
+        timestamp: new Date().toISOString()
+    };
 
     return tree;
 }

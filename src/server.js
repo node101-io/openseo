@@ -3,6 +3,7 @@ import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { proveAllWords } from './proveAll.js';
+import { MerkleTreeType } from './parse.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,7 +16,8 @@ const upload = multer({
 
 const uploadFields = upload.fields([
     { name: 'htmlFile', maxCount: 1 },
-    { name: 'keyword', maxCount: 1 }
+    { name: 'keyword', maxCount: 1 },
+    { name: 'treeType', maxCount: 1 }
 ]);
 
 let isProcessing = false;
@@ -48,11 +50,23 @@ app.post('/api/upload', uploadFields, async (req, res) => {
         });
     }
 
+    const treeTypeRaw = Array.isArray(req.body?.treeType) ? req.body.treeType[0] : req.body?.treeType;
+    const treeType = (treeTypeRaw ?? MerkleTreeType.DOM_DIRECT).toString().trim();
+    const validTreeTypes = Object.values(MerkleTreeType);
+    if (!validTreeTypes.includes(treeType)) {
+        return res.status(400).json({
+            success: false,
+            error: `Invalid tree type. Valid options: ${validTreeTypes.join(', ')}`
+        });
+    }
+
     isProcessing = true;
 
     try {
         const htmlContent = fileEntry.buffer.toString('utf-8');
-        const summary = await proveAllWords(htmlContent, keywordInput, true);
+        console.log(`Using Merkle Tree Type: ${treeType}`);
+        
+        const summary = await proveAllWords(htmlContent, keywordInput, true, treeType);
         res.json({ success: true, summary });
     } catch (error) {
         console.error('Proof generation error:', error);

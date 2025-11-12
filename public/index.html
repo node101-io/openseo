@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>ZK-SEO Proof Demo</title>
+    <title>ZK-SEO Proof</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         :root {
@@ -202,7 +202,7 @@
 </head>
 <body>
     <main>
-        <h1>ZK-SEO Proof Demo with Merkle Tree</h1>
+        <h1>ZK-SEO Proof with Merkle Tree</h1>
         <p class="description">
             Convert your HTML into a Merkle Tree and generate ZK proofs using tag-weighted keyword scoring.
         </p>
@@ -210,6 +210,18 @@
         <div class="input-group">
             <label for="keywordInput">Keyword to verify</label>
             <input id="keywordInput" type="text" placeholder="e.g. seo" autocomplete="off">
+        </div>
+
+        <div class="input-group">
+            <label for="treeTypeSelect">Merkle Tree Type</label>
+            <select id="treeTypeSelect" style="padding: 12px 16px; border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.3); background: rgba(15, 23, 42, 0.65); color: #f8fafc; font-size: 15px; cursor: pointer;">
+                <option value="dom_direct">Direct DOM to Merkle Tree (Default)</option>
+                <option value="balanced">Balanced Merkle Tree</option>
+                <option value="sparse">Sparse Merkle Tree (SMT)</option>
+            </select>
+            <small style="color: #94a3b8; font-size: 12px; margin-top: 4px;">
+                Select how your HTML will be converted to a Merkle tree structure
+            </small>
         </div>
 
         <div id="dropZone">
@@ -226,6 +238,7 @@
         const dropZone = document.getElementById('dropZone');
         const fileInput = document.getElementById('fileInput');
         const keywordInput = document.getElementById('keywordInput');
+        const treeTypeSelect = document.getElementById('treeTypeSelect');
         const statusEl = document.getElementById('status');
         const summaryEl = document.getElementById('summary');
 
@@ -286,13 +299,15 @@
         }
 
         async function uploadFile(file, keyword) {
-            statusEl.textContent = `Proof processing started for "${keyword}". Please wait...`;
+            const treeType = treeTypeSelect.value;
+            statusEl.textContent = `Proof processing started for "${keyword}" using ${getTreeTypeName(treeType)}. Please wait...`;
             summaryEl.hidden = true;
             summaryEl.innerHTML = '';
 
             const formData = new FormData();
             formData.append('htmlFile', file);
             formData.append('keyword', keyword);
+            formData.append('treeType', treeType);
 
             try {
                 const response = await fetch('/api/upload', {
@@ -316,6 +331,15 @@
             }
         }
 
+        function getTreeTypeName(treeType) {
+            const names = {
+                'dom_direct': 'Direct DOM Tree',
+                'balanced': 'Balanced Merkle Tree',
+                'sparse': 'Sparse Merkle Tree'
+            };
+            return names[treeType] || treeType;
+        }
+
         function renderSummary(summary) {
             statusEl.textContent = 'Proof processing finished.';
 
@@ -333,6 +357,10 @@
             const targetKeywordText = Array.isArray(targetKeywords) ? targetKeywords.join(', ') : targetKeywords;
             const durationMs = summary?.processing_time_ms ?? 0;
             const durationText = durationMs ? `${(durationMs / 1000).toFixed(1)} seconds` : 'Unknown';
+            
+            const treeType = summary?.merkle_tree_type ?? 'N/A';
+            const treeConversionTime = summary?.merkle_tree_conversion_time_ms ?? summary?.performance_metrics?.tree_conversion_time_ms ?? 0;
+            const proofGenerationTime = summary?.total_proof_generation_time_ms ?? summary?.performance_metrics?.proof_generation_time_ms ?? 0;
 
             const results = Array.isArray(summary?.results) ? summary.results : [];
 
@@ -349,7 +377,6 @@
                     const weightedScore = result.score ?? 0;
                     const verified = result.verified ? '✅' : '❌';
                     
-                    // Tag distribution
                     const tagDist = result.tagDistribution || {};
                     const tagBadges = Object.entries(tagDist)
                         .map(([tag, count]) => `<span class="tag-badge">${tag}(${count})</span>`)
@@ -380,6 +407,18 @@
                         <span>Target Keywords</span>
                         <strong style="color: #60a5fa;">${targetKeywordText}</strong>
                         ${keywordsNotFound.length > 0 ? `<div style="margin-top: 8px; font-size: 12px; color: #f87171;">Not found: ${keywordsNotFound.join(', ')}</div>` : ''}
+                    </div>
+                    <div class="metric" style="flex: 1 1 100%;">
+                        <span>Merkle Tree Type</span>
+                        <strong style="color: #a78bfa;">${getTreeTypeName(treeType)}</strong>
+                    </div>
+                    <div class="metric">
+                        <span>Tree Conversion Time</span>
+                        <strong style="color: #34d399;">${treeConversionTime.toFixed(2)}ms</strong>
+                    </div>
+                    <div class="metric">
+                        <span>Proof Generation Time</span>
+                        <strong style="color: #fbbf24;">${proofGenerationTime.toFixed(2)}ms</strong>
                     </div>
                     <div class="metric">
                         <span>Total Occurrences</span>

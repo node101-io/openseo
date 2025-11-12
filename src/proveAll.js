@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { execSync } from 'child_process';
 import path from 'path';
-import { parseHTMLToMerkleTree, sanitizeText, TAG_WEIGHTS } from './parse.js';
+import { parseHTMLToMerkleTree, sanitizeText, TAG_WEIGHTS, MerkleTreeType } from './parse.js';
 import { UltraHonkBackend } from '@aztec/bb.js';
 import { Noir } from '@noir-lang/noir_js';
 import toml from 'toml';
@@ -30,8 +30,8 @@ async function generateZKProof() {
             proofSize: proofData.proof.length
         };
     } catch (error) {
-        console.error('    ✗ Proof generation failed:', error.message);
-        console.error('    ✗ Full error:', error);
+        console.error('Proof generation failed:', error.message);
+        console.error(' Full error:', error);
         return {
             success: false,
             error: error.message || error.toString()
@@ -50,7 +50,7 @@ async function verifyZKProof(proof, publicInputs) {
         });
         return isValid;
     } catch (error) {
-        console.error('    ✗ Proof verification failed:', error.message);
+        console.error('Proof verification failed:', error.message);
         return false;
     }
 }
@@ -67,8 +67,16 @@ function normalizeKeyword(keyword) {
     return firstToken ?? '';
 }
 
-function extractDocumentData(htmlContent) {
-    const merkleTree = parseHTMLToMerkleTree(htmlContent);
+function extractDocumentData(htmlContent, treeType = MerkleTreeType.DOM_DIRECT) {
+    const treeStartTime = performance.now();
+    const merkleTree = parseHTMLToMerkleTree(htmlContent, treeType);
+    const treeEndTime = performance.now();
+    const treeConversionTime = treeEndTime - treeStartTime;
+    
+    console.log(`\nMerkle Tree Conversion Complete:`);
+    console.log(`  Type: ${treeType}`);
+    console.log(`  Time: ${treeConversionTime.toFixed(2)}ms`);
+    
     const wordMap = new Map();
     
     for (const [keyword, locations] of merkleTree.keywordIndex.entries()) {
@@ -99,7 +107,8 @@ function extractDocumentData(htmlContent) {
     return { 
         wordMap, 
         merkleTree,
-        stats: merkleTree.getStats()
+        stats: merkleTree.getStats(),
+        treeConversionTime
     };
 }
 
@@ -185,8 +194,7 @@ async function generateProofForKeyword({
     details = null,
     outputDir
 }) {
-    console.log(`  Keyword Hash: ${keywordHash}`);
-
+    console.log(`Keyword Hash: ${keywordHash}`);
     if (witnessCount > MAX_WITNESS_NODES) {
         throw new Error(`Keyword "${word}" has ${witnessCount} matches which exceeds MAX_WITNESS_NODES (${MAX_WITNESS_NODES}).`);
     }
@@ -202,8 +210,11 @@ async function generateProofForKeyword({
     fs.writeFileSync('Prover.toml', toml);
 
     try {
+        const proofStartTime = performance.now();
         executeCommand('nargo compile');        
         const proofResult = await generateZKProof();
+        const proofEndTime = performance.now();
+        const proofGenerationTime = proofEndTime - proofStartTime;
         let isVerified = false;
         let zkProof = null;
         
@@ -239,6 +250,7 @@ async function generateProofForKeyword({
             details,
             proof_generated: proofResult.success,
             proof_verified: isVerified,
+            proof_generation_time_ms: proofGenerationTime,
             proof_type: 'Noir PLONK Proof with Barretenberg Backend',
             proof_data: zkProof,
             timestamp: new Date().toISOString(),
@@ -249,6 +261,7 @@ async function generateProofForKeyword({
 
         console.log(`Output: ${outputFileName}`);
         console.log(`Weighted ZK Score: ${weightedScore}`);
+        console.log(`Proof Generation Time: ${proofGenerationTime.toFixed(2)}ms`);
         console.log(`Proof Verified: ${isVerified ? 'YES' : 'NO'}`);
 
         return {
@@ -263,7 +276,8 @@ async function generateProofForKeyword({
             sources,
             weights,
             tagDistribution,
-            details
+            details,
+            proofGenerationTime
         };
     } catch (error) {
         console.error(`Failed to create proof: ${error.message}`);
@@ -302,18 +316,18 @@ async function generateProofForKeyword({
     }
 }
 
-export async function proveAllWords(htmlFilePathOrContent, targetKeywordInput = '', isDirectContent = false) {
+export async function proveAllWords(htmlFilePathOrContent, targetKeywordInput = '', isDirectContent = false, treeType = MerkleTreeType.DOM_DIRECT) {
     const startedAt = Date.now();
     
     const htmlContent = isDirectContent 
         ? htmlFilePathOrContent 
         : fs.readFileSync(htmlFilePathOrContent, 'utf-8');
-    const { wordMap, merkleTree, stats } = extractDocumentData(htmlContent);
+    const { wordMap, merkleTree, stats, treeConversionTime } = extractDocumentData(htmlContent, treeType);
     const merkleRoot = stats.rootHash || '0x0';
 
     console.log(`\nMerkle Tree Statistics:`);
-    console.log(`  Root Hash: ${merkleRoot.substring(0, 16)}...`);
-    console.log(`  Unique Keywords: ${stats.totalKeywords}`);
+    console.log(`Root Hash: ${merkleRoot.substring(0, 16)}...`);
+    console.log(`Unique Keywords: ${stats.totalKeywords}`);
     const keywordInputs = targetKeywordInput.trim().split(/[\s,]+/).filter(k => k.length > 0);
     
     if (keywordInputs.length === 0) {
@@ -327,13 +341,13 @@ export async function proveAllWords(htmlFilePathOrContent, targetKeywordInput = 
     for (const keywordInput of keywordInputs) {
         const normalized = normalizeKeyword(keywordInput);
         if (!normalized) {
-            console.warn(`⚠️  Skipping invalid keyword: "${keywordInput}"`);
+            console.warn(`Skipping invalid keyword: "${keywordInput}"`);
             continue;
         }
         
         if (!wordMap.has(normalized)) {
             notFoundKeywords.push(normalized);
-            console.warn(`❌ Keyword "${normalized}" not found in HTML`);
+            console.warn(`Keyword "${normalized}" not found in HTML`);
             continue;
         }
         
@@ -356,6 +370,8 @@ export async function proveAllWords(htmlFilePathOrContent, targetKeywordInput = 
     fs.writeFileSync(merkleTreePath, JSON.stringify(merkleTree.toJSON(), null, 2));
 
     const results = [];
+    let totalProofTime = 0;
+    
     for (const [word, data] of entriesToProcess) {
         const result = await generateProofForKeyword({
             word,
@@ -370,6 +386,10 @@ export async function proveAllWords(htmlFilePathOrContent, targetKeywordInput = 
             details: data.details,
             outputDir
         });
+
+        if (result.proofGenerationTime) {
+            totalProofTime += result.proofGenerationTime;
+        }
 
         results.push({
             ...result,
@@ -391,6 +411,9 @@ export async function proveAllWords(htmlFilePathOrContent, targetKeywordInput = 
     const summary = {
         timestamp: new Date().toISOString(),
         html_file: isDirectContent ? 'Uploaded HTML Content' : htmlFilePathOrContent,
+        merkle_tree_type: treeType,
+        merkle_tree_conversion_time_ms: treeConversionTime,
+        total_proof_generation_time_ms: totalProofTime,
         merkle_tree_stats: stats,
         merkle_root_hash: merkleRoot,
         merkle_tree_file: merkleTreePath,
@@ -408,6 +431,12 @@ export async function proveAllWords(htmlFilePathOrContent, targetKeywordInput = 
         processing_time_ms: Date.now() - startedAt,
         output_directory: outputDir,
         tag_weights: TAG_WEIGHTS,
+        performance_metrics: {
+            tree_type: treeType,
+            tree_conversion_time_ms: treeConversionTime,
+            proof_generation_time_ms: totalProofTime,
+            total_time_ms: Date.now() - startedAt
+        },
         results
     };
 
@@ -415,6 +444,11 @@ export async function proveAllWords(htmlFilePathOrContent, targetKeywordInput = 
     fs.writeFileSync(summaryPath, JSON.stringify(summary, null, 2));
     summary.summary_path = summaryPath;
 
+    console.log(`\n=== Performance Summary ===`);
+    console.log(`Merkle Tree Type: ${treeType}`);
+    console.log(`Tree Conversion Time: ${treeConversionTime.toFixed(2)}ms`);
+    console.log(`Total Proof Generation Time: ${totalProofTime.toFixed(2)}ms`);
+    console.log(`Total Processing Time: ${(Date.now() - startedAt).toFixed(2)}ms`);
     console.log(`Merkle Root Hash: ${merkleRoot.substring(0, 32)}...`);
     console.log(`Target Keywords: ${foundKeywords.join(', ')}`);
     console.log(`Total Weighted ZK Score: ${totalScore}`);
