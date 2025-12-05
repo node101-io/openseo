@@ -2,8 +2,9 @@ import express from 'express';
 import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { performance } from 'perf_hooks';
+import fs from 'fs';
 import { proveAllWords } from './proveAll.js';
-import { MerkleTreeType } from './parse.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,11 +17,8 @@ const upload = multer({
 
 const uploadFields = upload.fields([
     { name: 'htmlFile', maxCount: 1 },
-    { name: 'keyword', maxCount: 1 },
-    { name: 'treeType', maxCount: 1 }
+    { name: 'keyword', maxCount: 1 }
 ]);
-
-let isProcessing = false;
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '..', 'public')));
@@ -50,30 +48,27 @@ app.post('/api/upload', uploadFields, async (req, res) => {
         });
     }
 
-    const treeTypeRaw = Array.isArray(req.body?.treeType) ? req.body.treeType[0] : req.body?.treeType;
-    const treeType = (treeTypeRaw ?? MerkleTreeType.DOM_DIRECT).toString().trim();
-    const validTreeTypes = Object.values(MerkleTreeType);
-    if (!validTreeTypes.includes(treeType)) {
-        return res.status(400).json({
-            success: false,
-            error: `Invalid tree type. Valid options: ${validTreeTypes.join(', ')}`
-        });
-    }
-
-    isProcessing = true;
-
     try {
         const htmlContent = fileEntry.buffer.toString('utf-8');
-        console.log(`Using Merkle Tree Type: ${treeType}`);
+        const baseTimestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const outputDirPrefix = `proofs_batch_${baseTimestamp}`;
         
-        const summary = await proveAllWords(htmlContent, keywordInput, true, treeType);
-        res.json({ success: true, summary });
+        console.log(`Generating proofs with Teleportation Tree...`);
+        const startTime = performance.now();
+        
+        const summary = await proveAllWords(htmlContent, keywordInput, true, outputDirPrefix);
+        const endTime = performance.now();
+        const totalTime = endTime - startTime;
+        
+        res.json({
+            success: true,
+            summary: summary,
+            totalTime: totalTime
+        });
     } catch (error) {
         console.error('Proof generation error:', error);
         const statusCode = error.message?.includes('not present') || error.message?.includes('Keyword') ? 400 : 500;
         res.status(statusCode).json({ success: false, error: error.message });
-    } finally {
-        isProcessing = false;
     }
 });
 

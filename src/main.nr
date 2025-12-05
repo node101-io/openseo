@@ -1,83 +1,68 @@
-global MAX_WITNESS_NODES: u32 = 32;
-global MAX_PATH_DEPTH: u32 = 10;
+use dep::std;
+global MAX_CHUNKS: u32 = 32;
 
 fn main(
-    HTML_merkle_root: Field,
-    keyword: Field,
-    witness_paths: [[Field; MAX_PATH_DEPTH]; MAX_WITNESS_NODES],
-    path_lengths: [Field; MAX_WITNESS_NODES],
-    witness_count: Field
+    keyword_hash: Field,
+    merkle_root: pub Field,
+    leaf_hashes: [Field; MAX_CHUNKS],
+    is_keyword: [u32; MAX_CHUNKS],
+    chunk_count: u32,
+    expected_occurrences: pub u32
 ) {
-    let witness_len: u32 = witness_count as u32;
-    assert(witness_len <= MAX_WITNESS_NODES, "witness_count exceeds MAX_WITNESS_NODES");
-    assert(witness_len > 0, "no witness nodes found");
-    let mut verified_paths: u32 = 0;
-    
-    for i in 0..MAX_WITNESS_NODES {
-        if i < witness_len {
-            let path_len = path_lengths[i] as u32;
-            assert(path_len > 0, "path length must be > 0");
-            assert(path_len <= MAX_PATH_DEPTH, "path too deep");
-            
-            // last element = root
-            let path_root = witness_paths[i][path_len - 1];
-            assert(path_root == HTML_merkle_root, "path does not lead to merkle root");
-            
-            //verify path
-            let mut valid_path = true;
-            for j in 0..MAX_PATH_DEPTH {
-                if j < path_len {
-                    if witness_paths[i][j] == 0 {
-                        valid_path = false;
-                    }
-                }
+    let mut layer = leaf_hashes;
+    let mut size = chunk_count;
+    for _level in 0..6 {
+        let mut next = [0; MAX_CHUNKS];
+        let mut idx = 0;
+        let pairs = size / 2;
+        for i in 0..32 {
+            let should_process = i < pairs;
+            if should_process {
+                let left = layer[i * 2];
+                let right = if (i * 2 + 1) < size { layer[i * 2 + 1] } else { left };
+                next[idx] = std::hash::pedersen_hash([left, right]);
+                idx += 1;
             }
-            
-            if valid_path {
-                verified_paths += 1;
+        }
+        if size % 2 == 1 {
+            let last_value = layer[size - 1];
+            next[idx] = std::hash::pedersen_hash([last_value, last_value]);
+            idx += 1;
+        }
+        layer = next;
+        size = idx;
+    }
+    assert(layer[0] == merkle_root);
+    let mut found = 0;
+    for i in 0..MAX_CHUNKS {
+        let is_in_range = i < chunk_count;
+        let is_kw = is_keyword[i] == 1u32;
+        if is_in_range {
+            if is_kw {
+                assert(leaf_hashes[i] == keyword_hash);
+                found += 1;
             }
         }
     }
-    
-    assert(verified_paths == witness_len, "not all paths verified");
-    assert(HTML_merkle_root != 0, "invalid merkle root");
-    assert(keyword != 0, "invalid keyword hash");
+    assert(found == expected_occurrences);
 }
 
 #[test]
-fn test_merkle_path_verification() {
-    let merkle_root = 0x95ff5f00;
+fn test_teleportation_tree() {
     let keyword_hash = 0x0857c95b;
+    let mut leaf_hashes = [0; MAX_CHUNKS];
+    let mut is_keyword = [0; MAX_CHUNKS];
     
-    let mut paths: [[Field; MAX_PATH_DEPTH]; MAX_WITNESS_NODES] = [[0; MAX_PATH_DEPTH]; MAX_WITNESS_NODES];
-    let mut path_lens: [Field; MAX_WITNESS_NODES] = [0; MAX_WITNESS_NODES];
+    leaf_hashes[0] = keyword_hash;
+    is_keyword[0] = 1;
+    leaf_hashes[1] = 0x12345678;
+    is_keyword[1] = 0;
+    leaf_hashes[2] = keyword_hash;
+    is_keyword[2] = 1;
     
-    paths[0][0] = 0xe5d2a699;
-    paths[0][1] = 0x41580563;
-    paths[0][2] = 0x91a6fcdb;
-    paths[0][3] = 0x95ff5f00;
-    path_lens[0] = 4;
+    let pair1 = std::hash::pedersen_hash([leaf_hashes[0], leaf_hashes[1]]);
+    let pair2 = std::hash::pedersen_hash([leaf_hashes[2], leaf_hashes[2]]);
+    let merkle_root = std::hash::pedersen_hash([pair1, pair2]);
     
-    paths[1][0] = 0x41580563;
-    paths[1][1] = 0x91a6fcdb;
-    paths[1][2] = 0x95ff5f00;
-    path_lens[1] = 3;
-    
-    main(merkle_root, keyword_hash, paths, path_lens, 2);
-}
-
-#[test]
-fn test_single_path() {
-    let merkle_root = 0xabcd1234;
-    let keyword_hash = 999;
-    
-    let mut paths: [[Field; MAX_PATH_DEPTH]; MAX_WITNESS_NODES] = [[0; MAX_PATH_DEPTH]; MAX_WITNESS_NODES];
-    let mut path_lens: [Field; MAX_WITNESS_NODES] = [0; MAX_WITNESS_NODES];
-    
-    paths[0][0] = 0x11111111;
-    paths[0][1] = 0x22222222;
-    paths[0][2] = 0xabcd1234;
-    path_lens[0] = 3;
-    
-    main(merkle_root, keyword_hash, paths, path_lens, 1);
+    main(keyword_hash, merkle_root, leaf_hashes, is_keyword, 3, 2);
 }

@@ -212,17 +212,6 @@
             <input id="keywordInput" type="text" placeholder="e.g. seo" autocomplete="off">
         </div>
 
-        <div class="input-group">
-            <label for="treeTypeSelect">Merkle Tree Type</label>
-            <select id="treeTypeSelect" style="padding: 12px 16px; border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.3); background: rgba(15, 23, 42, 0.65); color: #f8fafc; font-size: 15px; cursor: pointer;">
-                <option value="dom_direct">Direct DOM to Merkle Tree (Default)</option>
-                <option value="balanced">Balanced Merkle Tree</option>
-                <option value="sparse">Sparse Merkle Tree (SMT)</option>
-            </select>
-            <small style="color: #94a3b8; font-size: 12px; margin-top: 4px;">
-                Select how your HTML will be converted to a Merkle tree structure
-            </small>
-        </div>
 
         <div id="dropZone">
             <strong>Drop your HTML file here</strong>
@@ -238,7 +227,6 @@
         const dropZone = document.getElementById('dropZone');
         const fileInput = document.getElementById('fileInput');
         const keywordInput = document.getElementById('keywordInput');
-        const treeTypeSelect = document.getElementById('treeTypeSelect');
         const statusEl = document.getElementById('status');
         const summaryEl = document.getElementById('summary');
 
@@ -299,15 +287,13 @@
         }
 
         async function uploadFile(file, keyword) {
-            const treeType = treeTypeSelect.value;
-            statusEl.textContent = `Proof processing started for "${keyword}" using ${getTreeTypeName(treeType)}. Please wait...`;
+            statusEl.textContent = `Proof oluşturuluyor...`;
             summaryEl.hidden = true;
             summaryEl.innerHTML = '';
 
             const formData = new FormData();
             formData.append('htmlFile', file);
             formData.append('keyword', keyword);
-            formData.append('treeType', treeType);
 
             try {
                 const response = await fetch('/api/upload', {
@@ -320,9 +306,9 @@
                 if (!response.ok || !payload.success) {
                     throw new Error(payload.error || 'An unexpected error occurred.');
                 }
-                console.log("response", payload.summary);
+                console.log("response", payload);
 
-                renderSummary(payload.summary);
+                renderSummary(payload);
             } catch (error) {
                 console.error('Upload error:', error);
                 statusEl.textContent = `Error: ${error.message}`;
@@ -331,16 +317,8 @@
             }
         }
 
-        function getTreeTypeName(treeType) {
-            const names = {
-                'dom_direct': 'Direct DOM Tree',
-                'balanced': 'Balanced Merkle Tree',
-                'sparse': 'Sparse Merkle Tree'
-            };
-            return names[treeType] || treeType;
-        }
-
-        function renderSummary(summary) {
+        function renderSummary(payload) {
+            const summary = payload.summary || payload;
             statusEl.textContent = 'Proof processing finished.';
 
             const totalScore = summary?.total_weighted_zk_score ?? summary?.total_zk_score ?? 0;
@@ -358,9 +336,11 @@
             const durationMs = summary?.processing_time_ms ?? 0;
             const durationText = durationMs ? `${(durationMs / 1000).toFixed(1)} seconds` : 'Unknown';
             
-            const treeType = summary?.merkle_tree_type ?? 'N/A';
+            const treeType = summary?.merkle_tree_type ?? 'teleportation';
             const treeConversionTime = summary?.merkle_tree_conversion_time_ms ?? summary?.performance_metrics?.tree_conversion_time_ms ?? 0;
             const proofGenerationTime = summary?.total_proof_generation_time_ms ?? summary?.performance_metrics?.proof_generation_time_ms ?? 0;
+            const verificationTime = summary?.total_verification_time_ms ?? summary?.performance_metrics?.verification_time_ms ?? 0;
+            const proofSize = summary?.total_proof_size_bytes ?? summary?.performance_metrics?.proof_size_bytes ?? 0;
 
             const results = Array.isArray(summary?.results) ? summary.results : [];
 
@@ -410,7 +390,7 @@
                     </div>
                     <div class="metric" style="flex: 1 1 100%;">
                         <span>Merkle Tree Type</span>
-                        <strong style="color: #a78bfa;">${getTreeTypeName(treeType)}</strong>
+                        <strong style="color: #a78bfa;">Teleportation Tree</strong>
                     </div>
                     <div class="metric">
                         <span>Tree Conversion Time</span>
@@ -419,6 +399,14 @@
                     <div class="metric">
                         <span>Proof Generation Time</span>
                         <strong style="color: #fbbf24;">${proofGenerationTime.toFixed(2)}ms</strong>
+                    </div>
+                    <div class="metric">
+                        <span>Verification Time</span>
+                        <strong style="color: #a78bfa;">${verificationTime.toFixed(2)}ms</strong>
+                    </div>
+                    <div class="metric">
+                        <span>Proof Size</span>
+                        <strong style="color: #f472b6;">${(proofSize / 1024).toFixed(2)} KB</strong>
                     </div>
                     <div class="metric">
                         <span>Total Occurrences</span>
@@ -468,6 +456,7 @@
                 </table>
             `;
         }
+
     </script>
 </body>
 </html>
