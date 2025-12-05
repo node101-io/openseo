@@ -71,9 +71,7 @@ app.post('/api/upload', uploadFields, async (req, res) => {
         res.status(statusCode).json({ success: false, error: error.message });
     }
 });
-
 const PORT = process.env.PORT || 3000;
-
 app.listen(PORT, () => {
     console.log(`ZK-SEO server is running at http://localhost:${PORT}`);
 });

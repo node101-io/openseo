@@ -346,7 +346,6 @@ export async function buildTeleportationTree(htmlContent, targetKeyword) {
     const leafCount = chunks.length;
     const internalNodes = leafCount > 1 ? leafCount - 1 : 0;
     const totalNodes = leafCount + internalNodes;
-
     return {
         chunks,
         leaves: leafHashes,

@@ -59,7 +59,6 @@ fn test_teleportation_tree() {
     is_keyword[1] = 0;
     leaf_hashes[2] = keyword_hash;
     is_keyword[2] = 1;
-    
     let pair1 = std::hash::pedersen_hash([leaf_hashes[0], leaf_hashes[1]]);
     let pair2 = std::hash::pedersen_hash([leaf_hashes[2], leaf_hashes[2]]);
     let merkle_root = std::hash::pedersen_hash([pair1, pair2]);
