@@ -1,12 +1,12 @@
 # ZK-SEO Teleportation Tree Prover Input
-# Keyword: "admin"
-# Chunks: 6
-# Expected occurrences: 3
+# Keyword: "koza"
+# Chunks: 4
+# Expected occurrences: 2
 
-keyword_hash = "0x2ba0d9fff2ddc3c24d487d504aeb652560ffd93780896a96205b8402d448a916"
-merkle_root = "0x2b1ab5aaddc38722339b29b467d62e7adf1673c623f441e8caa6d53baf6a16dc"
-chunk_count = 6
-expected_occurrences = 3
+keyword_hash = "0x0857c95b1a8cea4f14eb54c7263e987499690e3b9aada155b1ade8086442d70d"
+merkle_root = "0x09a40be5ecb43b4a13a3786db0f2cf478bfab369e0fc7b6631b6bb2eb3b9be27"
+chunk_count = 4
+expected_occurrences = 2
 
-leaf_hashes = ["0x2ba0d9fff2ddc3c24d487d504aeb652560ffd93780896a96205b8402d448a916", "0x293f8c39ef67b74e790ef7c3ebe559ebb673fb26c4c21bc999166d96ac3b947b", "0x2ba0d9fff2ddc3c24d487d504aeb652560ffd93780896a96205b8402d448a916", "0x01a9b274594b847febfc98d1680bbcb0e8b342bd534646bd2f503fbbed85c5e4", "0x2ba0d9fff2ddc3c24d487d504aeb652560ffd93780896a96205b8402d448a916", "0x2fb7fdb0292781c96fb2c758736e723628a8c465966cd8efcb25e90a57abebb8", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0"]
-is_keyword = [1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+leaf_hashes = ["0x0857c95b1a8cea4f14eb54c7263e987499690e3b9aada155b1ade8086442d70d", "0x0104e05bc848344668200ec7a1bdf9eab61e694dc8919724e62066a78511a815", "0x0857c95b1a8cea4f14eb54c7263e987499690e3b9aada155b1ade8086442d70d", "0x1099ee957e2e628d485cdf7887181c946ff8edeaa293aee48f876d0500318675", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0"]
+is_keyword = [1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
