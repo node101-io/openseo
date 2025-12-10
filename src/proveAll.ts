@@ -5,6 +5,7 @@ import { sanitizeText } from './teleportationHash.js';
 import { ProverService } from './services/ProverService.js';
 import { ZKProofService } from './services/ZKProofService.js';
 import { WordScorePair } from './types/ProverTypes.js';
+import { performance } from 'perf_hooks';
 
 interface KeywordResult {
     word: string;
@@ -97,13 +98,41 @@ export async function proveAllWords(
     const proofEndTime = performance.now();
     const proofGenerationTime = proofEndTime - proofStartTime;
 
+    if (proofResult.success && proofResult.wordHashes) {
+        console.log(`\n=== Hash List (Word + Word-Score Hashes) ===`);
+        console.log(`Total hashes: ${proofResult.wordHashes.length}`);
+        proofResult.wordHashes.forEach((hash, index) => {
+            const wordScorePair = proverOutput.wordScorePairs[index];
+            if (wordScorePair) {
+                console.log(`  [${index + 1}] Word: "${wordScorePair.word}", Score: ${wordScorePair.score}`);
+                console.log(`      Hash: ${hash.substring(0, 32)}...${hash.substring(hash.length - 8)}`);
+            } else {
+                console.log(`  [${index + 1}] Hash: ${hash.substring(0, 32)}...${hash.substring(hash.length - 8)}`);
+            }
+        });
+    } else {
+        console.log(`\n Warning: Hash list not found in proof result`);
+    }
+
     let verificationTime = 0;
     let isVerified = false;
     let verificationDetails: any = null;
 
     if (proofResult.success && proofResult.proof && proofResult.publicInputs) {
         try {
-            const verifyResult = await zkProofService.verifyProof(proofResult.proof, proofResult.publicInputs);
+            if (!proofResult.wordHashes || proofResult.wordHashes.length === 0) {
+                throw new Error('Word hashes not found in proof result');
+            }
+            
+            console.log(`\n=== Verifying Proof ===`);
+            console.log(`Using hash list from proof (${proofResult.wordHashes.length} hashes)`);
+            
+            const verifyResult = await zkProofService.verifyProof(
+                proofResult.proof, 
+                proofResult.publicInputs,
+                proofResult.wordHashes 
+            );
+            
             isVerified = verifyResult.isValid;
             verificationTime = verifyResult.totalTime;
             verificationDetails = {
@@ -113,8 +142,23 @@ export async function proveAllWords(
                 verifyTime: verifyResult.verifyTime,
                 error: verifyResult.error
             };
+            console.log(`\n=== Verification Result ===`);
+            console.log(`Status: ${isVerified ? 'VERIFIED' : 'FAILED'}`);
+            if (verifyResult.error) {
+                console.log(`Error: ${verifyResult.error}`);
+            }
+            console.log(`Total Time: ${verificationTime.toFixed(2)}ms`);
+            if (verificationDetails.circuitLoadTime) {
+                console.log(`  - Circuit Load Time: ${verificationDetails.circuitLoadTime.toFixed(2)}ms`);
+            }
+            if (verificationDetails.backendInitTime) {
+                console.log(`  - Backend Init Time: ${verificationDetails.backendInitTime.toFixed(2)}ms`);
+            }
+            if (verificationDetails.verifyTime) {
+                console.log(`  - Verify Operation Time: ${verificationDetails.verifyTime.toFixed(2)}ms`);
+            }
         } catch (verifyError) {
-            console.error('Verification error:', (verifyError as Error).message);
+            console.error('\nVerification error:', (verifyError as Error).message);
             isVerified = false;
         }
     }
@@ -122,6 +166,7 @@ export async function proveAllWords(
     fs.writeFileSync(proofDataPath, JSON.stringify({
         merkleRoot: proverOutput.merkleRoot,
         wordScorePairs: proverOutput.wordScorePairs,
+        wordHashes: proofResult.wordHashes || proverOutput.wordHashes, 
         proof: proofResult.proof,
         publicInputs: proofResult.publicInputs,
         proofGenerated: proofResult.success,

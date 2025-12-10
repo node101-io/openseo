@@ -20,7 +20,7 @@ export class HTMLAnalyzerService {
         return result;
     }
 
-    private extractTextNodes(document: ReturnType<JSDOM['window']['document']>): Array<{ text: string; tag: string; element: any | null }> {
+    private extractTextNodes(document: InstanceType<typeof JSDOM>['window']['document']): Array<{ text: string; tag: string; element: any | null }> {
         const textNodes: Array<{ text: string; tag: string; element: any | null }> = [];
         const ignoreTags = ['script', 'style', 'noscript', 'iframe'];
         

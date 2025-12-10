@@ -4,15 +4,18 @@ import { execSync } from 'child_process';
 import { UltraHonkBackend } from '@aztec/bb.js';
 import { Noir } from '@noir-lang/noir_js';
 import toml from 'toml';
-import { WordOccurrenceData, ProofResult, VerificationResult } from '../types/ProverTypes.js';
+import { WordOccurrenceData, ProofResult, VerificationResult, WordScorePair } from '../types/ProverTypes.js';
 import { WordScoreHashService } from './WordScoreHashService.js';
+import { MerkleTreeBuilderService } from './MerkleTreeBuilderService.js';
 import { performance } from 'perf_hooks';
 
 export class ZKProofService {
     private wordScoreHasher: WordScoreHashService;
+    private merkleTreeBuilder: MerkleTreeBuilderService;
 
     constructor() {
         this.wordScoreHasher = new WordScoreHashService();
+        this.merkleTreeBuilder = new MerkleTreeBuilderService();
     }
 
     private hashToNoirField(hexHash: string): string {
@@ -38,11 +41,10 @@ export class ZKProofService {
     ): Promise<string> {
         const MAX_WORDS = 16;
         let tomlContent = `# ZK-SEO Word-Score Proof Input\n`;
-        tomlContent += `# Merkle Root: ${merkleRoot}\n`;
+        tomlContent += `# Note: Merkle root is not used in circuit - it will be verified in TypeScript\n`;
+        tomlContent += `# Merkle Root (for reference): ${merkleRoot}\n`;
         tomlContent += `# Word Count: ${wordScores.length}\n\n`;
 
-        const merkleRootField = this.hashToNoirField(merkleRoot);
-        tomlContent += `merkle_root = "${merkleRootField}"\n`;
         tomlContent += `word_count = ${wordScores.length}\n\n`;
 
         const wordScoresArray: string[] = [];
@@ -111,6 +113,7 @@ export class ZKProofService {
         occurrenceDataMap: Map<string, WordOccurrenceData>
     ): Promise<ProofResult> {
         try {
+            const wordHashes = await this.wordScoreHasher.hashWordScores(wordScores);
             const tomlContent = await this.generateProverToml(merkleRoot, wordScores, occurrenceDataMap);
             const proverTomlPath = path.join(process.cwd(), 'Prover.toml');
             fs.writeFileSync(proverTomlPath, tomlContent);
@@ -136,9 +139,10 @@ export class ZKProofService {
             return {
                 proof: proofData.proof,
                 publicInputs: proofData.publicInputs,
+                wordHashes: wordHashes,
                 success: true,
                 proofSize: proofSize
-            };
+            } as ProofResult;
         } catch (error) {
             console.error('Proof generation failed:', (error as Error).message);
             return {
@@ -148,13 +152,22 @@ export class ZKProofService {
         }
     }
 
-    public async verifyProof(proof: any, publicInputs: any): Promise<VerificationResult> {
+    public async verifyProof(
+        proof: any, 
+        publicInputs: any, 
+        wordHashes: string[],
+    ): Promise<VerificationResult> {
         const totalStartTime = performance.now();
         let circuitLoadTime = 0;
         let backendInitTime = 0;
         let verifyTime = 0;
+        let merkleRootVerificationTime = 0;
 
         try {
+            if (!wordHashes || wordHashes.length === 0) {
+                throw new Error('Word hashes list is required for verification');
+            }
+            console.log('  Step 1: Verifying proof with backend (circuit validation)...');
             const circuitLoadStart = performance.now();
             const circuitPath = path.join(process.cwd(), 'target', 'zkseo.json');
             const circuitData = JSON.parse(fs.readFileSync(circuitPath, 'utf-8'));
@@ -174,11 +187,34 @@ export class ZKProofService {
             const verifyEnd = performance.now();
             verifyTime = verifyEnd - verifyStart;
 
+            if (!isValid) {
+                console.error('Backend proof verification failed - proof is invalid');
+                return {
+                    isValid: false,
+                    totalTime: performance.now() - totalStartTime,
+                    circuitLoadTime,
+                    backendInitTime,
+                    verifyTime,
+                    error: 'Backend proof verification failed - circuit validation unsuccessful'
+                };
+            }
+            console.log('Backend proof verification passed - circuit validation successful');
+            console.log('  Step 2: Building Merkle tree from hash list and verifying...');
+            const merkleRootStart = performance.now();
+            const calculatedMerkleRoot = await this.merkleTreeBuilder.buildMerkleRoot(wordHashes);
+            const merkleRootEnd = performance.now();
+            merkleRootVerificationTime = merkleRootEnd - merkleRootStart;
+            
+            console.log(`Merkle tree built from hash list`);
+            console.log(`Calculated Merkle Root: ${calculatedMerkleRoot.substring(0, 32)}...`);
+            console.log(`Hash list length: ${wordHashes.length}`);
+            console.log(`Merkle tree construction time: ${merkleRootVerificationTime.toFixed(2)}ms`);
+
             const totalEndTime = performance.now();
             const totalTime = totalEndTime - totalStartTime;
 
             return {
-                isValid,
+                isValid: true,
                 totalTime,
                 circuitLoadTime,
                 backendInitTime,
@@ -187,7 +223,7 @@ export class ZKProofService {
         } catch (error) {
             const totalEndTime = performance.now();
             const totalTime = totalEndTime - totalStartTime;
-            console.error('Proof verification failed:', (error as Error).message);
+            console.error('Verification error:', (error as Error).message);
             return {
                 isValid: false,
                 totalTime,

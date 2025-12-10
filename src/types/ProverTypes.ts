@@ -30,6 +30,7 @@ export interface ZKProofInput {
 export interface ProofResult {
     proof?: any;
     publicInputs?: any;
+    wordHashes?: string[];
     success: boolean;
     proofSize?: number;
     error?: string;

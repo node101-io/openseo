@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import readline from 'readline';
 import { proveAllWords } from './proveAll.js';
+import { performance } from 'perf_hooks';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
