@@ -204,12 +204,15 @@
     <main>
         <h1>ZK-SEO Proof with Merkle Tree</h1>
         <p class="description">
-            Convert your HTML into a Merkle Tree and generate ZK proofs using tag-weighted keyword scoring.
+            Generate ZK proofs using tag-weighted keyword scoring.
         </p>
 
         <div class="input-group">
-            <label for="keywordInput">Keyword to verify</label>
-            <input id="keywordInput" type="text" placeholder="e.g. seo" autocomplete="off">
+            <label for="keywordInput">Keywords to verify</label>
+            <input id="keywordInput" type="text" placeholder="e.g. seo, optimization, web" autocomplete="off">
+            <small style="color: #94a3b8; font-size: 12px; margin-top: 4px;">
+                Separate multiple keywords with commas or spaces
+            </small>
         </div>
 
         <div id="dropZone">
@@ -268,7 +271,16 @@
 
             const keyword = keywordInput.value.trim();
             if (!keyword) {
-                statusEl.textContent = 'Please enter a keyword to verify before uploading.';
+                statusEl.textContent = 'Please enter at least one keyword to verify before uploading.';
+                summaryEl.hidden = true;
+                summaryEl.innerHTML = '';
+                return;
+            }
+
+            // Parse keywords to show count
+            const keywords = keyword.split(/[\s,]+/).filter(k => k.length > 0);
+            if (keywords.length === 0) {
+                statusEl.textContent = 'Please enter at least one valid keyword.';
                 summaryEl.hidden = true;
                 summaryEl.innerHTML = '';
                 return;
@@ -286,7 +298,10 @@
         }
 
         async function uploadFile(file, keyword) {
-            statusEl.textContent = `Proof oluşturuluyor...`;
+            const keywords = keyword.split(/[\s,]+/).filter(k => k.length > 0);
+            const keywordCount = keywords.length;
+            const keywordText = keywordCount === 1 ? 'keyword' : 'keywords';
+            statusEl.textContent = `Generating proofs for ${keywordCount} ${keywordText}...`;
             summaryEl.hidden = true;
             summaryEl.innerHTML = '';
 
@@ -356,7 +371,6 @@
                     const weightedScore = result.score ?? 0;
                     const verified = result.verified ? '✅' : '❌';
                     
-                    const tagDist = result.tagDistribution || {};
                     const tagBadges = Object.entries(tagDist)
                         .map(([tag, count]) => `<span class="tag-badge">${tag}(${count})</span>`)
                         .join(' ');
@@ -444,7 +458,6 @@
                             <th>Keyword</th>
                             <th>Count</th>
                             <th>Score</th>
-                            <th>Tag Distribution</th>
                             <th>Proof</th>
                             <th>Details</th>
                         </tr>

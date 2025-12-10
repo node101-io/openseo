@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- Produced from a LaTeX source file.  Note that the production is done -->
+<!-- by a very rough-and-ready (and buggy) script, so the HTML and other  -->
+<!-- code is quite ugly!  Later versions should be better.                -->
+<head>
+    <meta charset="utf-8">
+    <meta name="citation_title" content="Neural Networks and Deep Learning">
+    <meta name="citation_author" content="Nielsen, Michael A.">
+    <meta name="citation_publication_date" content="2015">
+    <meta name="citation_fulltext_html_url" content="http://neuralnetworksanddeeplearning.com">
+    <meta name="citation_publisher" content="Determination Press">
+    <meta name="citation_fulltext_world_readable" content="">
+    <link rel="icon" href="nnadl_favicon.ICO" />
+    <title>Neural networks and deep learning</title>
+    <script src="assets/jquery.min.js"></script>
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$']]},
+        "HTML-CSS": 
+          {scale: 92},
+        TeX: { equationNumbers: { autoNumber: "AMS" }}});
+    </script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+
+    <link href="assets/style.css" rel="stylesheet">
+    <link href="assets/pygments.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css">
+
+<style>
+/* Adapted from */
+/* https://groups.google.com/d/msg/mathjax-users/jqQxrmeG48o/oAaivLgLN90J, */
+/* by David Cervone */
+
+@font-face {
+    font-family: 'MJX_Math';
+    src: url('https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/fonts/HTML-CSS/TeX/eot/MathJax_Math-Italic.eot'); /* IE9 Compat Modes */
+    src: url('https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/fonts/HTML-CSS/TeX/eot/MathJax_Math-Italic.eot?iefix') format('eot'),
+    url('https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/fonts/HTML-CSS/TeX/woff/MathJax_Math-Italic.woff')  format('woff'),
+    url('https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/fonts/HTML-CSS/TeX/otf/MathJax_Math-Italic.otf')  format('opentype'),
+    url('https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/fonts/HTML-CSS/TeX/svg/MathJax_Math-Italic.svg#MathJax_Math-Italic') format('svg');
+}
+
+@font-face {
+    font-family: 'MJX_Main';
+    src: url('https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/fonts/HTML-CSS/TeX/eot/MathJax_Main-Regular.eot'); /* IE9 Compat Modes */
+    src: url('https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/fonts/HTML-CSS/TeX/eot/MathJax_Main-Regular.eot?iefix') format('eot'),
+    url('https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/fonts/HTML-CSS/TeX/woff/MathJax_Main-Regular.woff')  format('woff'),
+    url('https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/fonts/HTML-CSS/TeX/otf/MathJax_Main-Regular.otf')  format('opentype'),
+    url('https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/fonts/HTML-CSS/TeX/svg/MathJax_Main-Regular.svg#MathJax_Main-Regular') format('svg');
+}
+</style>
+
+  </head>
+  <body><div class="nonumber_header"><h2>Appendix: Is there a <em>simple</em> algorithm for intelligence?</h2></div><div class="section"><div id="toc"> 
+<p class="toc_title"><a href="index.html">Neural Networks and Deep Learning</a></p><p class="toc_not_mainchapter"><a href="about.html">What this book is about</a></p><p class="toc_not_mainchapter"><a href="exercises_and_problems.html">On the exercises and problems</a></p><p class='toc_mainchapter'><a id="toc_using_neural_nets_to_recognize_handwritten_digits_reveal" class="toc_reveal" onMouseOver="this.style.borderBottom='1px solid #2A6EA6';" onMouseOut="this.style.borderBottom='0px';"><img id="toc_img_using_neural_nets_to_recognize_handwritten_digits" src="images/arrow.png" width="15px"></a><a href="chap1.html">Using neural nets to recognize handwritten digits</a><div id="toc_using_neural_nets_to_recognize_handwritten_digits" style="display: none;"><p class="toc_section"><ul><a href="chap1.html#perceptrons"><li>Perceptrons</li></a><a href="chap1.html#sigmoid_neurons"><li>Sigmoid neurons</li></a><a href="chap1.html#the_architecture_of_neural_networks"><li>The architecture of neural networks</li></a><a href="chap1.html#a_simple_network_to_classify_handwritten_digits"><li>A simple network to classify handwritten digits</li></a><a href="chap1.html#learning_with_gradient_descent"><li>Learning with gradient descent</li></a><a href="chap1.html#implementing_our_network_to_classify_digits"><li>Implementing our network to classify digits</li></a><a href="chap1.html#toward_deep_learning"><li>Toward deep learning</li></a></ul></p></div>
+<script>
+$('#toc_using_neural_nets_to_recognize_handwritten_digits_reveal').click(function() { 
+   var src = $('#toc_img_using_neural_nets_to_recognize_handwritten_digits').attr('src');
+   if(src == 'images/arrow.png') {
+     $("#toc_img_using_neural_nets_to_recognize_handwritten_digits").attr('src', 'images/arrow_down.png');
+   } else {
+     $("#toc_img_using_neural_nets_to_recognize_handwritten_digits").attr('src', 'images/arrow.png');
+   };
+   $('#toc_using_neural_nets_to_recognize_handwritten_digits').toggle('fast', function() {});  
+});</script><p class='toc_mainchapter'><a id="toc_how_the_backpropagation_algorithm_works_reveal" class="toc_reveal" onMouseOver="this.style.borderBottom='1px solid #2A6EA6';" onMouseOut="this.style.borderBottom='0px';"><img id="toc_img_how_the_backpropagation_algorithm_works" src="images/arrow.png" width="15px"></a><a href="chap2.html">How the backpropagation algorithm works</a><div id="toc_how_the_backpropagation_algorithm_works" style="display: none;"><p class="toc_section"><ul><a href="chap2.html#warm_up_a_fast_matrix-based_approach_to_computing_the_output_from_a_neural_network"><li>Warm up: a fast matrix-based approach to computing the output  from a neural network</li></a><a href="chap2.html#the_two_assumptions_we_need_about_the_cost_function"><li>The two assumptions we need about the cost function</li></a><a href="chap2.html#the_hadamard_product_$s_\odot_t$"><li>The Hadamard product, $s \odot t$</li></a><a href="chap2.html#the_four_fundamental_equations_behind_backpropagation"><li>The four fundamental equations behind backpropagation</li></a><a href="chap2.html#proof_of_the_four_fundamental_equations_(optional)"><li>Proof of the four fundamental equations (optional)</li></a><a href="chap2.html#the_backpropagation_algorithm"><li>The backpropagation algorithm</li></a><a href="chap2.html#the_code_for_backpropagation"><li>The code for backpropagation</li></a><a href="chap2.html#in_what_sense_is_backpropagation_a_fast_algorithm"><li>In what sense is backpropagation a fast algorithm?</li></a><a href="chap2.html#backpropagation_the_big_picture"><li>Backpropagation: the big picture</li></a></ul></p></div>
+<script>
+$('#toc_how_the_backpropagation_algorithm_works_reveal').click(function() { 
+   var src = $('#toc_img_how_the_backpropagation_algorithm_works').attr('src');
+   if(src == 'images/arrow.png') {
+     $("#toc_img_how_the_backpropagation_algorithm_works").attr('src', 'images/arrow_down.png');
+   } else {
+     $("#toc_img_how_the_backpropagation_algorithm_works").attr('src', 'images/arrow.png');
+   };
+   $('#toc_how_the_backpropagation_algorithm_works').toggle('fast', function() {});  
+});</script><p class='toc_mainchapter'><a id="toc_improving_the_way_neural_networks_learn_reveal" class="toc_reveal" onMouseOver="this.style.borderBottom='1px solid #2A6EA6';" onMouseOut="this.style.borderBottom='0px';"><img id="toc_img_improving_the_way_neural_networks_learn" src="images/arrow.png" width="15px"></a><a href="chap3.html">Improving the way neural networks learn</a><div id="toc_improving_the_way_neural_networks_learn" style="display: none;"><p class="toc_section"><ul><a href="chap3.html#the_cross-entropy_cost_function"><li>The cross-entropy cost function</li></a><a href="chap3.html#overfitting_and_regularization"><li>Overfitting and regularization</li></a><a href="chap3.html#weight_initialization"><li>Weight initialization</li></a><a href="chap3.html#handwriting_recognition_revisited_the_code"><li>Handwriting recognition revisited: the code</li></a><a href="chap3.html#how_to_choose_a_neural_network's_hyper-parameters"><li>How to choose a neural network's hyper-parameters?</li></a><a href="chap3.html#other_techniques"><li>Other techniques</li></a></ul></p></div>
+<script>
+$('#toc_improving_the_way_neural_networks_learn_reveal').click(function() { 
+   var src = $('#toc_img_improving_the_way_neural_networks_learn').attr('src');
+   if(src == 'images/arrow.png') {
+     $("#toc_img_improving_the_way_neural_networks_learn").attr('src', 'images/arrow_down.png');
+   } else {
+     $("#toc_img_improving_the_way_neural_networks_learn").attr('src', 'images/arrow.png');
+   };
+   $('#toc_improving_the_way_neural_networks_learn').toggle('fast', function() {});  
+});</script><p class='toc_mainchapter'><a id="toc_a_visual_proof_that_neural_nets_can_compute_any_function_reveal" class="toc_reveal" onMouseOver="this.style.borderBottom='1px solid #2A6EA6';" onMouseOut="this.style.borderBottom='0px';"><img id="toc_img_a_visual_proof_that_neural_nets_can_compute_any_function" src="images/arrow.png" width="15px"></a><a href="chap4.html">A visual proof that neural nets can compute any function</a><div id="toc_a_visual_proof_that_neural_nets_can_compute_any_function" style="display: none;"><p class="toc_section"><ul><a href="chap4.html#two_caveats"><li>Two caveats</li></a><a href="chap4.html#universality_with_one_input_and_one_output"><li>Universality with one input and one output</li></a><a href="chap4.html#many_input_variables"><li>Many input variables</li></a><a href="chap4.html#extension_beyond_sigmoid_neurons"><li>Extension beyond sigmoid neurons</li></a><a href="chap4.html#fixing_up_the_step_functions"><li>Fixing up the step functions</li></a><a href="chap4.html#conclusion"><li>Conclusion</li></a></ul></p></div>
+<script>
+$('#toc_a_visual_proof_that_neural_nets_can_compute_any_function_reveal').click(function() { 
+   var src = $('#toc_img_a_visual_proof_that_neural_nets_can_compute_any_function').attr('src');
+   if(src == 'images/arrow.png') {
+     $("#toc_img_a_visual_proof_that_neural_nets_can_compute_any_function").attr('src', 'images/arrow_down.png');
+   } else {
+     $("#toc_img_a_visual_proof_that_neural_nets_can_compute_any_function").attr('src', 'images/arrow.png');
+   };
+   $('#toc_a_visual_proof_that_neural_nets_can_compute_any_function').toggle('fast', function() {});  
+});</script><p class='toc_mainchapter'><a id="toc_why_are_deep_neural_networks_hard_to_train_reveal" class="toc_reveal" onMouseOver="this.style.borderBottom='1px solid #2A6EA6';" onMouseOut="this.style.borderBottom='0px';"><img id="toc_img_why_are_deep_neural_networks_hard_to_train" src="images/arrow.png" width="15px"></a><a href="chap5.html">Why are deep neural networks hard to train?</a><div id="toc_why_are_deep_neural_networks_hard_to_train" style="display: none;"><p class="toc_section"><ul><a href="chap5.html#the_vanishing_gradient_problem"><li>The vanishing gradient problem</li></a><a href="chap5.html#what's_causing_the_vanishing_gradient_problem_unstable_gradients_in_deep_neural_nets"><li>What's causing the vanishing gradient problem?  Unstable gradients in deep neural nets</li></a><a href="chap5.html#unstable_gradients_in_more_complex_networks"><li>Unstable gradients in more complex networks</li></a><a href="chap5.html#other_obstacles_to_deep_learning"><li>Other obstacles to deep learning</li></a></ul></p></div>
+<script>
+$('#toc_why_are_deep_neural_networks_hard_to_train_reveal').click(function() { 
+   var src = $('#toc_img_why_are_deep_neural_networks_hard_to_train').attr('src');
+   if(src == 'images/arrow.png') {
+     $("#toc_img_why_are_deep_neural_networks_hard_to_train").attr('src', 'images/arrow_down.png');
+   } else {
+     $("#toc_img_why_are_deep_neural_networks_hard_to_train").attr('src', 'images/arrow.png');
+   };
+   $('#toc_why_are_deep_neural_networks_hard_to_train').toggle('fast', function() {});  
+});</script><p class='toc_mainchapter'><a id="toc_deep_learning_reveal" class="toc_reveal" onMouseOver="this.style.borderBottom='1px solid #2A6EA6';" onMouseOut="this.style.borderBottom='0px';"><img id="toc_img_deep_learning" src="images/arrow.png" width="15px"></a><a href="chap6.html">Deep learning</a><div id="toc_deep_learning" style="display: none;"><p class="toc_section"><ul><a href="chap6.html#introducing_convolutional_networks"><li>Introducing convolutional networks</li></a><a href="chap6.html#convolutional_neural_networks_in_practice"><li>Convolutional neural networks in practice</li></a><a href="chap6.html#the_code_for_our_convolutional_networks"><li>The code for our convolutional networks</li></a><a href="chap6.html#recent_progress_in_image_recognition"><li>Recent progress in image recognition</li></a><a href="chap6.html#other_approaches_to_deep_neural_nets"><li>Other approaches to deep neural nets</li></a><a href="chap6.html#on_the_future_of_neural_networks"><li>On the future of neural networks</li></a></ul></p></div>
+<script>
+$('#toc_deep_learning_reveal').click(function() { 
+   var src = $('#toc_img_deep_learning').attr('src');
+   if(src == 'images/arrow.png') {
+     $("#toc_img_deep_learning").attr('src', 'images/arrow_down.png');
+   } else {
+     $("#toc_img_deep_learning").attr('src', 'images/arrow.png');
+   };
+   $('#toc_deep_learning').toggle('fast', function() {});  
+});</script><p class="toc_not_mainchapter"><a href="sai.html">Appendix: Is there a <em>simple</em> algorithm for intelligence?</a></p><p class="toc_not_mainchapter"><a href="acknowledgements.html">Acknowledgements</a></p><p class="toc_not_mainchapter"><a href="faq.html">Frequently Asked Questions</a></p>
+<hr>
+<p class="sidebar"> If you benefit from the book, please make a small
+donation.  I suggest $5, but you can choose the amount.</p>
+
+<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
+<input type="hidden" name="cmd" value="_s-xclick">
+<input type="hidden" name="hosted_button_id" value="5K9YAHR4X84RN">
+<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+<img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
+</form>
+
+<p class="sidebar">Alternately, you can make a donation by sending me
+Bitcoin, at address <span style="font-size: 0.7em">1Kd6tXH5SDAmiFb49J9hknG5pqj7KStSAx</span></p>
+
+<!--
+<hr>
+
+<p class="sidebar"> If you benefit from the book, please make a small
+donation.  I suggest $3, but you can choose the amount.</p>
+
+<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
+<input type="hidden" name="cmd" value="_s-xclick">
+<input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----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-----END PKCS7-----
+">
+<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+<img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
+</form>
+
+-->
+
+<hr>
+<span class="sidebar_title">Sponsors</span>
+<br/>
+
+<a href="https://lambdalabs.com/?utm_source=neuralnetworksdeeplearning&utm_medium=banner&utm_campaign=blogin&utm_content=rbannerimg">
+  <img src="assets/lambda.png" width="200px" style="padding: 3px 0px 0px 10px; border-style: none;">
+</a>
+<br>
+<div style="line-height: 1.2; padding-bottom: 12px; font-size: 0.8;">
+  <a href="https://lambdalabs.com/?utm_source=neuralnetworksdeeplearning&utm_medium=banner&utm_campaign=blogin&utm_content=rtext">Deep Learning Workstations, Servers, and Laptops</a>
+</div>
+
+<a href='http://gsquaredcapital.com/'><img src='assets/gsquared.png' width='200px' style="padding: 5px 0px 10px 10px; border-style: none;"></a>
+
+<a href='http://www.tineye.com'><img src='assets/tineye.png' width='200px'
+style="padding: 0px 0px 10px 8px; border-style: none;"></a>
+
+<a href='http://www.visionsmarts.com'><img
+src='assets/visionsmarts.png' width='210px' style="padding: 0px 0px
+0px 0px; border-style: none;"></a> <br/> 
+
+<p class="sidebar">Thanks to all the <a
+href="supporters.html">supporters</a> who made the book possible, with
+especial thanks to Pavel Dudrenov.  Thanks also to all the
+contributors to the <a href="bugfinder.html">Bugfinder Hall of
+Fame</a>.  </p>
+
+<hr>
+<span class="sidebar_title">Resources</span>
+
+<p class="sidebar"><a href="https://twitter.com/michael_nielsen">Michael Nielsen on Twitter</a></p>
+
+<p class="sidebar"><a href="faq.html">Book FAQ</a></p>
+
+<p class="sidebar">
+<a href="https://github.com/mnielsen/neural-networks-and-deep-learning">Code repository</a></p>
+
+<p class="sidebar">
+<a href="https://michaelnielsenupdates.substack.com/subscribe">Michael Nielsen's project announcement mailing list</a>
+</p>
+
+<p class="sidebar"> <a href="http://www.deeplearningbook.org/">Deep Learning</a>, book by Ian
+Goodfellow, Yoshua Bengio, and Aaron Courville</p>
+
+<p class="sidebar"><a href="http://cognitivemedium.com">cognitivemedium.com</a></p>
+
+<hr>
+<a href="http://michaelnielsen.org"><img src="assets/Michael_Nielsen_Web_Small.jpg" width="160px" style="border-style: none;"/></a>
+
+<p class="sidebar">
+By <a href="http://michaelnielsen.org">Michael Nielsen</a> / Dec 2019
+</p>
+</div>
+</p><p>In this book, we've focused on the nuts and bolts of neural networks:how they work, and how they can be used to solve pattern recognitionproblems.  This is material with many immediate practicalapplications.  But, of course, one reason for interest in neural netsis the hope that one day they will go far beyond such basic patternrecognition problems.  Perhaps they, or some other approach based ondigital computers, will eventually be used to build thinking machines,machines that match or surpass human intelligence?  This notion farexceeds the material discussed in the book - or what anyone in theworld knows how to do.  But it's fun to speculate.</p><p>There has been much debate about whether it's even <em>possible</em> forcomputers to match human intelligence.  I'm not going to engage withthat question.  Despite ongoing dispute, I believe it's not in seriousdoubt that an intelligent computer is possible - although it may beextremely complicated, and perhaps far beyond current technology -and current naysayers will one day seem much like the<a href="https://en.wikipedia.org/wiki/Vitalism">vitalists</a>.</p><p>Rather, the question I explore here is whether there is a<em>simple</em> set of principles which can be used to explainintelligence?  In particular, and more concretely, is there a<em>simple algorithm for intelligence</em>?</p><p>The idea that there is a truly simple algorithm for intelligence is abold idea.  It perhaps sounds too optimistic to be true.  Many peoplehave a strong intuitive sense that intelligence has considerableirreducible complexity.  They're so impressed by the amazing varietyand flexibility of human thought that they conclude that a simplealgorithm for intelligence must be impossible.  Despite thisintuition, I don't think it's wise to rush to judgement.  The historyof science is filled with instances where a phenomenon initiallyappeared extremely complex, but was later explained by some simple butpowerful set of ideas.</p><p>Consider, for example, the early days of astronomy.  Humans have knownsince ancient times that there is a menagerie of objects in the sky:the sun, the moon, the planets, the comets, and the stars.  Theseobjects behave in very different ways - stars move in a stately,regular way across the sky, for example, while comets appear as if outof nowhere, streak across the sky, and then disappear.  In the 16thcentury only a foolish optimist could have imagined that all theseobjects' motions could be explained by a simple set of principles. Butin the 17th century Newton formulated his theory of universalgravitation, which not only explained all these motions, but alsoexplained terrestrial phenomena such as the tides and the behaviour ofEarth-bound projecticles.  The 16th century's foolish optimist seemsin retrospect like a pessimist, asking for too little.</p><p>Of course, science contains many more such examples.  Consider themyriad chemical substances making up our world, so beautifullyexplained by Mendeleev's periodic table, which is, in turn, explainedby a few simple rules which may be obtained from quantum mechanics.Or the puzzle of how there is so much complexity and diversity in thebiological world, whose origin turns out to lie in the principle ofevolution by natural selection.  These and many other examples suggestthat it would not be wise to rule out a simple explanation ofintelligence merely on the grounds that what our brains - currentlythe best examples of intelligence - are doing <em>appears</em> to bevery complicated*<span class="marginnote">*Through this appendix I assume that for a  computer to be considered intelligent its capabilities must match or  exceed human thinking ability.  And so I'll regard the question "Is  there a simple algorithm for intelligence?" as equivalent to "Is  there a simple algorithm which can `think' along essentially the  same lines as the human brain?"  It's worth noting, however, that  there may well be forms of intelligence that don't subsume human  thought, but nonetheless go beyond it in interesting ways.</span>.</p><p>Contrariwise, and despite these optimistic examples, it is alsologically possible that intelligence can only be explained by a largenumber of fundamentally distinct mechanisms.  In the case of ourbrains, those many mechanisms may perhaps have evolved in response tomany different selection pressures in our species' evolutionaryhistory.  If this point of view is correct, then intelligence involvesconsiderable irreducible complexity, and no simple algorithm forintelligence is possible.</p><p>Which of these two points of view is correct?</p><p>To get insight into this question, let's ask a closely relatedquestion, which is whether there's a simple explanation of how humanbrains work.  In particular, let's look at some ways of quantifyingthe complexity of the brain.  Our first approach is the view of thebrain from<a href="http://en.wikipedia.org/wiki/Connectomics">connectomics</a>.  Thisis all about the raw wiring: how many neurons there are in the brain,how many glial cells, and how many connections there are between theneurons.  You've probably heard the numbers before - the braincontains on the order of 100 billion neurons, 100 billion glial cells,and 100 trillion connections between neurons.  Those numbers arestaggering.  They're also intimidating.  If we need to understand thedetails of all those connections (not to mention the neurons and glialcells) in order to understand how the brain works, then we'recertainly not going to end up with a simple algorithm forintelligence.</p><p>There's a second, more optimistic point of view, the view of the brainfrom molecular biology.  The idea is to ask how much geneticinformation is needed to describe the brain's architecture.  To get ahandle on this question, we'll start by considering the geneticdifferences between humans and chimpanzees.  You've probably heard thesound bite that "human beings are 98 percent chimpanzee".  Thissaying is sometimes varied - popular variations also give the numberas 95 or 99 percent.  The variations occur because the numbers wereoriginally estimated by comparing samples of the human and chimpgenomes, not the entire genomes.  However, in 2007 the entirechimpanzee genome was<a href="http://www.nature.com/nature/journal/v437/n7055/full/nature04072.html">sequenced</a>(see also<a href="http://genome.cshlp.org/content/15/12/1746.full">here</a>), and wenow know that human and chimp DNA differ at roughly 125 million DNAbase pairs.  That's out of a total of roughly 3 billion DNA base pairsin each genome.  So it's not right to say human beings are 98 percentchimpanzee - we're more like 96 percent chimpanzee.</p><p>How much information is in that 125 million base pairs?  Each basepair can be labelled by one of four possibilities - the "letters"of the genetic code, the bases adenine, cytosine, guanine, andthymine.  So each base pair can be described using two bits ofinformation - just enough information to specify one of the fourlabels.  So 125 million base pairs is equivalent to 250 million bitsof information.  That's the genetic difference between humans andchimps!</p><p>Of course, that 250 million bits accounts for all the geneticdifferences between humans and chimps.  We're only interested in thedifference associated to the brain.  Unfortunately, no-one knows whatfraction of the total genetic difference is needed to explain thedifference between the brains.  But let's assume for the sake ofargument that about half that 250 million bits accounts for the braindifferences.  That's a total of 125 million bits.</p><p>125 million bits is an impressively large number.  Let's get a sensefor how large it is by translating it into more human terms.  Inparticular, how much would be an equivalent amount of English text?It<a href="http://ia902602.us.archive.org/23/items/bstj30-1-50/bstj30-1-50.pdf">turns  out</a> that the information content of English text is about 1 bit perletter.  That sounds low - after all, the alphabet has 26 letters- but there is a tremendous amount of redundancy in English text.Of course, you might argue that our genomes are redundant, too, so twobits per base pair is an overestimate.  But we'll ignore that, sinceat worst it means that we're overestimating our brain's geneticcomplexity.  With these assumptions, we see that the geneticdifference between our brains and chimp brains is equivalent to about125 million letters, or about 25 million English words.  That's about30 times as much as the King James Bible.</p><p>That's a lot of information.  But it's not incomprehensibly large.It's on a human scale.  Maybe no single human could ever understandall that's written in that code, but a group of people could perhapsunderstand it collectively, through appropriate specialization.  Andalthough it's a lot of information, it's minuscule when compared tothe information required to describe the 100 billion neurons, 100billion glial cells, and 100 trillion connections in our brains.  Evenif we use a simple, coarse description - say, 10 floating pointnumbers to characterize each connection - that would require about70 quadrillion bits.  That means the genetic description is a factorof about half a billion less complex than the full connectome for thehuman brain.</p><p>What we learn from this is that our genome cannot possibly contain adetailed description of all our neural connections.  Rather, it mustspecify just the broad architecture and basic principles underlyingthe brain.  But that architecture and those principles seem to beenough to guarantee that we humans will grow up to be intelligent.  Ofcourse, there are caveats - growing children need a healthy,stimulating environment and good nutrition to achieve theirintellectual potential.  But provided we grow up in a reasonableenvironment, a healthy human will have remarkable intelligence. Insome sense, the information in our genes contains the essence of howwe think.  And furthermore, the principles contained in that geneticinformation seem likely to be within our ability to collectivelygrasp.</p><p>All the numbers above are very rough estimates.  It's possible that125 million bits is a tremendous overestimate, that there is some muchmore compact set of core principles underlying human thought.  Maybemost of that 125 million bits is just fine-tuning of relatively minordetails.  Or maybe we were overly conservative in how we computed thenumbers.  Obviously, that'd be great if it were true!  For our currentpurposes, the key point is this: the architecture of the brain iscomplicated, but it's not nearly as complicated as you might thinkbased on the number of connections in the brain.  The view of thebrain from molecular biology suggests we humans ought to one day beable to understand the basic principles behind the brain'sarchitecture.</p><p>In the last few paragraphs I've ignored the fact that 125 million bitsmerely quantifies the genetic <em>difference</em> between human andchimp brains.  Not all our brain function is due to those 125 millionbits.  Chimps are remarkable thinkers in their own right.  Maybe thekey to intelligence lies mostly in the mental abilities (and geneticinformation) that chimps and humans have in common.  If this iscorrect, then human brains might be just a minor upgrade to chimpanzeebrains, at least in terms of the complexity of the underlyingprinciples.  Despite the conventional human chauvinism about ourunique capabilities, this isn't inconceivable: the chimpanzee andhuman genetic lines diverged just<a href="http://en.wikipedia.org/wiki/Chimpanzee-human_last_common_ancestor">5  million years ago</a>, a blink in evolutionary timescales.  However, inthe absence of a more compelling argument, I'm sympathetic to theconventional human chauvinism: my guess is that the most interestingprinciples underlying human thought lie in that 125 million bits, notin the part of the genome we share with chimpanzees.</p><p>Adopting the view of the brain from molecular biology gave us areduction of roughly nine orders of magnitude in the complexity of ourdescription.  While encouraging, it doesn't tell us whether or not atruly simple algorithm for intelligence is possible.  Can we get anyfurther reductions in complexity?  And, more to the point, can wesettle the question of whether a simple algorithm for intelligence ispossible?</p><p>Unfortunately, there isn't yet any evidence strong enough todecisively settle this question.  Let me describe some of theavailable evidence, with the caveat that this is a very brief andincomplete overview, meant to convey the flavour of some recent work,not to comprehensively survey what is known.</p><p>Among the evidence suggesting that there may be a simple algorithm forintelligence is an experiment<a href="http://www.nature.com/nature/journal/v404/n6780/abs/404841a0.html">reported</a>in April 2000 in the journal <em>Nature</em>.  A team of scientists ledby Mriganka Sur "rewired" the brains of newborn ferrets.  Usually,the signal from a ferret's eyes is transmitted to a part of the brainknown as the visual cortex.  But for these ferrets the scientists tookthe signal from the eyes and rerouted it so it instead went to theauditory cortex, i.e, the brain region that's usually used forhearing.</p><p>To understand what happened when they did this, we need to know a bitabout the visual cortex.  The visual cortex contains many<a href="http://en.wikipedia.org/wiki/Orientation_column">orientation  columns</a>.  These are little slabs of neurons, each of which respondsto visual stimuli from some particular direction.  You can think ofthe orientation columns as tiny directional sensors: when someoneshines a bright light from some particular direction, a correspondingorientation column is activated.  If the light is moved, a differentorientation column is activated.  One of the most important high-levelstructures in the visual cortex is the<a href="http://www.scholarpedia.org/article/Visual_map#Orientation_Maps">orientation  map</a>, which charts how the orientation columns are laid out.</p><p>What the scientists found is that when the visual signal from theferrets' eyes was rerouted to the auditory cortex, the auditory cortexchanged.  Orientation columns and an orientation map began to emergein the auditory cortex.  It was more disorderly than the orientationmap usually found in the visual cortex, but unmistakably similar.Furthermore, the scientists did some simple tests of how the ferretsresponded to visual stimuli, training them to respond differently whenlights flashed from different directions.  These tests suggested thatthe ferrets could still learn to "see", at least in a rudimentaryfashion, using the auditory cortex.</p><p>This is an astonishing result.  It suggests that there are commonprinciples underlying how different parts of the brain learn torespond to sensory data.  That commonality provides at least somesupport for the idea that there is a set of simple principlesunderlying intelligence.  However, we shouldn't kid ourselves abouthow good the ferrets' vision was in these experiments.  Thebehavioural tests tested only very gross aspects of vision.  And, ofcourse, we can't ask the ferrets if they've "learned to see".  Sothe experiments don't prove that the rewired auditory cortex wasgiving the ferrets a high-fidelity visual experience.  And so theyprovide only limited evidence in favour of the idea that commonprinciples underlie how different parts of the brain learn.</p><p>What evidence is there against the idea of a simple algorithm forintelligence?  Some evidence comes from the fields of evolutionarypsychology and neuroanatomy.  Since the 1960s evolutionarypsychologists have discovered a wide range of <em>human universals</em>,complex behaviours common to all humans, across cultures andupbringing.  These human universals include the incest taboo betweenmother and son, the use of music and dance, as well as much complexlinguistic structure, such as the use of swear words (i.e., taboowords), pronouns, and even structures as basic as the verb.Complementing these results, a great deal of evidence fromneuroanatomy shows that many human behaviours are controlled byparticular localized areas of the brain, and those areas seem to besimilar in all people.  Taken together, these findings suggest thatmany very specialized behaviours are hardwired into particular partsof our brains.</p><p>Some people conclude from these results that separate explanationsmust be required for these many brain functions, and that as aconsequence there is an irreducible complexity to the brain'sfunction, a complexity that makes a simple explanation for the brain'soperation (and, perhaps, a simple algorithm for intelligence)impossible.  For example, one well-known artificial intelligenceresearcher with this point of view is Marvin Minsky.  In the 1970s and1980s Minsky developed his "Society of Mind" theory, based on theidea that human intelligence is the result of a large society ofindividually simple (but very different) computational processes whichMinsky calls agents.  In<a href="https://en.wikipedia.org/wiki/Society_of_Mind">his book  describing the theory</a>, Minsky sums up what he sees as the power ofthis point of view:<blockquote>  What magical trick makes us intelligent? The trick is that there is  no trick. The power of intelligence stems from our vast diversity,  not from any single, perfect principle.</blockquote>In a response*<span class="marginnote">*In "Contemplating Minds: A Forum for  Artificial Intelligence", edited by William J. Clancey, Stephen  W. Smoliar, and Mark Stefik (MIT Press, 1994).</span> to reviews of hisbook, Minsky elaborated on the motivation for the Society of Mind,giving an argument similar to that stated above, based on neuroanatomyand evolutionary psychology:<blockquote>  We now know that the brain itself is composed of hundreds of  different regions and nuclei, each with significantly different  architectural elements and arrangements, and that many of them are  involved with demonstrably different aspects of our mental  activities.  This modern mass of knowledge shows that many phenomena  traditionally described by commonsense terms like "intelligence"  or "understanding" actually involve complex assemblies of  machinery.</blockquote>Minsky is, of course, not the only person to hold a point of viewalong these lines; I'm merely giving him as an example of a supporterof this line of argument.  I find the argument interesting, but don'tbelieve the evidence is compelling.  While it's true that the brain iscomposed of a large number of different regions, with differentfunctions, it does not therefore follow that a simple explanation forthe brain's function is impossible.  Perhaps those architecturaldifferences arise out of common underlying principles, much as themotion of comets, the planets, the sun and the stars all arise from asingle gravitational force.  Neither Minsky nor anyone else has arguedconvincingly against such underlying principles.</p><p>My own prejudice is in favour of there being a simple algorithm forintelligence.  And the main reason I like the idea, above and beyondthe (inconclusive) arguments above, is that it's an optimistic idea.When it comes to research, an unjustified optimism is often moreproductive than a seemingly better justified pessimism, for anoptimist has the courage to set out and try new things.  That's thepath to discovery, even if what is discovered is perhaps not what wasoriginally hoped.  A pessimist may be more "correct" in some narrowsense, but will discover less than the optimist.</p><p>This point of view is in stark contrast to the way we usually judgeideas: by attempting to figure out whether they are right or wrong.That's a sensible strategy for dealing with the routine minutiae ofday-to-day research.  But it can be the wrong way of judging a big,bold idea, the sort of idea that defines an entire research program.Sometimes, we have only weak evidence about whether such an idea iscorrect or not.  We can meekly refuse to follow the idea, insteadspending all our time squinting at the available evidence, trying todiscern what's true.  Or we can accept that no-one yet knows, andinstead work hard on developing the big, bold idea, in theunderstanding that while we have no guarantee of success, it is onlythus that our understanding advances.</p><p>With all that said, in its <em>most</em> optimistic form, I don'tbelieve we'll ever find a simple algorithm for intelligence.  To bemore concrete, I don't believe we'll ever find a really short Python(or C or Lisp, or whatever) program - let's say, anywhere up to athousand lines of code - which implements artificial intelligence.Nor do I think we'll ever find a really easily-described neuralnetwork that can implement artificial intelligence.  But I do believeit's worth acting as though we could find such a program or network.That's the path to insight, and by pursuing that path we may one dayunderstand enough to write a longer program or build a moresophisticated network which does exhibit intelligence.  And so it'sworth acting as though an extremely simple algorithm for intelligenceexists.</p><p>In the 1980s, the eminent mathematician and computer scientist<a href="http://en.wikipedia.org/wiki/Jacob_T._Schwartz">Jack Schwartz</a>was invited to a debate between artificial intelligence proponents andartificial intelligence skeptics.  The debate became unruly, with theproponents making over-the-top claims about the amazing things justround the corner, and the skeptics doubling down on their pessimism,claiming artificial intelligence was outright impossible.  Schwartzwas an outsider to the debate, and remained silent as the discussionheated up.  During a lull, he was asked to speak up and state histhoughts on the issues under discussion.  He said: "Well, some ofthese developments may lie one hundred Nobel prizes away"(<a href="http://books.google.ca/books?id=nFvY20pHghAC">ref</a>, page 22).It seems to me a perfect response.  The key to artificial intelligenceis simple, powerful ideas, and we can and should search optimisticallyfor those ideas.  But we're going to need many such ideas, and we'vestill got a long way to go!</p><p></div><div class="footer"> <span class="left_footer"> In academic work,
+please cite this book as: Michael A. Nielsen, "Neural Networks and
+Deep Learning", Determination Press, 2015
+
+<br/>
+<br/>
+
+This work is licensed under a <a rel="license"
+href="http://creativecommons.org/licenses/by-nc/3.0/deed.en_GB"
+style="color: #eee;">Creative Commons Attribution-NonCommercial 3.0
+Unported License</a>.  This means you're free to copy, share, and
+build on this book, but not to sell it.  If you're interested in
+commercial use, please <a
+href="mailto:mn@michaelnielsen.org">contact me</a>.
+</span>
+<span class="right_footer">
+Last update: Thu Dec 26 15:26:33 2019
+<br/>
+<br/>
+<br/>
+<a rel="license" href="http://creativecommons.org/licenses/by-nc/3.0/deed.en_GB"><img alt="Creative Commons Licence" style="border-width:0" src="http://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a>
+</span>
+</div>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-44208967-1', 'neuralnetworksanddeeplearning.com');
+  ga('send', 'pageview');
+
+</script>
+</body>
+</html>

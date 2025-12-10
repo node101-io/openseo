@@ -1,0 +1,40 @@
+
+
+<div class="text-center">
+	<h2>Discover our latest and greatest</h2>
+	<h1>React<span class="text-ros">OS</span> {{< reactos-version >}}</h1>
+</div>
+
+<div class="text-center">
+	<a id="bootcd" class="modalbtn" href="https://sourceforge.net/projects/reactos/files/latest/download"><div class="ros-button">Download Boot CD</div></a>
+	<p>Alternatively, you can download <a id="livecd" class="modalbtn" href="https://sourceforge.net/projects/reactos/files/ReactOS/0.4.15/ReactOS-{{< reactos-download-version >}}-x86-live.zip/download">LiveCD</a></p>
+</div>
+
+<h2>How to choose?</h2>
+<p>If you wish to install ReactOS on your machine, then Boot CD is the right option for you. Boot CD will direct you to a setup environment, please follow the instructions given on the screen. Live CD is useful if you don't plan to keep ReactOS on your computer for a longer period of time. It allows you to explore ReactOS in a temporary environment that will be reset in a restart. <span class="text-danger font-weight-bold">Please note, that ReactOS is still in alpha and gives no guarantee of stability, safety of your files or working at all.</span></p>
+
+<h2>What do I do with this?</h2>
+<p><a href="/wiki">ReactOS Wiki</a> is an ideal source of information, it will help you setup ReactOS in your desired environment. <a href="https://reactos.org/wiki/Installing_ReactOS">"Installing ReactOS"</a> page should help you get started.</p>
+
+<h2>Additional downloads</h2>
+<p><a href="https://downloads.sourceforge.net/reactos/ReactOS-{{< reactos-download-version >}}-src.zip">Source code for ReactOS {{< reactos-version >}}</a></p>
+<p><a href="https://fosstorrents.com/distributions/reactos/">ReactOS Torrent downloads via FOSS Torrents</a></p>
+
+<h2>Nightly builds</h2>
+<p>If you wish to download the bleeding edge versions of ReactOS, then nightly builds may just be your cup of tea. However, they do come with a catch; you're more likely to encounter regressions at the cost of new features. These are built on every commit made to the GitHub master branch and run through extensive tests on the Testman.</p>
+<a href="/getbuilds"><div class="ros-button ros-button-sm">Get nightly builds</div></a>
+<br>
+<br>
+<div class="modal fade" id="bootcdModal" role="dialog" tabindex="-1">
+<div class="modal-dialog modal-md" role="document">
+	<div class="modal-content">
+		<div class="modal-header"><button aria-label="Close" class="close" data-dismiss="modal" type="button"><span aria-hidden="true">×</span></button>
+			<h4 class="modal-title">Help ReactOS to reach Beta by a recurring donation</h4>
+		</div>
+		<div class="modal-body">
+			{{< paypal >}}
+		</div>
+		<div class="modal-footer"><a id="download" href="" style="font-size: 16px;">No, thanks. Let's proceed with the download! </a></div>
+	</div>
+</div>
+</div>
