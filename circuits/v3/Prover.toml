@@ -1,0 +1,18 @@
+# ZK-SEO Circuit Proof Input
+# Keywords: welcome, all
+# HTML Root: 0x1f0a790a4a3152310627d627f16af9d598b87d512d06d3c9e6b054107fe8ca05
+# Item Count: 1
+# Occurrences: 0
+
+keyword_hashes = ["0x280d44ab1e9f79b5cce2dd4f58f5fe91f0fbacdac9f7447dffc318ceb79f2d02", "0x2e91a0908384f3729455d97e32129f56409dd63d9fab0a1e3ff3be01a19ab628", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0"]
+keyword_count = 2
+html_root = "0x1f0a790a4a3152310627d627f16af9d598b87d512d06d3c9e6b054107fe8ca05"
+
+word_hashes = ["0x1f869093ae3c814211db42b7f0386a5ba2ca63b90bfa1bd2bb164848ac4bf0dc", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0"]
+
+scores = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+is_keyword = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+chunk_count = 1
+occurrences = 0

@@ -1,5 +1,4 @@
-import crypto from 'crypto';
-
+//for seo scoring tag weights
 export const TAG_WEIGHTS: Record<string, number> = {
     'title': 12,
     'h1': 10,
@@ -23,6 +22,7 @@ export const TAG_WEIGHTS: Record<string, number> = {
     'code': 3,
     'default': 1
 };
+
 const NON_ALLOWED_CHAR_REGEX = /[^a-z0-9\sığüşöç]/g;
 const WHITESPACE_REGEX = /\s+/g;
 
@@ -38,15 +38,3 @@ export function getTagWeight(tagName: string): number {
     const tag = tagName.toLowerCase();
     return TAG_WEIGHTS[tag] || TAG_WEIGHTS['default'];
 }
-
-export function hashToField(text: string): string {
-    const hash = crypto.createHash('sha256').update(text).digest('hex');
-    return '0x' + hash;
-}
-
-export function hashKeyword(keyword: string): string {
-    const normalized = sanitizeText(keyword);
-    return hashToField(normalized);
-}
-
-

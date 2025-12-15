@@ -355,18 +355,12 @@ async function generateHTMLFiles(
     count: number,
     outputDir: string = 'html_files'
 ): Promise<string[]> {
-    // Create output directory if it doesn't exist
     if (!fs.existsSync(outputDir)) {
         fs.mkdirSync(outputDir, { recursive: true });
     }
 
-    // Collect information for all HTML files
     const templates = await collectHTMLInfo(count);
-
-    // Generate HTML files
     const generatedFiles: string[] = [];
-    
-    // Find the next available number
     const existingFiles = fs.readdirSync(outputDir)
         .filter(f => f.match(/^\d+\.html$/))
         .map(f => parseInt(f.replace('.html', '')))
@@ -404,7 +398,6 @@ async function generateHTMLFiles(
     return generatedFiles;
 }
 
-// CLI support
 const __filename_htmlGen = fileURLToPath(import.meta.url);
 const isMainModule = process.argv[1] && (
     process.argv[1].endsWith('htmlGenerator.ts') ||
@@ -443,4 +436,3 @@ if (isMainModule) {
 }
 
 export { generateHTMLFiles, generateHTML, HTMLTemplate };
-

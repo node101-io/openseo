@@ -2,11 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import readline from 'readline';
-import { proveAllWords } from './proveAll.js';
+import { generateProofs } from '../utils/prover/Prover.js';
 import { performance } from 'perf_hooks';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 interface HTMLTestResult {
     html_file: string;
@@ -19,7 +16,6 @@ interface HTMLTestResult {
     verification_details?: {
         totalTime: number;
         circuitLoadTime?: number;
-        backendInitTime?: number;
         verifyTime?: number;
     };
     proof_size_bytes: number;
@@ -41,24 +37,12 @@ interface BatchTestResults {
     total_processing_time_ms: number;
     average_proof_generation_time_ms: number;
     average_verification_time_ms: number;
-    average_processing_time_ms: number;
     total_proof_size_bytes: number;
     results: HTMLTestResult[];
 }
 
 interface KeywordsMapping {
     [htmlFileName: string]: string;
-}
-
-function createReadlineInterface() {
-    return readline.createInterface({
-        input: process.stdin,
-        output: process.stdout
-    });
-}
-
-function question(rl: readline.Interface, query: string): Promise<string> {
-    return new Promise(resolve => rl.question(query, resolve));
 }
 
 function naturalSort(files: string[]): string[] {
@@ -77,51 +61,6 @@ function naturalSort(files: string[]): string[] {
     });
 }
 
-async function collectKeywordsInteractively(htmlFiles: string[]): Promise<KeywordsMapping> {
-    const rl = createReadlineInterface();
-    const mapping: KeywordsMapping = {};
-
-    console.log(`\n${'='.repeat(60)}`);
-    console.log(`=== Keywords Collection ===`);
-    console.log(`${'='.repeat(60)}`);
-    console.log(`Found ${htmlFiles.length} HTML file(s). Please enter keywords for each file.`);
-    console.log(`(Separate multiple keywords with commas, e.g., "seo,keyword,test")\n`);
-
-    for (let i = 0; i < htmlFiles.length; i++) {
-        const htmlFile = htmlFiles[i];
-        let keywords = '';
-        
-        while (!keywords.trim()) {
-            keywords = await question(rl, `[${i + 1}/${htmlFiles.length}] Keywords for "${htmlFile}": `);
-            keywords = keywords.trim();
-            
-            if (!keywords) {
-                console.log('Keywords cannot be empty. Please enter at least one keyword.');
-            }
-        }
-        
-        mapping[htmlFile] = keywords;
-        console.log(`✓ Saved: ${htmlFile} -> ${keywords}\n`);
-    }
-
-    rl.close();
-    return mapping;
-}
-
-function saveMappingToTxt(mapping: KeywordsMapping, outputPath: string): void {
-    let content = 'Keywords Mapping\n';
-    content += '='.repeat(60) + '\n\n';
-    content += `Generated: ${new Date().toISOString()}\n\n`;
-    
-    for (const [fileName, keywords] of Object.entries(mapping)) {
-        content += `${fileName}\n`;
-        content += `  Keywords: ${keywords}\n\n`;
-    }
-    
-    fs.writeFileSync(outputPath, content, 'utf-8');
-    console.log(`\n✓ Keywords mapping saved to: ${outputPath}`);
-}
-
 function saveResultsToTxt(batchResults: BatchTestResults, outputPath: string): void {
     let content = 'Batch Processing Results\n';
     content += '='.repeat(60) + '\n\n';
@@ -135,7 +74,6 @@ function saveResultsToTxt(batchResults: BatchTestResults, outputPath: string): v
     content += `Total Processing Time: ${batchResults.total_processing_time_ms.toFixed(2)}ms\n`;
     content += `Average Proof Generation Time: ${batchResults.average_proof_generation_time_ms.toFixed(2)}ms\n`;
     content += `Average Verification Time: ${batchResults.average_verification_time_ms.toFixed(2)}ms\n`;
-    content += `Average Processing Time: ${batchResults.average_processing_time_ms.toFixed(2)}ms\n`;
     content += `Total Proof Size: ${batchResults.total_proof_size_bytes} bytes\n\n`;
     
     content += 'Detailed Results\n';
@@ -143,20 +81,20 @@ function saveResultsToTxt(batchResults: BatchTestResults, outputPath: string): v
     
     batchResults.results.forEach((result, index) => {
         content += `[${index + 1}] ${result.html_file}\n`;
-        content += `  Status: ${result.success ? 'SUCCESS' : 'FAILED'}\n`;
-        content += `  Verified: ${result.verified ? 'YES' : 'NO'}\n`;
-        content += `  Word Count: ${result.word_count}\n`;
-        content += `  Merkle Root: ${result.merkle_root.substring(0, 32)}...\n`;
-        content += `  Proof Generation Time: ${result.total_proof_generation_time_ms.toFixed(2)}ms\n`;
-        content += `  Verification Time: ${result.total_verification_time_ms.toFixed(2)}ms\n`;
-        content += `  Proof Size: ${result.proof_size_bytes} bytes\n`;
-        content += `  Processing Time: ${result.processing_time_ms.toFixed(2)}ms\n`;
-        content += `  Keywords: ${result.keywords}\n`;
+        content += `Status: ${result.success ? 'SUCCESS' : 'FAILED'}\n`;
+        content += `Verified: ${result.verified ? 'YES' : 'NO'}\n`;
+        content += `Word Count: ${result.word_count}\n`;
+        content += `Merkle Root: ${result.merkle_root.substring(0, 32)}...\n`;
+        content += `Proof Generation Time: ${result.total_proof_generation_time_ms.toFixed(2)}ms\n`;
+        content += `Verification Time: ${result.total_verification_time_ms.toFixed(2)}ms\n`;
+        content += `Proof Size: ${result.proof_size_bytes} bytes\n`;
+        content += `Processing Time: ${result.processing_time_ms.toFixed(2)}ms\n`;
+        content += `Keywords: ${result.keywords}\n`;
         if (result.error) {
-            content += `  Error: ${result.error}\n`;
+            content += `Error: ${result.error}\n`;
         }
         if (result.output_directory) {
-            content += `  Output Directory: ${result.output_directory}\n`;
+            content += `Output Directory: ${result.output_directory}\n`;
         }
         content += '\n';
     });
@@ -182,25 +120,25 @@ function saveAnalizTxt(batchResults: BatchTestResults, outputPath: string): void
     content += '='.repeat(60) + '\n\n';
     batchResults.results.forEach((result, index) => {
         content += `[${index + 1}] ${result.html_file}\n`;
-        content += `  Proof Generation Time: ${result.total_proof_generation_time_ms.toFixed(2)}ms\n`;
-        content += `  Verification Time: ${result.total_verification_time_ms.toFixed(2)}ms\n`;
-        content += `  Keywords: ${result.keywords}\n`;
-        content += `  Toplam Süre: ${(result.total_proof_generation_time_ms + result.total_verification_time_ms).toFixed(2)}ms\n`;
-        content += `  Durum: ${result.success ? 'BAŞARILI' : 'BAŞARISIZ'}\n`;
-        content += `  Doğrulandı: ${result.verified ? 'EVET' : 'HAYIR'}\n`;
+        content += ` Proof Generation Time: ${result.total_proof_generation_time_ms.toFixed(2)}ms\n`;
+        content += `Verification Time: ${result.total_verification_time_ms.toFixed(2)}ms\n`;
+        content += `Keywords: ${result.keywords}\n`;
+        content += `Toplam Süre: ${(result.total_proof_generation_time_ms + result.total_verification_time_ms).toFixed(2)}ms\n`;
+        content += `Durum: ${result.success ? 'BAŞARILI' : 'BAŞARISIZ'}\n`;
+        content += `Doğrulandı: ${result.verified ? 'EVET' : 'HAYIR'}\n`;
         if (result.error) {
-            content += `  Hata: ${result.error}\n`;
+            content += `Hata: ${result.error}\n`;
         }
         content += '\n';
     });
     
     fs.writeFileSync(outputPath, content, 'utf-8');
-    console.log(`✓ Analiz raporu kaydedildi: ${outputPath}`);
+    console.log(`Analiz raporu kaydedildi: ${outputPath}`);
 }
 
 async function processHTMLFiles(
     htmlFolderPath: string,
-    keywordsOrMappingPath: string,
+    keywordsOrMappingPath: string = '',
     outputBaseDir: string = 'batch_results'
 ): Promise<BatchTestResults> {
     const batchStartTime = performance.now();
@@ -211,9 +149,9 @@ async function processHTMLFiles(
     }
 
     let keywordsMapping: KeywordsMapping | null = null;
-    let defaultKeywords: string = '';
+    let defaultKeywords: string = keywordsOrMappingPath || '';
     
-    if (keywordsOrMappingPath.endsWith('.json')) {
+    if (keywordsOrMappingPath && keywordsOrMappingPath.endsWith('.json')) {
         if (!fs.existsSync(keywordsOrMappingPath)) {
             throw new Error(`Keywords mapping file not found: ${keywordsOrMappingPath}`);
         }
@@ -226,8 +164,6 @@ async function processHTMLFiles(
         } catch (error) {
             throw new Error(`Failed to parse keywords mapping file: ${(error as Error).message}`);
         }
-    } else {
-        defaultKeywords = keywordsOrMappingPath;
     }
 
     const files = fs.readdirSync(htmlFolderPath);
@@ -256,7 +192,6 @@ async function processHTMLFiles(
     let verifiedCount = 0;
     let totalProofGenTime = 0;
     let totalVerificationTime = 0;
-    let totalProcessingTime = 0;
     let totalProofSize = 0;
 
     const outputDir = path.join(process.cwd(), outputBaseDir, `batch_${timestamp}`);
@@ -270,16 +205,13 @@ async function processHTMLFiles(
         
         let keywordsForThisFile: string;
         if (keywordsMapping) {
-            // Try exact filename match first
             if (keywordsMapping[htmlFile]) {
                 keywordsForThisFile = keywordsMapping[htmlFile];
             } else {
-                // Try without extension
                 const fileNameWithoutExt = path.basename(htmlFile, path.extname(htmlFile));
                 if (keywordsMapping[fileNameWithoutExt]) {
                     keywordsForThisFile = keywordsMapping[fileNameWithoutExt];
                 } else {
-                    // Try with .html extension if it was .htm
                     const altFileName = htmlFile.endsWith('.htm') ? htmlFile + 'l' : htmlFile;
                     if (keywordsMapping[altFileName]) {
                         keywordsForThisFile = keywordsMapping[altFileName];
@@ -288,8 +220,25 @@ async function processHTMLFiles(
                     }
                 }
             }
-        } else {
+        } else if (defaultKeywords) {
             keywordsForThisFile = defaultKeywords;
+        } else {
+            const rl = readline.createInterface({
+                input: process.stdin,
+                output: process.stdout
+            });
+            
+            keywordsForThisFile = await new Promise<string>((resolve) => {
+                rl.question(`Enter keywords for ${htmlFile} (space or comma separated): `, (answer: string) => {
+                    rl.close();
+                    resolve(answer.trim());
+                });
+            });
+
+            if (!keywordsForThisFile) {
+                console.log(`Skipping ${htmlFile} - no keywords provided`);
+                continue;
+            }
         }
         
         console.log(`\n[${i + 1}/${htmlFiles.length}] Processing: ${htmlFile}`);
@@ -297,7 +246,7 @@ async function processHTMLFiles(
         console.log('─'.repeat(60));
 
         try {
-            const summary = await proveAllWords(
+            const summary = await generateProofs(
                 htmlFilePath,
                 keywordsForThisFile,
                 false,
@@ -341,7 +290,6 @@ async function processHTMLFiles(
 
             totalProofGenTime += summary.total_proof_generation_time_ms;
             totalVerificationTime += summary.total_verification_time_ms;
-            totalProcessingTime += summary.processing_time_ms;
             totalProofSize += summary.total_proof_size_bytes;
 
             console.log(`✓ Completed: ${htmlFile}`);
@@ -378,7 +326,6 @@ async function processHTMLFiles(
 
     const averageProofGenTime = processedCount > 0 ? totalProofGenTime / processedCount : 0;
     const averageVerificationTime = processedCount > 0 ? totalVerificationTime / processedCount : 0;
-    const averageProcessingTime = processedCount > 0 ? totalProcessingTime / processedCount : 0;
     const allKeywords = results.map(r => r.keywords).filter(k => k).join(', ');
 
     const batchResults: BatchTestResults = {
@@ -393,7 +340,6 @@ async function processHTMLFiles(
         total_processing_time_ms: totalBatchTime,
         average_proof_generation_time_ms: averageProofGenTime,
         average_verification_time_ms: averageVerificationTime,
-        average_processing_time_ms: averageProcessingTime,
         total_proof_size_bytes: totalProofSize,
         results
     };
@@ -401,11 +347,9 @@ async function processHTMLFiles(
     const resultsPath = path.join(outputDir, 'batch_test_results.json');
     fs.writeFileSync(resultsPath, JSON.stringify(batchResults, null, 2));
 
-    // Also save results as .txt file
     const resultsTxtPath = path.join(outputDir, 'batch_test_results.txt');
     saveResultsToTxt(batchResults, resultsTxtPath);
 
-    // Save analiz.txt file
     const analizPath = path.join(process.cwd(), 'analiz.txt');
     saveAnalizTxt(batchResults, analizPath);
 
@@ -420,12 +364,11 @@ async function processHTMLFiles(
     console.log(`Total Processing Time: ${totalBatchTime.toFixed(2)}ms`);
     console.log(`Average Proof Generation Time: ${averageProofGenTime.toFixed(2)}ms`);
     console.log(`Average Verification Time: ${averageVerificationTime.toFixed(2)}ms`);
-    console.log(`Average Processing Time: ${averageProcessingTime.toFixed(2)}ms`);
     console.log(`Total Proof Size: ${totalProofSize} bytes`);
     console.log(`\nResults saved to:`);
-    console.log(`  JSON: ${resultsPath}`);
-    console.log(`  TXT:  ${resultsTxtPath}`);
-    console.log(`  ANALIZ: ${analizPath}`);
+    console.log(`JSON: ${resultsPath}`);
+    console.log(`TXT:  ${resultsTxtPath}`);
+    console.log(`ANALIZ: ${analizPath}`);
     console.log(`${'='.repeat(60)}\n`);
 
     return batchResults;
@@ -440,59 +383,28 @@ if (isMainModule) {
     const args = process.argv.slice(2);
 
     if (args.length < 1) {
-        console.log('Usage: tsx src/batchProcess.ts <html_folder> [output_dir]');
+        console.log('Usage:');
+        console.log('npx tsx src/helper/scripts/batchProcess.ts <html_folder> [keywords]');
         console.log('');
-        console.log('The program will:');
-        console.log('  1. Scan the HTML folder for .html/.htm files');
-        console.log('  2. Ask you to enter keywords for each file interactively');
-        console.log('  3. Process all files with their respective keywords');
-        console.log('  4. Save results in both JSON and TXT formats');
-        console.log('');
-        console.log('Example:');
-        console.log('  tsx src/batchProcess.ts html_files batch_results');
+        console.log('Options:');
+        console.log('<html_folder>  - Path to folder containing HTML files');
+        console.log('[keywords]     - Optional: Keywords for all files (space or comma separated)');
         process.exit(1);
     }
 
     const htmlFolder = args[0];
-    const outputDir = args[1] || 'batch_results';
+    const keywordsInput = args.length > 1 ? args.slice(1).join(' ') : '';
 
     (async () => {
         try {
-            // First, find all HTML files
             if (!fs.existsSync(htmlFolder)) {
                 throw new Error(`HTML folder not found: ${htmlFolder}`);
             }
-
-            const files = fs.readdirSync(htmlFolder);
-            const htmlFiles = naturalSort(files.filter(file => 
-                file.toLowerCase().endsWith('.html') || file.toLowerCase().endsWith('.htm')
-            ));
-
-            if (htmlFiles.length === 0) {
-                throw new Error(`No HTML files found in: ${htmlFolder}`);
+            const stats = fs.statSync(htmlFolder);
+            if (!stats.isDirectory()) {
+                throw new Error(`Path is not a directory: ${htmlFolder}`);
             }
-
-            // Collect keywords interactively
-            const keywordsMapping = await collectKeywordsInteractively(htmlFiles);
-
-            // Save mapping to .txt file
-            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-            const mappingOutputDir = path.join(process.cwd(), outputDir, `batch_${timestamp}`);
-            if (!fs.existsSync(mappingOutputDir)) {
-                fs.mkdirSync(mappingOutputDir, { recursive: true });
-            }
-            const mappingTxtPath = path.join(mappingOutputDir, 'keywords_mapping.txt');
-            saveMappingToTxt(keywordsMapping, mappingTxtPath);
-
-            // Create a temporary JSON mapping file for processHTMLFiles
-            const tempMappingJsonPath = path.join(mappingOutputDir, 'keywords_mapping_temp.json');
-            fs.writeFileSync(tempMappingJsonPath, JSON.stringify(keywordsMapping, null, 2));
-
-            // Process files with the collected keywords
-            await processHTMLFiles(htmlFolder, tempMappingJsonPath, outputDir);
-
-            // Clean up temporary JSON file (optional - you might want to keep it)
-            // fs.unlinkSync(tempMappingJsonPath);
+            await processHTMLFiles(htmlFolder, keywordsInput);
 
         } catch (error) {
             console.error('Batch processing error:', (error as Error).message);

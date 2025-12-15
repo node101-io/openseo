@@ -1,4 +1,5 @@
-[package]
+[workspace]
+members = ["circuits/v1", "circuits/v2", "circuits/v3"]
 name = "zkseo"
 type = "bin"
 authors = [""]

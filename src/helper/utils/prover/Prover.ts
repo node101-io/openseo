@@ -1,42 +1,15 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { sanitizeText } from './teleportationHash.js';
-import { ProverService } from './services/ProverService.js';
-import { ZKProofService } from './services/ZKProofService.js';
-import { WordScorePair } from './types/ProverTypes.js';
+import { sanitizeText } from '../common/textUtils.js';
+import { KeywordAnalysis} from './KeywordAnalysis.js';
+import { CircuitProof } from './CircuitProof.js';
+import { HashService } from './Hashing.js';
+import { KeywordResult, Summary } from '../common/ProverTypes.js';
+import { MAX_WORDS } from '../common/constants.js';
 import { performance } from 'perf_hooks';
 
-interface KeywordResult {
-    word: string;
-    score: number;
-    success: boolean;
-    verified: boolean;
-    proofGenerationTime?: number;
-    verificationTime?: number;
-    proofSize?: number;
-    error?: string;
-}
-
-interface Summary {
-    timestamp: string;
-    html_file: string;
-    merkle_root: string;
-    word_score_pairs: WordScorePair[];
-    word_count: number;
-    total_proof_generation_time_ms: number;
-    total_verification_time_ms: number;
-    total_proof_size_bytes: number;
-    successful_proofs: number;
-    failed_proofs: number;
-    verified_proofs: number;
-    processing_time_ms: number;
-    output_directory: string;
-    results: KeywordResult[];
-    summary_path?: string;
-}
-
-export async function proveAllWords(
+export async function generateProofs(
     htmlFilePathOrContent: string,
     targetKeywordInput: string = '',
     isDirectContent: boolean = false,
@@ -48,26 +21,22 @@ export async function proveAllWords(
         : fs.readFileSync(htmlFilePathOrContent, 'utf-8');
 
     const keywordInputs = targetKeywordInput.trim().split(/[\s,]+/).filter(k => k.length > 0);
-
     if (keywordInputs.length === 0) {
         throw new Error('At least one keyword is required for proof generation.');
     }
 
-    if (keywordInputs.length > 16) {
-        throw new Error(`Maximum 16 keywords allowed, got ${keywordInputs.length}`);
+    if (keywordInputs.length > MAX_WORDS) {
+        throw new Error(`Maximum ${MAX_WORDS} keywords allowed, got ${keywordInputs.length}`);
     }
 
     const normalizedKeywords = keywordInputs.map(k => sanitizeText(k)).filter(k => k.length > 0);
-    const proverService = new ProverService();
-    const zkProofService = new ZKProofService();
     console.log(`\n=== Generating Prover Output ===`);
-    const proverOutput = await proverService.generateProof(htmlContent, normalizedKeywords);
-    console.log(`Merkle Root: ${proverOutput.merkleRoot}`);
+    const proverOutput = await KeywordAnalysis.analyzeKeywords(htmlContent, normalizedKeywords);
+    console.log(`HTML Root: ${proverOutput.htmlRoot}`);
     console.log(`Word-Score Pairs: ${proverOutput.wordScorePairs.length}`);
     proverOutput.wordScorePairs.forEach(({ word, score }) => {
         console.log(`  - ${word}: ${score} points`);
     });
-    const occurrenceDataMap = proverService.getOccurrenceData(htmlContent, normalizedKeywords);
     let outputDir: string;
     if (outputDirPrefix) {
         outputDir = outputDirPrefix;
@@ -81,35 +50,43 @@ export async function proveAllWords(
     }
     const proverOutputPath = path.join(outputDir, 'prover_output.json');
     fs.writeFileSync(proverOutputPath, JSON.stringify({
-        merkleRoot: proverOutput.merkleRoot,
+        htmlRoot: proverOutput.htmlRoot,
         wordScorePairs: proverOutput.wordScorePairs,
         timestamp: new Date().toISOString()
     }, null, 2));
 
     console.log(`\n=== Generating ZK Proof ===`);
     const proofStartTime = performance.now();
-    
-    const proofResult = await zkProofService.generateProof(
-        proverOutput.merkleRoot,
-        proverOutput.wordScorePairs,
-        occurrenceDataMap
+    const proofResult = await CircuitProof.generateProof(
+        htmlContent,
+        normalizedKeywords,
+        proverOutput.htmlRoot
     );
-    
+
     const proofEndTime = performance.now();
     const proofGenerationTime = proofEndTime - proofStartTime;
 
     if (proofResult.success && proofResult.wordHashes) {
         console.log(`\n=== Hash List (Word + Word-Score Hashes) ===`);
         console.log(`Total hashes: ${proofResult.wordHashes.length}`);
-        proofResult.wordHashes.forEach((hash, index) => {
-            const wordScorePair = proverOutput.wordScorePairs[index];
-            if (wordScorePair) {
-                console.log(`  [${index + 1}] Word: "${wordScorePair.word}", Score: ${wordScorePair.score}`);
-                console.log(`      Hash: ${hash.substring(0, 32)}...${hash.substring(hash.length - 8)}`);
-            } else {
-                console.log(`  [${index + 1}] Hash: ${hash.substring(0, 32)}...${hash.substring(hash.length - 8)}`);
+        
+        const proverTomlPath = path.join(process.cwd(), 'circuits', 'v3', 'Prover.toml');
+        let isKeywordArray: number[] = [];
+        if (fs.existsSync(proverTomlPath)) {
+            const tomlContent = fs.readFileSync(proverTomlPath, 'utf-8');
+            const isKeywordMatch = tomlContent.match(/is_keyword = \[(.*?)\]/s);
+            if (isKeywordMatch) {
+                isKeywordArray = isKeywordMatch[1].split(',').map(s => parseInt(s.trim()));
             }
-        });
+        }
+        
+        const keywordHashMap = new Map<string, string>();
+        const keywordScoreMap = new Map<string, number>();
+        for (const pair of proverOutput.wordScorePairs) {
+            const keywordHash = HashService.hashWordForCircuit(pair.word);
+            keywordHashMap.set(keywordHash, pair.word);
+            keywordScoreMap.set(keywordHash, pair.score);
+        }
     } else {
         console.log(`\n Warning: Hash list not found in proof result`);
     }
@@ -123,22 +100,21 @@ export async function proveAllWords(
             if (!proofResult.wordHashes || proofResult.wordHashes.length === 0) {
                 throw new Error('Word hashes not found in proof result');
             }
-            
+
             console.log(`\n=== Verifying Proof ===`);
             console.log(`Using hash list from proof (${proofResult.wordHashes.length} hashes)`);
-            
-            const verifyResult = await zkProofService.verifyProof(
-                proofResult.proof, 
+
+            const verifyResult = await CircuitProof.verifyProof(
+                proofResult.proof,
                 proofResult.publicInputs,
-                proofResult.wordHashes 
+                proverOutput.htmlRoot
             );
-            
+
             isVerified = verifyResult.isValid;
             verificationTime = verifyResult.totalTime;
             verificationDetails = {
                 totalTime: verifyResult.totalTime,
                 circuitLoadTime: verifyResult.circuitLoadTime,
-                backendInitTime: verifyResult.backendInitTime,
                 verifyTime: verifyResult.verifyTime,
                 error: verifyResult.error
             };
@@ -151,9 +127,6 @@ export async function proveAllWords(
             if (verificationDetails.circuitLoadTime) {
                 console.log(`  - Circuit Load Time: ${verificationDetails.circuitLoadTime.toFixed(2)}ms`);
             }
-            if (verificationDetails.backendInitTime) {
-                console.log(`  - Backend Init Time: ${verificationDetails.backendInitTime.toFixed(2)}ms`);
-            }
             if (verificationDetails.verifyTime) {
                 console.log(`  - Verify Operation Time: ${verificationDetails.verifyTime.toFixed(2)}ms`);
             }
@@ -164,9 +137,9 @@ export async function proveAllWords(
     }
     const proofDataPath = path.join(outputDir, 'proof.json');
     fs.writeFileSync(proofDataPath, JSON.stringify({
-        merkleRoot: proverOutput.merkleRoot,
+        htmlRoot: proverOutput.htmlRoot,
         wordScorePairs: proverOutput.wordScorePairs,
-        wordHashes: proofResult.wordHashes || proverOutput.wordHashes, 
+        wordHashes: proofResult.wordHashes || proverOutput.wordHashes,
         proof: proofResult.proof,
         publicInputs: proofResult.publicInputs,
         proofGenerated: proofResult.success,
@@ -198,7 +171,7 @@ export async function proveAllWords(
     const summary: Summary = {
         timestamp: new Date().toISOString(),
         html_file: isDirectContent ? 'Uploaded HTML Content' : htmlFilePathOrContent,
-        merkle_root: proverOutput.merkleRoot,
+        merkle_root: proverOutput.htmlRoot,
         word_score_pairs: proverOutput.wordScorePairs,
         word_count: proverOutput.wordScorePairs.length,
         total_proof_generation_time_ms: proofGenerationTime,
@@ -215,43 +188,58 @@ export async function proveAllWords(
     const summaryPath = path.join(outputDir, 'summary.json');
     fs.writeFileSync(summaryPath, JSON.stringify(summary, null, 2));
     summary.summary_path = summaryPath;
-    console.log(`\n=== Summary ===`);
-    console.log(`Merkle Root: ${proverOutput.merkleRoot.substring(0, 32)}...`);
+    console.log(`\n*** Summary ***`);
+    console.log(`HTML Root: ${proverOutput.htmlRoot.substring(0, 32)}...`);
     console.log(`Word Count: ${proverOutput.wordScorePairs.length}`);
     console.log(`Proof Generation Time: ${proofGenerationTime.toFixed(2)}ms`);
     console.log(`Verification Time: ${verificationTime.toFixed(2)}ms`);
     if (verificationDetails) {
-        console.log(`  - Circuit Load Time: ${verificationDetails.circuitLoadTime?.toFixed(2) || '0.00'}ms`);
-        console.log(`  - Backend Init Time: ${verificationDetails.backendInitTime?.toFixed(2) || '0.00'}ms`);
-        console.log(`  - Verify Operation Time: ${verificationDetails.verifyTime?.toFixed(2) || '0.00'}ms`);
+        console.log(`Circuit Load Time: ${verificationDetails.circuitLoadTime?.toFixed(2) || '0.00'}ms`);
+        console.log(`Verify Operation Time: ${verificationDetails.verifyTime?.toFixed(2) || '0.00'}ms`);
     }
     console.log(`Proof Size: ${proofResult.proofSize || 0} bytes`);
     console.log(`Proof Verified: ${isVerified ? 'YES' : 'NO'}`);
     console.log(`Total Processing Time: ${(performance.now() - startedAt).toFixed(2)}ms`);
     console.log(`Output Directory: ${outputDir}`);
-
     return summary;
 }
 
-const __filename_proveAll = fileURLToPath(import.meta.url);
+export const proveAllWords = generateProofs;
+
+const __filename_proofOrch = fileURLToPath(import.meta.url);
 const isMainModule = process.argv[1] && (
-    path.resolve(process.argv[1]) === path.resolve(__filename_proveAll) ||
-    process.argv[1].endsWith('proveAll.ts'));
+    path.resolve(process.argv[1]) === path.resolve(__filename_proofOrch) ||
+    process.argv[1].endsWith('Prover.ts') ||
+    process.argv[1].endsWith('Prover.js'));
 
 if (isMainModule) {
     const args = process.argv.slice(2);
 
     if (args.length < 2) {
-        console.log('Usage: tsx src/proveAll.ts <html> <keywords>');
+        console.log('Usage: npx tsx src/helper/utils/prover/Prover.ts <html_file> <keywords>');
+        console.log('');
+        console.log('For batch processing, use:');
+        console.log('npx tsx src/helper/scripts/batchProcess.ts <html_folder> [keywords]');
         process.exit(1);
     }
 
     const htmlFile = args[0];
     const keywordInput = args.slice(1).join(' ');
+    if (!fs.existsSync(htmlFile)) {
+        throw new Error(`File not found: ${htmlFile}`);
+    }
+
+    const stats = fs.statSync(htmlFile);
+    if (stats.isDirectory()) {
+        console.error('Error: This command is for single file processing only.');
+        console.error('For batch processing, use:');
+        console.error('  npx tsx src/helper/scripts/batchProcess.ts <html_folder> [keywords]');
+        process.exit(1);
+    }
 
     (async () => {
         try {
-            await proveAllWords(htmlFile, keywordInput, false);
+            await generateProofs(htmlFile, keywordInput, false);
         } catch (error) {
             console.error('Error:', (error as Error).message);
             process.exit(1);

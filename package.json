@@ -8,11 +8,11 @@
     "prove": "nargo prove",
     "verify": "nargo verify",
     "prove-all": "tsx src/proveAll.ts",
-    "batch": "tsx src/batchProcess.ts",
+    "batch": "tsx src/helper/scripts/batchProcess.ts",
     "html-generate": "tsx src/htmlGenerator.ts",
     "start": "tsx src/server.ts",
     "build": "tsc",
-    "dev": "tsx watch src/server.ts"
+    "dev": "tsx src/helper/scripts/server.ts"
   },
   "dependencies": {
     "@aztec/bb.js": "^0.87.0",
