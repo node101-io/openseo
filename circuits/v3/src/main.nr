@@ -21,7 +21,6 @@ fn main(
         
         if is_in_range {
             if is_kw {
-                // Check if word_hashes[i] matches any keyword_hash
                 let mut matches_keyword = false;
                 for j in 0..MAX_KEYWORDS {
                     let is_valid_keyword = j < keyword_count;

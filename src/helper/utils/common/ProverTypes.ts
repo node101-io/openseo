@@ -15,27 +15,6 @@ export interface TextNode {
     element: any;
 }
 
-export interface Chunk {
-    type: 'keyword' | 'chunk';
-    hash: string;
-    content: string;
-    position: number;
-    tag?: string;
-    weight?: number;
-    keyword?: string;
-}
-
-export interface TeleportationTreeResult {
-    chunks: Chunk[];
-    leaves: string[];
-    root: string;
-    occurrences: number;
-    weightedScore: number;
-    totalNodes: number;
-    leafCount: number;
-    internalNodes: number;
-}
-
 export interface ProverOutput {
     htmlRoot: string;
     wordScorePairs: WordScorePair[];

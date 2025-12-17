@@ -40,7 +40,6 @@ async function buildHtmlRoot(
         }
     }
     
-    // Sequential hashing (same as circuit) - for proof generation
     const wordsToProcess = Math.min(wordDataList.length, MAX_CHUNKS);
     let i = 0;
     

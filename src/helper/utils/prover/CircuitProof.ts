@@ -1,17 +1,15 @@
 import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
-import { ProofResult, VerificationResult } from '../common/ProverTypes.js';
+import { ProofResult } from '../common/ProverTypes.js';
 import { HashService } from './Hashing.js';
 import { HTMLAnalyzer } from './HTMLAnalyzer.js';
 import { hashToNoirField } from '../common/hashUtils.js';
 import { sanitizeText, getTagWeight } from '../common/textUtils.js';
 import { MAX_CHUNKS } from '../common/constants.js';
-import { performance } from 'perf_hooks';
 import { barretenbergApi } from '../common/barretenbergApi.js';
 import { Fr } from '@aztec/bb.js';
-import { formatHashResult } from '../common/hashUtils.js';
-const api = await barretenbergApi.getBarretenbergApi();
+import { ProofVerifier } from '../verifier/ProofVerifier.js';
 
 //generating and verifying proof
 export namespace CircuitProof {
@@ -169,7 +167,6 @@ export namespace CircuitProof {
                     stdio: 'pipe', 
                     encoding: 'utf-8' 
                 });
-                console.log('  Circuit execution successful - inputs are valid');
             } catch (executeError: any) {
                 const errorMsg = executeError.message || executeError.toString();
                 if (errorMsg.includes('Failed constraint') || errorMsg.includes('Cannot satisfy constraint')) {
@@ -284,23 +281,12 @@ export namespace CircuitProof {
                     i = chunkIndex; 
                 }
             }
-            
-            // Generate ZK-SNARK proof using Barretenberg API
-            console.log('  Generating ZK-SNARK proof with Barretenberg API...');
-            
             const circuitPath = path.join(process.cwd(), 'target', 'v3.json');
             if (!fs.existsSync(circuitPath)) {
                 throw new Error(`Circuit not found at ${circuitPath}. Make sure nargo compile succeeded.`);
             }
             
-            // Load ACIR circuit
-            const acirBuffer = fs.readFileSync(circuitPath);
-            const acirJson = JSON.parse(acirBuffer.toString());
-            
-            // Initialize Barretenberg API
-            const api = await barretenbergApi.getBarretenbergApi();
-            
-            // Prepare inputs as Field elements
+            const acirBuffer = fs.readFileSync(circuitPath);            
             const MAX_KEYWORDS = 16;
             const keywordHashesFields: Fr[] = [];
             for (let i = 0; i < MAX_KEYWORDS; i++) {
@@ -335,14 +321,124 @@ export namespace CircuitProof {
                 html_root: hashToNoirField(htmlRoot),
                 occurrences: occurrences
             };
+
+            let proofGenerated = false;
+            let proofFilePath: string | null = null;
+            let witnessFilePath: string | null = null;
+            let verificationKeyPath: string | null = null;
             
-            const proofData = {
+            try {
+                const targetDir = path.join(process.cwd(), 'target');
+                if (!fs.existsSync(targetDir)) {
+                    fs.mkdirSync(targetDir, { recursive: true });
+                }
+                const circuitName = 'v3'; 
+                witnessFilePath = path.join(targetDir, `${circuitName}.gz`);
+                const proofDir = path.join(targetDir, 'proof');
+                proofFilePath = path.join(proofDir, 'proof');
+                verificationKeyPath = path.join(targetDir, 'vk');
+                try {
+                    execSync('nargo execute', {
+                        cwd: circuitDir,
+                        stdio: 'pipe',
+                        encoding: 'utf-8'
+                    });
+                    
+                    const possibleWitnessPaths = [
+                        path.join(targetDir, `${circuitName}.gz`), 
+                        path.join(targetDir, 'witness.gz'),
+                        path.join(targetDir, 'witness'),
+                        path.join(circuitDir, 'target', `${circuitName}.gz`),
+                        path.join(circuitDir, 'target', 'witness.gz'),
+                        path.join(circuitDir, 'target', 'witness')
+                    ];
+                    
+                    let foundWitness = false;
+                    for (const witnessPath of possibleWitnessPaths) {
+                        if (fs.existsSync(witnessPath)) {
+                            witnessFilePath = witnessPath;
+                            foundWitness = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!foundWitness) {
+                        throw new Error(`Witness file not found. Checked: ${possibleWitnessPaths.join(', ')}`);
+                    }
+                } catch (nargoError: any) {
+                    console.log(`  nargo execute failed: ${nargoError.message}`);
+                    throw new Error(`Failed to create witness file: ${nargoError.message}`);
+                }
+                
+                if (!witnessFilePath || !fs.existsSync(witnessFilePath)) {
+                    throw new Error(`Witness file not found at: ${witnessFilePath}`);
+                }
+                
+                if (fs.existsSync(proofDir)) {
+                    fs.rmSync(proofDir, { recursive: true, force: true });
+                }
+                const bbProveCommand = `bb prove -b "${circuitPath}" -w "${witnessFilePath}" -o "${proofDir}" --write_vk`;
+                
+                const bbOutput = execSync(bbProveCommand, {
+                    cwd: process.cwd(),
+                    stdio: 'pipe',
+                    encoding: 'utf-8'
+                });
+                
+                if (bbOutput) {
+                    console.log(`bb output: ${bbOutput.substring(0, 200)}`);
+                }
+                
+                if (fs.existsSync(proofFilePath)) {
+                    proofGenerated = true;
+                    const proofStats = fs.statSync(proofFilePath);
+                    const proofData = fs.readFileSync(proofFilePath);
+                    const vkPathInProofDir = path.join(proofDir, 'vk');
+                    if (fs.existsSync(vkPathInProofDir)) {
+                        verificationKeyPath = vkPathInProofDir;
+                    } else {
+                        const vkPathInTarget = path.join(targetDir, 'vk');
+                        if (fs.existsSync(vkPathInTarget)) {
+                            verificationKeyPath = vkPathInTarget;
+                        } else {
+                            console.log(`  Warning: Verification key not found. Expected at: ${vkPathInProofDir}`);
+                        }
+                    }
+                } else {
+                    throw new Error(`Proof file was not created at: ${proofFilePath}`);
+                }
+            } catch (bbError: any) {
+                console.log(`  bb prove failed: ${bbError.message}`);
+                if (bbError.stdout) {
+                    console.log(`  bb stdout: ${bbError.stdout.substring(0, 500)}`);
+                }
+                if (bbError.stderr) {
+                    console.log(`  bb stderr: ${bbError.stderr.substring(0, 500)}`);
+                }
+                console.log('  Falling back to circuit execution validation');
+                proofGenerated = false;
+            }
+            
+            const proofData: any = {
                 circuit_executed: true,
                 circuit_path: circuitPath,
                 execution_timestamp: new Date().toISOString(),
-                proof_type: 'zk_snark_circuit_execution_validated',
+                proof_type: proofGenerated ? 'zk_snark_proof_generated' : 'zk_snark_circuit_execution_validated',
                 public_inputs: publicInputs,
-                input_hash: await HashService.hashWordForCircuit(
+                acir_hash: HashService.hashWordForCircuit(acirBuffer.toString())
+            };
+            
+            if (proofGenerated && proofFilePath && fs.existsSync(proofFilePath)) {
+                const proofFileData = fs.readFileSync(proofFilePath);
+                proofData.proof_file_path = proofFilePath;
+                proofData.proof = proofFileData.toString('base64');
+                proofData.proof_size_bytes = proofFileData.length;
+                
+                if (verificationKeyPath && fs.existsSync(verificationKeyPath)) {
+                    proofData.verification_key_path = verificationKeyPath;
+                }
+            } else {
+                proofData.input_hash = HashService.hashWordForCircuit(
                     JSON.stringify({
                         keyword_hashes: keywordHashesFields.map(f => f.toString()),
                         word_hashes: wordHashesFields.map(f => f.toString()),
@@ -351,9 +447,8 @@ export namespace CircuitProof {
                         html_root: htmlRootField.toString(),
                         occurrences: occurrences
                     })
-                ),
-                acir_hash: await HashService.hashWordForCircuit(acirBuffer.toString())
-            };
+                );
+            }
             
             const proofBase64 = Buffer.from(JSON.stringify(proofData)).toString('base64');
             const proofSize = proofBase64.length;
@@ -378,215 +473,6 @@ export namespace CircuitProof {
         }
     }
 
-    export async function verifyProof(
-        proof: any,
-        publicInputs: any,
-        htmlRoot: string
-    ): Promise<VerificationResult> {
-        const totalStartTime = performance.now();
-        let circuitLoadTime = 0;
-        let verifyTime = 0;
 
-        try {
-            console.log('Loading Prover.toml for verification...');
-            const circuitDir = path.join(process.cwd(), 'circuits', 'v3');
-            const proverTomlPath = path.join(circuitDir, 'Prover.toml');
-            if (!fs.existsSync(proverTomlPath)) {
-                throw new Error(`Prover.toml not found at ${proverTomlPath}. Proof generation must be run first.`);
-            }
-            
-            const tomlContent = fs.readFileSync(proverTomlPath, 'utf-8');
-            
-            const parseArray = (content: string, key: string): string[] => {
-                const lines = content.split('\n');
-                let arrayLine = '';
-                for (const line of lines) {
-                    if (line.trim().startsWith(`${key} = `)) {
-                        arrayLine = line.trim();
-                        break;
-                    }
-                }
-                if (!arrayLine) return [];
-                
-                const match = arrayLine.match(/\[(.*)\]/);
-                if (!match) return [];
-                
-                const arrContent = match[1];
-                const arr = arrContent
-                    .split(',')
-                    .map(s => s.trim().replace(/"/g, ''))
-                    .filter(h => h.length > 0);
-                
-                return arr;
-            };
-            
-            const parseIntArray = (content: string, key: string): number[] => {
-                const regex = new RegExp(`${key} = \\[([\\s\\S]*?)\\]`, 'm');
-                const match = content.match(regex);
-                if (!match) return [];
-                return match[1]
-                    .split(',')
-                    .map(s => {
-                        const cleaned = s.trim().replace(/\n/g, '').replace(/\r/g, '');
-                        return cleaned.length > 0 ? parseInt(cleaned) : 0;
-                    })
-                    .filter(v => !isNaN(v));
-            };
-
-            const wordHashes = parseArray(tomlContent, 'word_hashes');
-            const isKeyword = parseIntArray(tomlContent, 'is_keyword');
-            const scores = parseIntArray(tomlContent, 'scores');
-            const keywordHashes = parseArray(tomlContent, 'keyword_hashes');
-            const chunkCountMatch = tomlContent.match(/chunk_count = (\d+)/);
-            const chunkCount = chunkCountMatch ? parseInt(chunkCountMatch[1]) : wordHashes.filter(h => h !== '0x0').length;
-            const occurrencesMatch = tomlContent.match(/occurrences = (\d+)/);
-            const occurrences = occurrencesMatch ? parseInt(occurrencesMatch[1]) : 0;
-            const keywordCountMatch = tomlContent.match(/keyword_count = (\d+)/);
-            const keywordCount = keywordCountMatch ? parseInt(keywordCountMatch[1]) : keywordHashes.filter(h => h !== '0x0').length;
-            console.log('Verifying ZK-SNARK proof...');
-            const verifyStart = performance.now();
-            
-            let proofData: any;
-            try {
-                if (typeof proof === 'string') {
-                    try {
-                        proofData = JSON.parse(proof);
-                    } catch {
-                        try {
-                            const decoded = Buffer.from(proof, 'base64').toString('utf-8');
-                            proofData = JSON.parse(decoded);
-                        } catch {
-                            throw new Error('Proof is neither valid JSON nor base64 encoded JSON');
-                        }
-                    }
-                } else {
-                    proofData = proof;
-                }
-            } catch (e) {
-                throw new Error(`Failed to parse proof data: ${(e as Error).message}`);
-            }
-            
-            if (proofData.proof_type === 'zk_snark_circuit_execution_validated') {
-                console.log('  Verifying ZK-SNARK proof');
-                const circuitLoadStart = performance.now();
-                
-                const circuitDir = path.join(process.cwd(), 'circuits', 'v3');
-                try {
-                    execSync('nargo execute', { 
-                        cwd: circuitDir,
-                        stdio: 'pipe', 
-                        encoding: 'utf-8' 
-                    });
-                    console.log('  Circuit execution verification successful');
-                } catch (executeError: any) {
-                    const errorMsg = executeError.message || executeError.toString();
-                    return {
-                        isValid: false,
-                        totalTime: performance.now() - totalStartTime,
-                        circuitLoadTime: performance.now() - circuitLoadStart,
-                        verifyTime: performance.now() - verifyStart,
-                        error: `Circuit execution verification failed: ${errorMsg}`
-                    };
-                }
-                circuitLoadTime = performance.now() - circuitLoadStart;
-            } else {
-                console.log('  Warning: Unknown proof type, performing basic validation');
-            }
-            console.log(`Verifying keyword hashes and occurrences...`);
-            
-            let found = 0;
-            for (let i = 0; i < chunkCount; i++) {
-                if (isKeyword[i] === 1) {
-                    const wordHash = wordHashes[i];
-                    let matchesKeyword = false;
-                    for (let j = 0; j < keywordCount; j++) {
-                        if (wordHash.toLowerCase() === keywordHashes[j].toLowerCase()) {
-                            matchesKeyword = true;
-                            break;
-                        }
-                    }
-                    if (!matchesKeyword) {
-                        return {
-                            isValid: false,
-                            totalTime: performance.now() - totalStartTime,
-                            circuitLoadTime: 0,
-                            verifyTime: performance.now() - verifyStart,
-                            error: `Word hash at index ${i} does not match any keyword hash`
-                        };
-                    }
-                    found++;
-                }
-            }
-            
-            // Verify occurrences match
-            if (found !== occurrences) {
-                return {
-                    isValid: false,
-                    totalTime: performance.now() - totalStartTime,
-                    circuitLoadTime: 0,
-                    verifyTime: performance.now() - verifyStart,
-                    error: `Found ${found} keywords but expected ${occurrences}`
-                };
-            }
-            
-            console.log('Verifying html_root using sequential hash');
-            let currentRoot = new Fr(BigInt(0));
-            for (let i = 0; i < chunkCount; i++) {
-                const wordHash = wordHashes[i];
-                const isKw = isKeyword[i] === 1;
-                if (isKw) {
-                    // Keyword: H(current_root, H(word_hash, score))
-                    const wordHashValue = barretenbergApi.hexToFieldValue(wordHash);
-                    const wordField = new Fr(wordHashValue);
-                    const scoreField = new Fr(BigInt(scores[i]));
-                    const wordScoreHash = api.pedersenHash([wordField, scoreField], 0);
-                    currentRoot = api.pedersenHash([currentRoot, wordScoreHash], 0);
-                } else {
-                    // Chunk: H(current_root, chunk_hash)
-                    const chunkHashValue = barretenbergApi.hexToFieldValue(wordHash);
-                    const chunkField = new Fr(chunkHashValue);
-                    currentRoot = api.pedersenHash([currentRoot, chunkField], 0);
-                }
-            }
-            
-            const calculatedHtmlRoot = formatHashResult(currentRoot);
-            const formattedCalculatedRoot = hashToNoirField(calculatedHtmlRoot);
-            const formattedExpectedRoot = hashToNoirField(htmlRoot);
-            
-            if (formattedCalculatedRoot.toLowerCase() !== formattedExpectedRoot.toLowerCase()) {
-                return {
-                    isValid: false,
-                    totalTime: performance.now() - totalStartTime,
-                    circuitLoadTime: 0,
-                    verifyTime: performance.now() - verifyStart,
-                    error: `Calculated html_root does not match expected. Expected: ${formattedExpectedRoot}, Got: ${formattedCalculatedRoot}`
-                };
-            }
-            
-            const verifyEnd = performance.now();
-            verifyTime = verifyEnd - verifyStart;
-            
-            console.log('Sequential hash root verified:', formattedCalculatedRoot.substring(0, 32) + '...');
-            const totalEndTime = performance.now();
-            const totalTime = totalEndTime - totalStartTime;
-
-            return {
-                isValid: true,
-                totalTime,
-                circuitLoadTime,
-                verifyTime
-            };
-        } catch (error) {
-            const totalEndTime = performance.now();
-            const totalTime = totalEndTime - totalStartTime;
-            console.error('Verification error:', (error as Error).message);
-            return {
-                isValid: false,
-                totalTime,
-                circuitLoadTime,
-                verifyTime,
-                error: (error as Error).message || (error as Error).toString()
-            };
-        }
-    }
+    export const verifyProof = ProofVerifier.verifyProof;
 }
