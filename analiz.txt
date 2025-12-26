@@ -1,0 +1,41 @@
+BATCH PROCESSING RESULTS
+Timestamp: 2025-12-26T10:18:01.180Z
+HTML Folder: public/htmls
+Keywords: 
+
+SUMMARY
+────────────────────────────────────────────────────────────
+Total Files: 2
+Processed: 2
+Successful: 2
+Failed: 0
+Verified: 2
+
+Total Processing Time: 11639.74ms
+Average Proof Generation: 644.19ms
+Average Verification: 11.44ms
+Total Proof Size: 29184 bytes
+
+DETAILED RESULTS
+────────────────────────────────────────────────────────────
+
+[1] 1.html
+Status: SUCCESS | Verified: YES
+Keywords: tell your
+Word Count: 2
+Proof Generation: 716.21ms
+Merkle Root: 0x0f5f837cd0a55f4177ccd60842d10f10e02f4c...
+Verification: 11.56ms
+Proof Size: 14592 bytes
+Total Time: 727.77ms
+Output: /Users/fatmanurozcetin/Desktop/openseo/batch_results/batch_2025-12-26T10-17-49-540Z/html_1_1
+[2] 2.html
+Status: SUCCESS | Verified: YES
+Keywords: courses designed
+Word Count: 2
+Proof Generation: 572.17ms
+Merkle Root: 0x2bcd9dd895735e1403cb312e406a2d88490256...
+Verification: 11.32ms
+Proof Size: 14592 bytes
+Total Time: 583.50ms
+Output: /Users/fatmanurozcetin/Desktop/openseo/batch_results/batch_2025-12-26T10-17-49-540Z/html_2_2

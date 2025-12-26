@@ -320,8 +320,6 @@
                 if (!response.ok || !payload.success) {
                     throw new Error(payload.error || 'An unexpected error occurred.');
                 }
-                console.log("response", payload);
-
                 renderSummary(payload);
             } catch (error) {
                 console.error('Upload error:', error);

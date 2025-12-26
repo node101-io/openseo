@@ -3,39 +3,10 @@ export interface WordScorePair {
     score: number;
 }
 
-export interface WordOccurrenceData {
-    word: string;
-    occurrences: number;
-    weights: number[];
-}
-
-export interface TextNode {
-    text: string;
-    tag: string;
-    element: any;
-}
-
 export interface ProverOutput {
     htmlRoot: string;
     wordScorePairs: WordScorePair[];
     wordHashes: string[];
-}
-
-export interface VerifierInput {
-    keywordHash: string;
-    htmlRoot: string;
-    wordHashes: string[];
-    scores: number[];
-    isKeyword: number[];
-    chunkCount: number;
-    expectedOccurrences: number;
-}
-
-export interface ZKProofInput {
-    htmlRoot: string;
-    wordScores: WordScorePair[];
-    occurrences: number[];
-    weights: number[][];
 }
 
 export interface ProofResult {
@@ -50,7 +21,6 @@ export interface ProofResult {
 export interface VerificationResult {
     isValid: boolean;
     totalTime: number;
-    circuitLoadTime: number;
     verifyTime: number;
     error?: string;
 }
@@ -65,6 +35,7 @@ export interface KeywordResult {
     proofSize: number;
     error?: string;
 }
+
 
 export interface Summary {
     timestamp: string;

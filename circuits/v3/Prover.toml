@@ -1,18 +1,18 @@
 # ZK-SEO Circuit Proof Input
-# Keywords: welcome, all
-# HTML Root: 0x1f0a790a4a3152310627d627f16af9d598b87d512d06d3c9e6b054107fe8ca05
-# Item Count: 1
-# Occurrences: 0
+# Keywords: courses, designed
+# HTML Root: 0x2bcd9dd895735e1403cb312e406a2d8849025611cee715698507c9e2b28a3c57
+# Word Count: 3
+# Occurrences: 1
 
-keyword_hashes = ["0x280d44ab1e9f79b5cce2dd4f58f5fe91f0fbacdac9f7447dffc318ceb79f2d02", "0x2e91a0908384f3729455d97e32129f56409dd63d9fab0a1e3ff3be01a19ab628", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0"]
+keyword_hashes = ["0x0241716c5e88a98a36a0e662c76cc5b09100693357246cf9493d11a2bdba549c", "0x0a8e6419c53b3cffd19a05532eed7cb894ff24feb168ffc594c68cacaf423f46", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0"]
 keyword_count = 2
-html_root = "0x1f0a790a4a3152310627d627f16af9d598b87d512d06d3c9e6b054107fe8ca05"
+html_root = "0x2bcd9dd895735e1403cb312e406a2d8849025611cee715698507c9e2b28a3c57"
 
-word_hashes = ["0x1f869093ae3c814211db42b7f0386a5ba2ca63b90bfa1bd2bb164848ac4bf0dc", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0"]
+word_hashes = ["0x227a0e1654f3cb642e0191f3e3ac9210c51754ab22df3a31296879c7f66f0749", "0x0241716c5e88a98a36a0e662c76cc5b09100693357246cf9493d11a2bdba549c", "0x013fc7bb97df021e73692591e1a7b36859751b875d81daaf6d5cae798aa66506", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0"]
 
-scores = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+keyword_scores = [0, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
-is_keyword = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+is_keyword = [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
-chunk_count = 1
-occurrences = 0
+word_count = 3
+occurrences = 1
