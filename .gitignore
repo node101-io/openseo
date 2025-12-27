@@ -1,6 +1,10 @@
 node_modules/
-
+out/
 target/
+batch_results/
 *.json.gz
 *.witness
 .DS_Store
+analiz.txt
+.vscode/
+htmls/

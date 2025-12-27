@@ -16,7 +16,7 @@ fn main(
     let mut found = 0;
     
     for i in 0..MAX_WORDS {
-        let is_in_range = i < word_count; //if we use MAX_WORDS loop work 32 times but we only have 10 words so it will only loop 10 times
+        let is_in_range = i < word_count; 
         let is_kw = is_keyword[i] == 1u32;
         
         if is_in_range {

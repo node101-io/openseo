@@ -43,9 +43,8 @@ export namespace CircuitProof {
 
         let i = 0;
         const words = parsed.words;
-        const wordsToProcess = Math.min(words.length, MAX_WORDS);
 
-        while (i < wordsToProcess && wordHashes.length < MAX_WORDS) {
+        while (i < words.length && wordHashes.length < MAX_WORDS) {
             const word = words[i];
             const isKw = keywordSet.has(word.word);
 
@@ -60,7 +59,7 @@ export namespace CircuitProof {
                 const chunkWords: string[] = [];
                 let chunkIndex = i;
 
-                while (chunkIndex < wordsToProcess &&
+                while (chunkIndex < words.length &&
                        !keywordSet.has(words[chunkIndex].word) &&
                        wordHashes.length < MAX_WORDS) {
                     chunkWords.push(words[chunkIndex].word);
