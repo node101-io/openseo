@@ -26,19 +26,28 @@ fn main(
     assert(found == keyword_count);
 }
 
-fn calc_root(h: [Field; MAX_WORDS], n: u32) -> Field {
-    let mut r: Field = 0;
-    for i in 0..MAX_WORDS { if i < n { r = std::hash::pedersen_hash([r, h[i]]); } }
-    r
-}
-
 #[test]
-fn test_multiple_keywords() { // 3 keywords at positions 1, 3, 6
+fn test_multiple_keywords() {
+    // 7 words: 3 keywords, 4 chunks
     let mut w = [0; MAX_WORDS];
     let mut is_kw = [0; MAX_WORDS];
-    for i in 0..8 { w[i] = i as Field + 100; }
-    w[1] = 0x1111; is_kw[1] = 1;
-    w[3] = 0x2222; is_kw[3] = 1;
-    w[6] = 0x3333; is_kw[6] = 1;
-    main(3, is_kw, w, 8, calc_root(w, 8));
+    
+    w[0] = 0xc1;   is_kw[0] = 0;  // chunk
+    w[1] = 0x1111; is_kw[1] = 1;  // keyword
+    w[2] = 0xc2;   is_kw[2] = 0;  // chunk
+    w[3] = 0x2222; is_kw[3] = 1;  // keyword
+    w[4] = 0xc3;   is_kw[4] = 0;  // chunk
+    w[5] = 0x3333; is_kw[5] = 1;  // keyword
+    w[6] = 0xc4;   is_kw[6] = 0;  // chunk
+    
+    // H(H(H(H(H(H(H(0, c1), kw1), c2), kw2), c3), kw3), c4)
+    let r0 = std::hash::pedersen_hash([0, w[0]]);
+    let r1 = std::hash::pedersen_hash([r0, w[1]]);
+    let r2 = std::hash::pedersen_hash([r1, w[2]]);
+    let r3 = std::hash::pedersen_hash([r2, w[3]]);
+    let r4 = std::hash::pedersen_hash([r3, w[4]]);
+    let r5 = std::hash::pedersen_hash([r4, w[5]]);
+    let root = std::hash::pedersen_hash([r5, w[6]]);
+    
+    main(3, is_kw, w, 7, root);
 }
