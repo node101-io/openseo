@@ -1,14 +1,11 @@
 import { hashToNoirField } from './hashUtils.js';
 
 export interface CircuitInputs {
-    keywordHashes: string[];
     keywordCount: number;
-    htmlRoot: string;
-    wordHashes: string[];
-    keywordScores: number[];
     isKeyword: number[];
+    wordHashes: string[];
     wordCount: number;
-    occurrences: number;
+    htmlRoot: string;
 }
 
 export function serializeToProverToml(inputs: CircuitInputs, metadata?: { keywords?: string[] }): string {
@@ -20,20 +17,13 @@ export function serializeToProverToml(inputs: CircuitInputs, metadata?: { keywor
     }
     lines.push(`# HTML Root: ${inputs.htmlRoot}`);
     lines.push(`# Word Count: ${inputs.wordCount}`);
-    lines.push(`# Occurrences: ${inputs.occurrences}`);
+    lines.push(`# Keyword Count: ${inputs.keywordCount}`);
     lines.push('');
-    lines.push(`keyword_hashes = [${inputs.keywordHashes.map(h => `"${h}"`).join(', ')}]`);
     lines.push(`keyword_count = ${inputs.keywordCount}`);
-    lines.push(`html_root = "${hashToNoirField(inputs.htmlRoot)}"`);
-    lines.push('');
-    lines.push(`word_hashes = [${inputs.wordHashes.map(h => `"${h}"`).join(', ')}]`);
-    lines.push('');
-    lines.push(`keyword_scores = [${inputs.keywordScores.join(', ')}]`);
-    lines.push('');
     lines.push(`is_keyword = [${inputs.isKeyword.join(', ')}]`);
-    lines.push('');
+    lines.push(`word_hashes = [${inputs.wordHashes.map(h => `"${h}"`).join(', ')}]`);
     lines.push(`word_count = ${inputs.wordCount}`);
-    lines.push(`occurrences = ${inputs.occurrences}`);
+    lines.push(`html_root = "${hashToNoirField(inputs.htmlRoot)}"`);
 
     return lines.join('\n');
 }
@@ -50,12 +40,12 @@ export function parseProverToml(content: string): CircuitInputs {
     };
 
     const parseIntArray = (key: string): number[] => {
-        const regex = new RegExp(`^${key} = \\[([\\s\\S]*?)\\]`, 'm');
+        const regex = new RegExp(`^${key} = \\[(.*)\\]`, 'm');
         const match = content.match(regex);
         if (!match) return [];
         return match[1]
             .split(',')
-            .map(s => parseInt(s.trim().replace(/\n/g, '')))
+            .map(s => parseInt(s.trim()))
             .filter(v => !isNaN(v));
     };
 
@@ -72,14 +62,10 @@ export function parseProverToml(content: string): CircuitInputs {
     };
 
     return {
-        keywordHashes: parseStringArray('keyword_hashes'),
         keywordCount: parseNumber('keyword_count'),
-        htmlRoot: parseString('html_root'),
-        wordHashes: parseStringArray('word_hashes'),
-        keywordScores: parseIntArray('keyword_scores'),
         isKeyword: parseIntArray('is_keyword'),
+        wordHashes: parseStringArray('word_hashes'),
         wordCount: parseNumber('word_count'),
-        occurrences: parseNumber('occurrences')
+        htmlRoot: parseString('html_root')
     };
 }
-

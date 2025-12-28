@@ -5,7 +5,7 @@ import { ProofResult, WordScorePair } from '../common/ProverTypes.js';
 import { HashService } from './Hashing.js';
 import { hashToNoirField, formatHashResult } from '../common/hashUtils.js';
 import { sanitizeText } from '../common/textUtils.js';
-import { MAX_WORDS, MAX_KEYWORDS } from '../common/constants.js';
+import { MAX_WORDS } from '../common/constants.js';
 import { HTMLParser, ParsedHTML } from '../common/HTMLParser.js';
 import { serializeToProverToml, CircuitInputs } from '../common/tomlSerializer.js';
 import { ProofVerifier } from '../verifier/ProofVerifier.js';
@@ -25,22 +25,11 @@ export namespace CircuitProof {
         const api = await barretenbergApi.getBarretenbergApi();
         const normalizedKeywords = targetKeywords.map(kw => sanitizeText(kw));
         const keywordSet = new Set(normalizedKeywords);
-
-        const keywordHashes: string[] = [];
-        for (let i = 0; i < MAX_KEYWORDS; i++) {
-            if (i < targetKeywords.length) {
-                const hash = HashService.hashWordForCircuit(normalizedKeywords[i]);
-                keywordHashes.push(hashToNoirField(hash));
-            } else {
-                keywordHashes.push('0x0');
-            }
-        }
-
+        
         const wordHashes: string[] = [];
-        const keywordScores: number[] = [];
         const isKeyword: number[] = [];
         const wordHashesForReturn: string[] = [];
-
+        
         let i = 0;
         const words = parsed.words;
 
@@ -51,65 +40,53 @@ export namespace CircuitProof {
             if (isKw) {
                 const hash = HashService.hashWordForCircuit(word.word);
                 wordHashes.push(hashToNoirField(hash));
-                keywordScores.push(word.weight);
                 isKeyword.push(1);
                 wordHashesForReturn.push(hash);
                 i++;
             } else {
                 const chunkWords: string[] = [];
                 let chunkIndex = i;
-
+                
                 while (chunkIndex < words.length &&
                        !keywordSet.has(words[chunkIndex].word) &&
                        wordHashes.length < MAX_WORDS) {
                     chunkWords.push(words[chunkIndex].word);
                     chunkIndex++;
                 }
-
+                
                 const chunkText = chunkWords.join(' ');
                 const hash = HashService.hashWordForCircuit(chunkText);
                 wordHashes.push(hashToNoirField(hash));
-                keywordScores.push(0);
                 isKeyword.push(0);
                 wordHashesForReturn.push(hash);
-                i = chunkIndex;
+                i = chunkIndex; 
             }
         }
-
+        
+        // Pad to MAX_WORDS
         while (wordHashes.length < MAX_WORDS) {
             wordHashes.push('0x0');
-            keywordScores.push(0);
             isKeyword.push(0);
         }
 
         const wordCount = wordHashes.filter(h => h !== '0x0').length;
-        const occurrences = isKeyword.filter((v, idx) => v === 1 && idx < wordCount).length;
+        const keywordCount = isKeyword.filter((v, idx) => v === 1 && idx < wordCount).length;
 
-        // Calculate HTML root 
+        // Calculate HTML root: H(H(H(0, h1), h2), h3)...
         let currentRoot = new Fr(BigInt(0));
         for (let idx = 0; idx < wordCount; idx++) {
             const hashValue = barretenbergApi.hexToFieldValue(wordHashes[idx]);
             const hashField = new Fr(hashValue);
-
-            if (isKeyword[idx] === 1) {
-                const scoreField = new Fr(BigInt(keywordScores[idx]));
-                const wordScoreHash = api.pedersenHash([hashField, scoreField], 0);
-                currentRoot = api.pedersenHash([currentRoot, wordScoreHash], 0);
-            } else {
-                currentRoot = api.pedersenHash([currentRoot, hashField], 0);
-            }
+            currentRoot = api.pedersenHash([currentRoot, hashField], 0);
         }
 
         return {
             inputs: {
-                keywordHashes,
-                keywordCount: targetKeywords.length,
-                htmlRoot: hashToNoirField(formatHashResult(currentRoot)),
-                wordHashes,
-                keywordScores,
+                keywordCount,
                 isKeyword,
+                wordHashes,
                 wordCount,
-                occurrences
+                htmlRoot: hashToNoirField(formatHashResult(currentRoot))
             },
             wordHashesForReturn,
             htmlRoot: hashToNoirField(formatHashResult(currentRoot))
@@ -123,9 +100,6 @@ export namespace CircuitProof {
         const normalizedKeywords = keywords.map(k => sanitizeText(k)).filter(k => k.length > 0);
         if (normalizedKeywords.length === 0) {
             throw new Error('At least one keyword is required');
-        }
-        if (normalizedKeywords.length > MAX_KEYWORDS) {
-            throw new Error(`Maximum ${MAX_KEYWORDS} keywords allowed`);
         }
         const parsed = HTMLParser.parse(htmlContent);
 
@@ -159,28 +133,28 @@ export namespace CircuitProof {
             execSync('nargo execute', { cwd: circuitDir, stdio: 'pipe' });
 
             // Generate proof
-            const targetDir = path.join(process.cwd(), 'target');
+                const targetDir = path.join(process.cwd(), 'target');
             const circuitPath = path.join(targetDir, 'v3.json');
             const witnessPath = path.join(targetDir, 'v3.gz');
-            const proofDir = path.join(targetDir, 'proof');
-
-            if (fs.existsSync(proofDir)) {
-                fs.rmSync(proofDir, { recursive: true, force: true });
-            }
-
+                const proofDir = path.join(targetDir, 'proof');
+                
+                if (fs.existsSync(proofDir)) {
+                    fs.rmSync(proofDir, { recursive: true, force: true });
+                }
+                
             execSync(`bb prove -b "${circuitPath}" -w "${witnessPath}" -o "${proofDir}" --write_vk`, {
-                cwd: process.cwd(),
+                    cwd: process.cwd(),
                 stdio: 'pipe'
             });
 
             const proofFilePath = path.join(proofDir, 'proof');
-            const proofData = fs.readFileSync(proofFilePath);
+                    const proofData = fs.readFileSync(proofFilePath);
 
             const proofPackage = {
                 proof_type: 'zk_snark_proof_generated',
                 proof_file_path: proofFilePath,
                 verification_key_path: path.join(proofDir, 'vk'),
-                public_inputs: { html_root: htmlRoot, occurrences: inputs.occurrences }
+                public_inputs: { html_root: htmlRoot }
             };
 
             return {
