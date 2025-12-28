@@ -19,6 +19,7 @@ interface HTMLTestResult {
     error?: string;
     output_directory: string;
     keywords: string;
+    total_score?: number; //if v4 circuit
 }
 
 interface BatchTestResults {
@@ -72,6 +73,9 @@ function saveResultsToTxt(results: BatchTestResults, outputPath: string): void {
         content += `Status: ${r.success ? 'SUCCESS' : 'FAILED'} | Verified: ${r.verified ? 'YES' : 'NO'}\n`;
         content += `Keywords: ${r.keywords}\n`;
         content += `Word Count: ${r.word_count}\n`;
+        if (r.total_score !== undefined) {
+            content += `Total Score: ${r.total_score}\n`;
+        }
         content += `Proof Generation: ${r.total_proof_generation_time_ms.toFixed(2)}ms\n`;
         content += `Merkle Root: ${r.merkle_root ? r.merkle_root.substring(0, 40) + '...' : 'N/A'}\n`;
         content += `Verification: ${r.total_verification_time_ms.toFixed(2)}ms\n`;
@@ -86,13 +90,14 @@ function saveResultsToTxt(results: BatchTestResults, outputPath: string): void {
 async function processFile(
     htmlPath: string,
     keywords: string[],
-    outputDir: string
+    outputDir: string,
+    type: 'v3' | 'v4' = 'v3'
 ): Promise<{ result: FullProofResult; proofTime: number; verifyTime: number; verified: boolean; verifyDetails?: {verifyTime: number } }> {
     const htmlContent = fs.readFileSync(htmlPath, 'utf-8');
     
     // Generate proof
     const proofStart = performance.now();
-    const result = await CircuitProof.generateProof(htmlContent, keywords);
+    const result = await CircuitProof.generateProof(htmlContent, keywords, type);
     const proofTime = performance.now() - proofStart;
     // Verify proof
     let verifyTime = 0;
@@ -132,7 +137,8 @@ async function processFile(
 async function processHTMLFiles(
     htmlFolderPath: string,
     keywordsInput: string = '',
-    outputBaseDir: string = 'batch_results'
+    outputBaseDir: string = 'batch_results',
+    type: 'v3' | 'v4' = 'v3'
 ): Promise<BatchTestResults> {
     const batchStart = performance.now();
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -185,7 +191,7 @@ async function processHTMLFiles(
         const fileOutputDir = path.join(outputDir, `html_${i + 1}_${file.replace('.html', '')}`);
 
         try {
-            const { result, proofTime, verifyTime, verified, verifyDetails } = await processFile(filePath, keywords, fileOutputDir);
+            const { result, proofTime, verifyTime, verified, verifyDetails } = await processFile(filePath, keywords, fileOutputDir, type);
 
             results.push({
                 html_file: file,
@@ -194,6 +200,7 @@ async function processHTMLFiles(
                 verified,
                 merkle_root: result.htmlRoot || '',
                 word_count: result.wordScorePairs?.length || 0,
+                total_score: result.totalScore,
                 total_proof_generation_time_ms: proofTime,
                 total_verification_time_ms: verifyTime,
                 proof_size_bytes: result.proofSize || 0,
@@ -256,12 +263,31 @@ async function processHTMLFiles(
 
 const __filename = fileURLToPath(import.meta.url);
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(__filename)) {
-    const args = process.argv.slice(2);
+    let args = process.argv.slice(2);
+    
+    const separatorIndex = args.indexOf('--');
+    if (separatorIndex !== -1) {
+        args = args.slice(separatorIndex + 1);
+    }
+    
     if (args.length < 1) {
-        console.log('Usage: npx tsx src/helper/scripts/batchProcess.ts <html_folder> [keywords]');
+        console.log('Usage: npm run batch <html_folder> [keywords] [--type v3|v4]');
+        console.log('npx tsx src/helper/scripts/batchProcess.ts <html_folder> [keywords] [--type v3|v4]');
         process.exit(1);
     }
-    processHTMLFiles(args[0], args.slice(1).join(' ')).catch(e => {
+    
+    let type: 'v3' | 'v4' = 'v3';
+    const typeIndex = args.indexOf('--type');
+    if (typeIndex !== -1 && args[typeIndex + 1]) {
+        const typeValue = args[typeIndex + 1].toLowerCase();
+        if (typeValue === 'v3' || typeValue === 'v4') {
+            type = typeValue as 'v3' | 'v4';
+            args.splice(typeIndex, 2);
+        }
+    }
+    
+    const keywords = args.slice(1).join(' ').trim();
+    processHTMLFiles(args[0], keywords, 'batch_results', type).catch(e => {
         console.error('Error:', e.message);
         process.exit(1);
     });

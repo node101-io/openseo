@@ -17,30 +17,50 @@ export namespace ProofVerifier {
                 proof_type: string;
                 proof_file_path: string;
                 verification_key_path: string;
-                public_inputs: { html_root: string; occurrences: number };
+                public_inputs: { html_root: string; total_score?: number };
             };
 
             try {
-                if (typeof proof === 'string') {
-                    try {
-                        proofData = JSON.parse(proof);
-                    } catch {
-                        const decoded = Buffer.from(proof, 'base64').toString('utf-8');
-                        proofData = JSON.parse(decoded);
-                    }
-                } else {
-                    proofData = proof as typeof proofData;
-                }
-            } catch (e) {
-                throw new Error(`Failed to parse proof data: ${(e as Error).message}`);
+                proofData = JSON.parse(proof);
+            } catch {
+                const decoded = Buffer.from(proof, 'base64').toString('utf-8');
+                proofData = JSON.parse(decoded);
             }
 
             const verifyStart = performance.now();
-            if (proofData.proof_type === 'zk_snark_proof_generated') {
+
+            // Verify html root is match
+            if (proofData.public_inputs?.html_root) {
+                const proofHtmlRoot = proofData.public_inputs.html_root;
+                const normalizeRoot = (root: string) => root.toLowerCase().replace(/^0x/, '');
+                const normalizedProofRoot = normalizeRoot(proofHtmlRoot);
+                const normalizedExpectedRoot = normalizeRoot(expectedHtmlRoot);
+
+                if (normalizedProofRoot !== normalizedExpectedRoot) {
+                    return {
+                        isValid: false,
+                        totalTime: performance.now() - totalStartTime,
+                        verifyTime: 0,
+                        error: `HTML root mismatch: expected ${expectedHtmlRoot}, but proof contains ${proofHtmlRoot}`
+                    };
+                }
+            } else {
+                return {
+                    isValid: false,
+                    totalTime: performance.now() - totalStartTime,
+                    verifyTime: 0,
+                    error: 'Proof does not contain html_root in public_inputs'
+                };
+            }
+
+            // Support v3 and v4 proof types
+            if (proofData.proof_type === 'zk_snark_proof_v3' ||
+                proofData.proof_type === 'zk_snark_proof_v4' ||
+                proofData.proof_type === 'zk_snark_proof_generated') {
+
                 const targetDir = path.join(process.cwd(), 'target');
                 const proofFilePath = proofData.proof_file_path || path.join(targetDir, 'proof', 'proof');
                 const verificationKeyPath = proofData.verification_key_path || path.join(targetDir, 'proof', 'vk');
-                const publicInputsPath = path.join(targetDir, 'proof', 'public_inputs');
 
                 if (!fs.existsSync(proofFilePath)) {
                     throw new Error(`Proof file not found: ${proofFilePath}`);
@@ -49,17 +69,9 @@ export namespace ProofVerifier {
                     throw new Error(`Verification key not found: ${verificationKeyPath}`);
                 }
 
-                // Write public inputs if needed
-                if (!fs.existsSync(publicInputsPath)) {
-                    const pubInputs = {
-                        html_root: proofData.public_inputs?.html_root || expectedHtmlRoot,
-                        occurrences: proofData.public_inputs?.occurrences || 0
-                    };
-                    fs.writeFileSync(publicInputsPath, JSON.stringify(pubInputs));
-                }
-
-                //bb verify
+                // bb verify
                 try {
+                    const publicInputsPath = path.join(path.dirname(proofFilePath), 'public_inputs');
                     const bbVerifyCommand = `bb verify -p "${proofFilePath}" -k "${verificationKeyPath}" -i "${publicInputsPath}"`;
                     execSync(bbVerifyCommand, {
                         cwd: process.cwd(),
@@ -76,30 +88,12 @@ export namespace ProofVerifier {
                     };
                 }
 
-            } else if (proofData.proof_type === 'zk_snark_circuit_execution_validated') {
-                const circuitDir = path.join(process.cwd(), 'circuits', 'v3');
-
-                try {
-                    execSync('nargo execute', {
-                        cwd: circuitDir,
-                        stdio: 'pipe',
-                        encoding: 'utf-8'
-                    });
-                } catch (executeError: unknown) {
-                    return {
-                        isValid: false,
-                        totalTime: performance.now() - totalStartTime,
-                        verifyTime: performance.now() - verifyStart,
-                        error: `Circuit execution failed: ${(executeError as Error).message}`
-                    };
-                }
-
             } else {
                 return {
                     isValid: false,
                     totalTime: performance.now() - totalStartTime,
                     verifyTime: 0,
-                    error: 'Unknown proof type'
+                    error: `Unknown proof type: ${proofData.proof_type}`
                 };
             }
 

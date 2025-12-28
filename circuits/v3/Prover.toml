@@ -1,11 +1,8 @@
-# ZK-SEO Circuit Proof Input
-# Keywords: toggle
-# HTML Root: 0x040f60578322a4938d0b6555a260c6824407a2e7ac981afa95989f6e2123c571
-# Word Count: 3
-# Keyword Count: 1
+# ZK-SEO Circuit v3
+# Keywords: networking
 
 keyword_count = 1
 is_keyword = [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-word_hashes = ["0x127ed4d5c71fee2a4f0a670c78d9c3c4cd38aec3e926647370711179cad9a271", "0x24693e568d9c5453ecfb0bf072356f5d03bced8cd508d85c86b55ad161b1f5d6", "0x21a793d21347576dd2c9675fd9df7bc10ec77009d9e0e0c82fd986d5fd0fdb60", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0"]
+word_hashes = ["0x203d7e226168e6d9fb2ca018b23ca75ba06765b3838d2953b0df9c0f4d6def27", "0x0d084578b1819697bc950ab6b3d03e65ecc5afb4ac8c0c06a025403aaa9c4996", "0x14008dafebc561fbabab2518dec74ce8b2e99a9c1cf3502599ac0fca736aa02e", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0"]
 word_count = 3
-html_root = "0x040f60578322a4938d0b6555a260c6824407a2e7ac981afa95989f6e2123c571"
+html_root = "0x219f781dae4374ae938ee767e60342c254ea78bbcca5ed1d782e00b7ae6c9afa"
