@@ -34,11 +34,12 @@ export namespace CircuitProof {
         const keywordSet = new Set(normalizedKeywords);
 
         const wordHashes: string[] = [];
-        const isKeyword: number[] = [];
+        let isKeywordBitmask = 0; //bit i is 1 if word i is keyword
         const wordHashesForReturn: string[] = [];
 
         let i = 0;
         const words = parsed.words;
+        let wordIndex = 0; 
 
         while (i < words.length && wordHashes.length < MAX_WORDS) {
             const word = words[i];
@@ -47,9 +48,15 @@ export namespace CircuitProof {
             if (isKw) {
                 const hash = HashService.hashWordForCircuit(word.word);
                 wordHashes.push(hashToNoirField(hash));
-                isKeyword.push(1);
+                //set 1 at wordIndex position in isKeywordBitmask shift 1 left wordIndex times
+                //or with bitmask
+                //wordIndex=2, bitmask=00000000 | 00000100 = 00000100
+                //wordIndex=3, bitmask=00000100 | 00001000 = 00001100
+                const bitToSet = 1 << wordIndex;
+                isKeywordBitmask |= bitToSet;
                 wordHashesForReturn.push(hash);
                 i++;
+                wordIndex++;
             } else {
                 const chunkWords: string[] = [];
                 let chunkIndex = i;
@@ -60,19 +67,24 @@ export namespace CircuitProof {
                 const chunkText = chunkWords.join(' ');
                 const hash = HashService.hashWordForCircuit(chunkText);
                 wordHashes.push(hashToNoirField(hash));
-                isKeyword.push(0);
                 wordHashesForReturn.push(hash);
                 i = chunkIndex;
+                wordIndex++;
             }
         }
 
         while (wordHashes.length < MAX_WORDS) {
             wordHashes.push('0x0');
-            isKeyword.push(0);
         }
 
         const wordCount = wordHashes.filter(h => h !== '0x0').length;
-        const keywordCount = isKeyword.filter((v, idx) => v === 1 && idx < wordCount).length;
+        let keywordCount = 0;
+        for (let idx = 0; idx < wordCount; idx++) {
+            const bitIsSet = (isKeywordBitmask >> idx) & 1; //right shift by idx bits and check if the least significant bit is 1
+            if (bitIsSet === 1) {
+                keywordCount++;
+            }
+        }
 
         // Calculate html root
         let currentRoot = new Fr(BigInt(0));
@@ -85,7 +97,7 @@ export namespace CircuitProof {
         return {
             inputs: {
                 keywordCount,
-                isKeyword,
+                isKeyword: isKeywordBitmask,
                 wordHashes,
                 wordCount,
                 htmlRoot: hashToNoirField(formatHashResult(currentRoot))
@@ -105,12 +117,13 @@ export namespace CircuitProof {
         const keywordSet = new Set(normalizedKeywords);
 
         const wordHashes: string[] = [];
-        const isKeyword: number[] = [];
+        let isKeywordBitmask = 0; //bit i is 1 if word i is keyword
         const tagIds: number[] = [];
         const wordHashesForReturn: string[] = [];
 
         let i = 0;
         const words = parsed.words;
+        let wordIndex = 0;
 
         while (i < words.length && wordHashes.length < MAX_WORDS) {
             const word = words[i];
@@ -119,10 +132,12 @@ export namespace CircuitProof {
             if (isKw) {
                 const hash = HashService.hashWordForCircuit(word.word);
                 wordHashes.push(hashToNoirField(hash));
-                isKeyword.push(1);
+                const bitToSet = 1 << wordIndex;
+                isKeywordBitmask |= bitToSet;
                 tagIds.push(getTagId(word.tag));
                 wordHashesForReturn.push(hash);
                 i++;
+                wordIndex++;
             } else {
                 const chunkWords: string[] = [];
                 let chunkIndex = i;
@@ -133,21 +148,26 @@ export namespace CircuitProof {
                 const chunkText = chunkWords.join(' ');
                 const hash = HashService.hashWordForCircuit(chunkText);
                 wordHashes.push(hashToNoirField(hash));
-                isKeyword.push(0);
                 tagIds.push(0);
                 wordHashesForReturn.push(hash);
                 i = chunkIndex;
+                wordIndex++;
             }
         }
 
         while (wordHashes.length < MAX_WORDS) {
             wordHashes.push('0x0');
-            isKeyword.push(0);
             tagIds.push(0);
         }
 
         const wordCount = wordHashes.filter(h => h !== '0x0').length;
-        const keywordCount = isKeyword.filter((v, idx) => v === 1 && idx < wordCount).length;
+        let keywordCount = 0;
+        for (let idx = 0; idx < wordCount; idx++) {
+            const bitIsSet = (isKeywordBitmask >> idx) & 1; //right shift by idx bits and check if the least significant bit is 1
+            if (bitIsSet === 1) {
+                keywordCount++;
+            }
+        }
 
         // Calculate total score and HTML root for v4
         let currentRoot = new Fr(BigInt(0));
@@ -157,7 +177,8 @@ export namespace CircuitProof {
             const hashValue = barretenbergApi.hexToFieldValue(wordHashes[idx]);
             const hashField = new Fr(hashValue);
 
-            if (isKeyword[idx] === 1) {
+            const bitIsSet = (isKeywordBitmask >> idx) & 1;
+            if (bitIsSet === 1) {
                 const weight = getTagWeight(words.find((_, wi) => {
                     // Find the original word index that corresponds to this wordHash position
                     let count = 0;
@@ -173,7 +194,6 @@ export namespace CircuitProof {
                     return count === idx + 1;
                 })?.tag || 'default');
                 
-                // Actually, use tagIds which we already calculated
                 const tagIdForWeight = tagIds[idx];
                 const weightFromId = getWeightFromTagId(tagIdForWeight);
                 totalScore += weightFromId;
@@ -189,7 +209,7 @@ export namespace CircuitProof {
         return {
             inputs: {
                 keywordCount,
-                isKeyword,
+                isKeyword: isKeywordBitmask,
                 wordHashes,
                 tagIds,
                 wordCount,

@@ -3,7 +3,7 @@ global MAX_WORDS: u32 = 32;
 
 fn main(
     keyword_count: u32, // number of keywords
-    is_keyword: [u32; MAX_WORDS], // 1 if word is keyword, 0 otherwise for each word
+    is_keyword: u32, // bit i is 1 if word i is keyword, 0 otherwise
     word_hashes: [Field; MAX_WORDS], // hashes of words(chunk+keyword)
     word_count: u32, // number of words(chunk+keyword)
     html_root: pub Field // root of the html tree
@@ -13,8 +13,8 @@ fn main(
     
     for i in 0..MAX_WORDS {
         if i < word_count {
-            // is_keyword[i] == 1 -> keyword, otherwise chunk
-            if is_keyword[i] == 1 {
+            // Check if bit i is set in the bitmask
+            if ((is_keyword >> i) & 1) == 1 {
                 found += 1;
             }
             // hash everyword
@@ -29,16 +29,18 @@ fn main(
 #[test]
 fn test_multiple_keywords() {
     // 7 words: 3 keywords, 4 chunks
+    // bitmask: bits 1 3 5 000101010 -> 42
     let mut w = [0; MAX_WORDS];
-    let mut is_kw = [0; MAX_WORDS];
     
-    w[0] = 0xc1;   is_kw[0] = 0;  // chunk
-    w[1] = 0x1111; is_kw[1] = 1;  // keyword
-    w[2] = 0xc2;   is_kw[2] = 0;  // chunk
-    w[3] = 0x2222; is_kw[3] = 1;  // keyword
-    w[4] = 0xc3;   is_kw[4] = 0;  // chunk
-    w[5] = 0x3333; is_kw[5] = 1;  // keyword
-    w[6] = 0xc4;   is_kw[6] = 0;  // chunk
+    w[0] = 0xc1;   // chunk
+    w[1] = 0x1111; // keyword
+    w[2] = 0xc2;   // chunk
+    w[3] = 0x2222; // keyword
+    w[4] = 0xc3;   // chunk
+    w[5] = 0x3333; // keyword
+    w[6] = 0xc4;   // chunk
+    
+    let is_kw: u32 = 42;
     
     // H(H(H(H(H(H(H(0, c1), kw1), c2), kw2), c3), kw3), c4)
     let r0 = std::hash::pedersen_hash([0, w[0]]);

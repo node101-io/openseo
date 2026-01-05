@@ -29,7 +29,7 @@ fn get_weight(tag_id: u32) -> Field {
 
 fn main(
     keyword_count: u32, // number of keywords
-    is_keyword: [u32; MAX_WORDS], // 1 if word is a keyword, 0 chunk
+    is_keyword: u32, // bit i is 1 if word i is keyword, 0 otherwise
     word_hashes: [Field; MAX_WORDS], // hash of each item (chunk or keyword)
     tag_ids: [u32; MAX_WORDS],  // tag id for each word
     word_count: u32, // number of items (chunks or keywords)
@@ -42,7 +42,7 @@ fn main(
     
     for i in 0..MAX_WORDS {
         if i < word_count {
-            if is_keyword[i] == 1 { // if keyword calculate weight and then add to score to root
+            if ((is_keyword >> i) & 1) == 1 { // if keyword calculate weight and then add to score to root
                 found += 1;
                 // Calculate score from tag id 
                 let weight = get_weight(tag_ids[i]);
@@ -64,17 +64,17 @@ fn main(
 
 #[test]
 fn test_score_calculation() {
-    // chunk - keyword(title) - chunk - keyword(h1) - chunk
+    // bitmask: bits 1 3 00001010 -> 10
     let mut w = [0; MAX_WORDS];
-    let mut is_kw = [0; MAX_WORDS];
     let mut tags = [0; MAX_WORDS];
     
-    w[0] = 0xc1;   is_kw[0] = 0; tags[0] = 0;   // chunk
-    w[1] = 0x1111; is_kw[1] = 1; tags[1] = 1;   // keyword in title (weight=12)
-    w[2] = 0xc2;   is_kw[2] = 0; tags[2] = 0;   // chunk
-    w[3] = 0x1111; is_kw[3] = 1; tags[3] = 2;   // keyword in h1 (weight=10)
-    w[4] = 0xc3;   is_kw[4] = 0; tags[4] = 0;   // chunk
-    
+    w[0] = 0xc1; tags[0] = 0;   // chunk
+    w[1] = 0x1111; tags[1] = 1;   // keyword in title (weight=12)
+    w[2] = 0xc2; tags[2] = 0;   // chunk
+    w[3] = 0x1111; tags[3] = 2;   // keyword in h1 (weight=10)
+    w[4] = 0xc3; tags[4] = 0;   // chunk
+
+    let is_kw: u32 = 10;
     let r0 = std::hash::pedersen_hash([0, w[0]]);
     let ws1 = std::hash::pedersen_hash([w[1], 12]);
     let r1 = std::hash::pedersen_hash([r0, ws1]);
