@@ -1,5 +1,5 @@
 {
-  "contractAddress": "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9",
+  "contractAddress": "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707",
   "abi": [
     {
       "inputs": [
@@ -16,10 +16,10 @@
       "anonymous": false,
       "inputs": [
         {
-          "indexed": true,
-          "internalType": "uint256",
-          "name": "requestId",
-          "type": "uint256"
+          "indexed": false,
+          "internalType": "string",
+          "name": "cid",
+          "type": "string"
         },
         {
           "indexed": false,
@@ -34,12 +34,6 @@
     {
       "anonymous": false,
       "inputs": [
-        {
-          "indexed": true,
-          "internalType": "uint256",
-          "name": "requestId",
-          "type": "uint256"
-        },
         {
           "indexed": false,
           "internalType": "string",
@@ -113,14 +107,24 @@
           "internalType": "string",
           "name": "",
           "type": "string"
-        }
-      ],
-      "name": "cidToRequestID",
-      "outputs": [
+        },
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        },
         {
           "internalType": "uint256",
           "name": "",
           "type": "uint256"
+        }
+      ],
+      "name": "cidRootVotes",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
         }
       ],
       "stateMutability": "view",
@@ -129,31 +133,42 @@
     {
       "inputs": [
         {
-          "internalType": "uint256",
-          "name": "reqID",
-          "type": "uint256"
+          "internalType": "string",
+          "name": "cid",
+          "type": "string"
+        }
+      ],
+      "name": "claimRefund",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "cid",
+          "type": "string"
+        }
+      ],
+      "name": "cleanIsNotProcessedRequest",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "cid",
+          "type": "string"
         }
       ],
       "name": "getRequestDetails",
       "outputs": [
         {
-          "internalType": "address",
-          "name": "owner",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "timestamp",
-          "type": "uint256"
-        },
-        {
-          "internalType": "bool",
-          "name": "isProcessed",
-          "type": "bool"
-        },
-        {
           "internalType": "string",
-          "name": "cid",
+          "name": "CID",
           "type": "string"
         },
         {
@@ -168,27 +183,22 @@
     {
       "inputs": [
         {
-          "internalType": "uint256",
+          "internalType": "string",
           "name": "",
-          "type": "uint256"
+          "type": "string"
         },
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "name": "requestVotes",
-      "outputs": [
         {
           "internalType": "address",
-          "name": "node",
+          "name": "",
           "type": "address"
-        },
+        }
+      ],
+      "name": "hasVoted",
+      "outputs": [
         {
-          "internalType": "bytes32",
-          "name": "root",
-          "type": "bytes32"
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
         }
       ],
       "stateMutability": "view",
@@ -197,9 +207,9 @@
     {
       "inputs": [
         {
-          "internalType": "uint256",
+          "internalType": "string",
           "name": "",
-          "type": "uint256"
+          "type": "string"
         }
       ],
       "name": "requests",
@@ -223,7 +233,21 @@
           "internalType": "bool",
           "name": "isProcessed",
           "type": "bool"
-        },
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "name": "results",
+      "outputs": [
         {
           "internalType": "string",
           "name": "cid",
@@ -251,7 +275,7 @@
           "type": "bytes32"
         }
       ],
-      "name": "submitVerification",
+      "name": "submitHtmlRoot",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -269,7 +293,7 @@
           "type": "string[]"
         }
       ],
-      "name": "verifyRequest",
+      "name": "submitRequest",
       "outputs": [],
       "stateMutability": "payable",
       "type": "function"

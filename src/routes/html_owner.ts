@@ -155,17 +155,16 @@ app.post('/send_file', upload.single('file'), async (req: Request, res: Response
             
             // simulate transaction
             try {
-                await contract.verifyRequest.staticCall(cid, keywords, { value: verificationFee });
+                await contract.submitRequest.staticCall(cid, keywords, { value: verificationFee });
             } catch (simError: any) {
                 const reason = simError.reason || simError.message || 'Unknown error';
-                throw new Error(reason.includes('already exists') 
+                throw new Error(reason.includes('already exists') || reason.includes('Active request')
                     ? 'verification request already exists for this cid'
                     : reason
                 );
             }
             
-            // send transaction
-            const tx = await contract.verifyRequest(cid, keywords, {
+            const tx = await contract.submitRequest(cid, keywords, {
                     value: verificationFee,
                     gasLimit: 500000 
                 });
@@ -213,35 +212,94 @@ app.get('/request_status/:cid', async (req: Request, res: Response) => {
         const rpcUrl = process.env.ETHEREUM_RPC_URL || 'http://localhost:8545';
         const provider = new ethers.JsonRpcProvider(rpcUrl);
         const contract = new ethers.Contract(contractAddress, getOpenSEOABI(), provider);
-
-        const requestIdPlusOne = await contract.cidToRequestId(cid);
         
-        if (requestIdPlusOne === 0n) {
-            return res.status(404).json({ error: 'No request found for this CID' });
+        try {
+            const result = await contract.results(cid);
+            const resultRoot = result.resultRoot;
+            
+            return res.status(200).json({
+                success: true,
+                cid,
+                resultRoot: resultRoot === '0x0000000000000000000000000000000000000000000000000000000000000000' ? null : resultRoot,
+            });
+        } catch (error: any) {
+            return res.status(200).json({
+                success: true,
+                cid,
+                resultRoot: null,
+                message: 'Request not yet completed'
+            });
         }
-
-        const requestId = requestIdPlusOne - 1n;
-        
-        const [requester, timestamp, isProcessed, resultRoot] = await contract.getRequestDetails(requestId);
-
-        const currentTime = BigInt(Math.floor(Date.now() / 1000));
-        const VERIFICATION_TIMEOUT = 300n;
-        const isTimedOut = currentTime > timestamp + VERIFICATION_TIMEOUT;
-
-        return res.status(200).json({
-            success: true,
-            requestId: requestId.toString(),
-            cid,
-            requester,
-            timestamp: timestamp.toString(),
-            isProcessed,
-            resultRoot: resultRoot === '0x0000000000000000000000000000000000000000000000000000000000000000' ? null : resultRoot,
-            isTimedOut,
-            canClaimRefund: isTimedOut && !isProcessed
-        });
 
     } catch (error: any) {
         console.error('Error in /request_status:', error);
+        return res.status(500).json({ error: error.message || 'Internal server error' });
+    }
+});
+
+app.post('/claim_refund', async (req: Request, res: Response) => {
+    try {
+        const { cid } = req.body;
+
+        if (!cid) {
+            return res.status(400).json({ error: 'CID is required' });
+        }
+
+        // Contract kontrolü
+        const contractAddress = process.env.CONTRACT_ADDRESS;
+        if (!contractAddress) {
+            return res.status(400).json({ error: 'Contract address not configured' });
+        }
+
+        const rpcUrl = process.env.ETHEREUM_RPC_URL || 'http://localhost:8545';
+        const isLocalhost = rpcUrl.includes("localhost") || rpcUrl.includes("127.0.0.1");
+        const provider = new ethers.JsonRpcProvider(rpcUrl);
+        
+        const wallet = await getWalletWithBalance(provider, process.env.OWNER_PRIVATE_KEY, isLocalhost);
+        
+        if (!wallet) {
+            return res.status(400).json({ error: 'No wallet with balance available' });
+        }
+
+        try {
+            const contract = new ethers.Contract(contractAddress, getOpenSEOABI(), wallet);
+            
+            try {
+                await contract.claimRefund.staticCall(cid);
+            } catch (simError: any) {
+                const reason = simError.reason || simError.message || 'Unknown error';
+                if (reason.includes('Not found')) {
+                    return res.status(404).json({ error: 'Request not found for this CID' });
+                }
+                if (reason.includes('Wait timeout')) {
+                    return res.status(400).json({ error: 'Timeout period not reached yet. Please wait.' });
+                }
+                if (reason.includes('Not owner')) {
+                    return res.status(403).json({ error: 'Only the original requester can claim refund' });
+                }
+                throw new Error(reason);
+            }
+            
+            const tx = await contract.claimRefund(cid, { gasLimit: 200000 });
+            console.log(`[HTML Owner] Refund transaction sent: ${tx.hash}`);
+            
+            const receipt = await tx.wait();
+            console.log(`[HTML Owner] Refund confirmed. Block: ${receipt.blockNumber}`);
+
+            return res.status(200).json({
+                success: true,
+                message: 'Refund claimed successfully',
+                txHash: receipt.hash,
+                blockNumber: receipt.blockNumber
+            });
+            
+        } catch (ethError: any) {
+            console.error('[HTML Owner] Refund error:', ethError.message);
+            return res.status(500).json({ error: ethError.message });
+        }
+
+    } catch (error: any) {
+        console.error('Error in /claim_refund:', error);
         return res.status(500).json({ error: error.message || 'Internal server error' });
     }
 });

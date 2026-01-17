@@ -7,7 +7,6 @@ batch_results/
 .DS_Store
 analiz.txt
 .vscode/
-htmls/
-html_files/
+public/
 .env
 uploads/

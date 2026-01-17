@@ -11,7 +11,10 @@ contract OpenSEO {
         address owner;
         uint256 timestamp;
         uint256 paymentAmount;
-        bool isProcessed;
+        bool isProcessed; 
+    }
+
+    struct RequestResult {
         string cid; 
         bytes32 resultRoot; 
     }
@@ -22,13 +25,13 @@ contract OpenSEO {
         bytes32 root;
     }
 
-    //VerificationRequest[] public requests;
-    mapping(uint256 => VerificationRequest[]) public requests; 
-    mapping(string => uint256) public cidToRequestID; //"Qm1212"->1,"Qm1231"->2 
-    mapping(uint256 => Vote[]) public requestVotes; //her bir request için kim hangi oyu(node=root) attı 
-    
-    event VerificationRequested(uint256 indexed requestId, string cid, string[] keywords, address owner);
-    event RequestCompleted(uint256 indexed requestId, bool success);
+    mapping(string => RequestResult) public results; //if isProcessed true 
+    mapping(string => VerificationRequest) public requests; 
+    mapping(string => mapping(bytes32 => address[])) public cidRootVotes; //"Qm123" -> { "0xRootHash...": [Node1, Node2] }
+    mapping(string => mapping(address => bool)) public hasVoted; //o mode un o cid için oy kullanıp kullanmadığı
+
+    event VerificationRequested(string cid, string[] keywords, address owner);
+    event RequestCompleted(string cid, bool success);
 
     modifier authNodes() {
         require(authorizedNodes[msg.sender], "Unauthorized");
@@ -43,80 +46,76 @@ contract OpenSEO {
 
     function submitRequest(string calldata cid, string[] calldata keywords ) external payable {
         require(msg.value>0, "Payment amount required");
-        require(cidToRequestID[cid] == 0 || requests[cidToRequestID[cid] -1].isProcessed, "No active request");
-        //"Qm1212"->1
+        VerificationRequest storage request = requests[cid];
 
-        uint256 reqID = requests.length;
-        requests.push(VerificationRequest({
+        if (request.paymentAmount > 0) { 
+             require(request.isProcessed, "Active request exists");
+        }
+
+        requests[cid] = VerificationRequest({
             owner: msg.sender,
             timestamp: block.timestamp,
             paymentAmount: msg.value,
-            isProcessed: false,
-            cid: cid,
-            resultRoot: bytes32(0)
-        }));
-        //0, 1, 2
-        //1, 2, 3
+            isProcessed: false
+        });
 
-        cidToRequestID[cid] = reqID + 1; 
-        emit VerificationRequested(reqID, cid, keywords, msg.sender);
+        emit VerificationRequested(cid, keywords, msg.sender);
     }
 
     function submitHtmlRoot(string calldata cid, bytes32 htmlRoot) external authNodes{
-        uint256 id = cidToRequestID[cid];
-        require(id > 0, "Request not found"); 
-        uint256 reqID = id - 1;
+        VerificationRequest storage request = requests[cid];
 
-        VerificationRequest storage request = requests[reqID];
+        require(request.paymentAmount > 0, "Request not found"); 
         require(!request.isProcessed, "Request processed");
+        require(!hasVoted[cid][msg.sender], "Voted"); //çifte oy kontrolü
 
-        //timeout olursa ownera iade
-        if(block.timestamp > request.timestamp + VERIFICATION_TIMEOUT) {
+        hasVoted[cid][msg.sender] = true;
+        cidRootVotes[cid][htmlRoot].push(msg.sender); //bu cid için bu root a oy verenlere ekle 
+        uint256 matchVoteCount = cidRootVotes[cid][htmlRoot].length;
+
+        if(matchVoteCount >= REQUIRED_CONSENSUS) {
             request.isProcessed = true;
-            payable(request.owner).transfer(request.paymentAmount);
-            emit RequestCompleted(reqID, false);
-            return;
-        }
+            results[cid] = RequestResult({cid:cid, resultRoot: htmlRoot});
 
-        //aynı node aynı root u birden fazla verify etmemeli
-        Vote[] storage votes = requestVotes[reqID];
-        for(uint i=0; i<votes.length; i++) {
-            require(votes[i].node != msg.sender, "Voted");
-        }
-        votes.push(Vote({node:msg.sender, root: htmlRoot}));
+            address[] memory winners = cidRootVotes[cid][htmlRoot];
+            uint256 payPerNode = request.paymentAmount / matchVoteCount;
 
-        //Consensus daha efficient bul 
-        uint256 matchCount = 0; 
-        for(uint i=0; i<votes.length; i++) {
-            if(votes[i].root == htmlRoot) {
-                matchCount++;
+            for(uint i=0; i < winners.length; i++) {
+                payable(winners[i]).transfer(payPerNode);
             }
-        }
 
-        //consensus okey
-        if(matchCount >= REQUIRED_CONSENSUS) {
-            request.isProcessed = true;
-            request.resultRoot = htmlRoot;
-
-            //node payment
-            uint256 payPerNode = request.paymentAmount / matchCount;
-            for(uint i=0; i<votes.length; i++) {
-                if(votes[i].root == htmlRoot) {
-                    payable(votes[i].node).transfer(payPerNode);
-                }
-            }
-            emit RequestCompleted(reqID, true);
+            emit RequestCompleted(cid, true);
         }
     }
 
-    function getRequestDetails(uint256 reqID) external view returns (
-        address owner,
-        uint256 timestamp,
-        bool isProcessed,
-        string memory cid,
+    function claimRefund(string calldata cid) external {
+        VerificationRequest storage request = requests[cid];
+        
+        require(request.paymentAmount > 0, "Not found");
+        require(!request.isProcessed, "Already processed");
+        require(block.timestamp > request.timestamp + VERIFICATION_TIMEOUT, "Wait timeout");
+        require(msg.sender == request.owner, "Not owner"); // 'requester' değil 'owner'
+        request.isProcessed = true;
+
+        payable(request.owner).transfer(request.paymentAmount);
+        emit RequestCompleted(cid, false); 
+    }
+
+    function getRequestDetails(string calldata cid) external view returns (
+        string memory CID,
         bytes32 resultRoot
     ) {
-        VerificationRequest memory request = requests[reqID];
-        return (request.owner, request.timestamp, request.isProcessed, request.cid, request.resultRoot);
-    }
+        RequestResult memory result = results[cid];
+        return (result.cid, result.resultRoot);
+    } 
+
+    function cleanIsNotProcessedRequest(string calldata cid) external authNodes(){
+        VerificationRequest storage request = requests[cid];
+
+        require(request.paymentAmount>0, "Request not found");
+        require(!request.isProcessed, "Processed");
+        require(block.timestamp > request.timestamp + VERIFICATION_TIMEOUT, "Not expired request verification time");
+
+        delete requests[cid];
+    }   
 }
