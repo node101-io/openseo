@@ -7,8 +7,8 @@ import { hashToNoirField, formatHashResult } from '../common/hashUtils.js';
 import { sanitizeText, getTagId, getTagWeight } from '../common/textUtils.js';
 import { MAX_WORDS } from '../common/constants.js';
 import { HTMLParser, ParsedHTML } from '../common/HTMLParser.js';
-import { 
-    serializeToProverTomlV3, 
+import {
+    serializeToProverTomlV3,
     serializeToProverTomlV4,
     CircuitInputsV3,
     CircuitInputsV4
@@ -39,7 +39,7 @@ export namespace CircuitProof {
 
         let i = 0;
         const words = parsed.words;
-        let wordIndex = 0; 
+        let wordIndex = 0;
 
         while (i < words.length && wordHashes.length < MAX_WORDS) {
             const word = words[i];
@@ -210,7 +210,7 @@ export namespace CircuitProof {
                     }
                     return count === idx + 1;
                 })?.tag || 'default');
-                
+
                 const tagIdForWeight = tagIds[idx];
                 const weightFromId = getWeightFromTagId(tagIdForWeight);
                 totalScore += weightFromId;
@@ -276,14 +276,14 @@ export namespace CircuitProof {
 
         try {
             const circuitDir = path.join(process.cwd(), 'circuits', version);
-            
+
             if (version === 'v4') {
                 const { inputs, wordHashesForReturn, htmlRoot, totalScore } = await buildCircuitWithScore(parsed, normalizedKeywords);
                 fs.writeFileSync(
                     path.join(circuitDir, 'Prover.toml'),
                     serializeToProverTomlV4(inputs, { keywords: normalizedKeywords })
                 );
-                
+
                 execSync('nargo compile', { cwd: circuitDir, stdio: 'pipe' });
                 execSync('nargo execute', { cwd: circuitDir, stdio: 'pipe' });
 
@@ -369,6 +369,25 @@ export namespace CircuitProof {
                 wordScorePairs
             };
         }
+    }
+
+    export async function generateHtmlRoot(
+        htmlContent: string,
+        keywords: string[],
+        version: 'v4'
+    ): Promise<{ htmlRoot: string; success: boolean }> {
+        const normalizedKeywords = keywords.map(k => sanitizeText(k)).filter(k => k.length > 0);
+        if (normalizedKeywords.length === 0) {
+            throw new Error('At least one keyword is required');
+        }
+
+        const parsed = HTMLParser.parse(htmlContent);
+
+        const { htmlRoot } = await buildCircuitWithScore(parsed, normalizedKeywords);
+        return {
+            htmlRoot,
+            success: true
+        };
     }
 
     export const verifyProof = ProofVerifier.verifyProof;

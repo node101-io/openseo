@@ -8,3 +8,6 @@ batch_results/
 analiz.txt
 .vscode/
 htmls/
+html_files/
+.env
+uploads/

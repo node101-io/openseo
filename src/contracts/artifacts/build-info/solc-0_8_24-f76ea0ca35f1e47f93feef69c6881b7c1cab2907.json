@@ -1,0 +1,39 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_24-f76ea0ca35f1e47f93feef69c6881b7c1cab2907",
+  "solcVersion": "0.8.24",
+  "solcLongVersion": "0.8.24+commit.e11b9ed9",
+  "userSourceNameMap": {
+    "src/contracts/OpenSEO.sol": "project/src/contracts/OpenSEO.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "shanghai",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode",
+            "evm.deployedBytecode",
+            "evm.methodIdentifiers",
+            "metadata"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/src/contracts/OpenSEO.sol": {
+        "content": "//SPDX-License-Identifier: UNLICENSED\npragma solidity ^0.8.24;\n\ncontract OpenSEO {\n    uint256 public constant VERIFICATION_TIMEOUT = 300;\n    uint256 public constant REQUIRED_CONSENSUS = 2;\n\n    mapping(address => bool) public authorizedNodes;\n\n    struct VerificationRequest {\n        address owner;\n        uint256 timestamp;\n        uint256 paymentAmount;\n        bool isProcessed;\n        string cid; \n        bytes32 resultRoot; \n    }\n\n    //her bir node dan gelen root \n    struct Vote {\n        address node;\n        bytes32 root;\n    }\n\n    VerificationRequest[] public requests;\n    mapping(string => uint256) public cidToRequestID; //ownerdan gelen istekleri cid kullanarak bulmak için 0->yok, 0.index(+1)\n    mapping(uint256 => Vote[]) public requestVotes; //her bir request için kim hangi oyu(node=root) attı \n    \n    event VerificationRequested(uint256 indexed requestId, string cid, string[] keywords, address owner);\n    event RequestCompleted(uint256 indexed requestId, bool success);\n\n    modifier authNodes() {\n        require(authorizedNodes[msg.sender], \"Unauthorized\");\n        _;\n    }\n\n    constructor(address[3] memory _nodes) {\n        for(uint i=0; i<3; i++) {\n            authorizedNodes[_nodes[i]] = true;\n        }\n    }\n\n    function verifyRequest(string calldata cid, string[] calldata keywords ) external payable {\n        require(msg.value>0, \"Payment amount required\");\n        require(cidToRequestID[cid] == 0 || requests[cidToRequestID[cid] -1].isProcessed, \"No active request\");\n\n        uint256 reqID = requests.length;\n        requests.push(VerificationRequest({\n            owner: msg.sender,\n            timestamp: block.timestamp,\n            paymentAmount: msg.value,\n            isProcessed: false,\n            cid: cid,\n            resultRoot: bytes32(0)\n        }));\n\n        cidToRequestID[cid] = reqID + 1; \n        emit VerificationRequested(reqID, cid, keywords, msg.sender);\n    }\n\n    function submitVerification(string calldata cid, bytes32 htmlRoot) external authNodes{\n        uint256 id = cidToRequestID[cid];\n        require(id > 0, \"Request not found\"); \n        uint256 reqID = id - 1;\n\n        VerificationRequest storage request = requests[reqID];\n        require(!request.isProcessed, \"Request processed\");\n\n        //timeout olursa ownera iade\n        if(block.timestamp > request.timestamp + VERIFICATION_TIMEOUT) {\n            request.isProcessed = true;\n            payable(request.owner).transfer(request.paymentAmount);\n            emit RequestCompleted(reqID, false);\n            return;\n        }\n\n        //aynı node aynı root u birden fazla verify etmemeli\n        Vote[] storage votes = requestVotes[reqID];\n        for(uint i=0; i<votes.length; i++) {\n            require(votes[i].node != msg.sender, \"Voted\");\n        }\n        votes.push(Vote({node:msg.sender, root: htmlRoot}));\n\n        //Consensus\n        uint256 matchCount = 0; //kaç node verify yaptı\n        for(uint i=0; i<votes.length; i++) {\n            if(votes[i].root == htmlRoot) {\n                matchCount++;\n            }\n        }\n\n        //consensus okey\n        if(matchCount >= REQUIRED_CONSENSUS) {\n            request.isProcessed = true;\n            request.resultRoot = htmlRoot;\n\n            //node payment\n            uint256 payPerNode = request.paymentAmount / matchCount;\n            for(uint i=0; i<votes.length; i++) {\n                if(votes[i].root == htmlRoot) {\n                    payable(votes[i].node).transfer(payPerNode);\n                }\n            }\n            emit RequestCompleted(reqID, true);\n        }\n    }\n\n    function getRequestDetails(uint256 reqID) external view returns (\n        address owner,\n        uint256 timestamp,\n        bool isProcessed,\n        string memory cid,\n        bytes32 resultRoot\n    ) {\n        VerificationRequest memory request = requests[reqID];\n        return (request.owner, request.timestamp, request.isProcessed, request.cid, request.resultRoot);\n    }\n}"
+      }
+    }
+  }
+}

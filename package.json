@@ -12,12 +12,26 @@
     "html-generate": "tsx src/htmlGenerator.ts",
     "start": "tsx src/server.ts",
     "build": "tsc",
-    "dev": "tsx src/helper/scripts/server.ts"
+    "dev": "tsx src/helper/scripts/server.ts",
+    "start:node1": "tsx src/routes/node1.ts",
+    "start:node2": "tsx src/routes/node2.ts",
+    "start:node3": "tsx src/routes/node3.ts",
+    "start:filecoin": "tsx src/routes/filecoin.ts",
+    "start:html-owner": "tsx src/routes/html_owner.ts",
+    "start:all": "concurrently \"npm run start:node1\" \"npm run start:node2\" \"npm run start:node3\"",
+    "hardhat:compile": "hardhat compile",
+    "hardhat:test": "hardhat test",
+    "hardhat:node": "hardhat node",
+    "hardhat:deploy": "hardhat run scripts/deploy.ts",
+    "hardhat:deploy:localhost": "hardhat run src/services/deploy.ts --network localhost",
+    "hardhat:deploy:sepolia": "hardhat run src/services/deploy.ts --network sepolia"
   },
   "dependencies": {
     "@aztec/bb.js": "^0.87.0",
     "@noir-lang/acvm_js": "1.0.0-beta.14",
     "@noir-lang/noir_js": "1.0.0-beta.9",
+    "axios": "^1.13.2",
+    "ethers": "^6.16.0",
     "express": "^4.19.2",
     "jsdom": "^24.0.0",
     "multer": "^1.4.5-lts.1",
@@ -28,6 +42,9 @@
     "@types/jsdom": "^27.0.0",
     "@types/multer": "^1.4.11",
     "@types/node": "^20.0.0",
+    "concurrently": "^9.2.1",
+    "dotenv": "^17.2.3",
+    "hardhat": "^3.1.4",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3"
   }
