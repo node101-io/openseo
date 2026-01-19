@@ -1,0 +1,39 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_24-076b91360c2178c0575bcb741339c13f6fdbe2ac",
+  "solcVersion": "0.8.24",
+  "solcLongVersion": "0.8.24+commit.e11b9ed9",
+  "userSourceNameMap": {
+    "src/contracts/OpenSEO.sol": "project/src/contracts/OpenSEO.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "shanghai",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode",
+            "evm.deployedBytecode",
+            "evm.methodIdentifiers",
+            "metadata"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/src/contracts/OpenSEO.sol": {
+        "content": "//SPDX-License-Identifier: UNLICENSED\npragma solidity ^0.8.24;\n\ncontract OpenSEO {\n    uint256 public constant VERIFICATION_TIMEOUT = 300;\n    uint256 public constant REQUIRED_CONSENSUS = 2;\n\n    mapping(address => bool) public authorizedNodes;\n\n    struct VerificationRequest {\n        address owner;\n        uint256 timestamp;\n        uint256 paymentAmount;\n        bool isProcessed; \n        mapping(bytes32 => address[]) cidRootVotes; //\"0xRootHash...\": [Node1, Node2]\n    }\n\n    struct RequestResult {\n        string cid; \n        bytes32 resultRoot; \n    }\n\n    //her bir node dan gelen root \n    struct Vote {\n        address node;\n        bytes32 root;\n    }\n\n    mapping(string => RequestResult) public results; //if isProcessed true \n    mapping(string => VerificationRequest) public requests; \n    mapping(string => mapping(address => bool)) public hasVoted; //o mode un o cid için oy kullanıp kullanmadığı\n\n    event VerificationRequested(string cid, string[] keywords, address owner);\n    event RequestCompleted(string cid, bool success);\n\n    modifier authNodes() {\n        require(authorizedNodes[msg.sender], \"Unauthorized\");\n        _;\n    }\n\n    constructor(address[3] memory _nodes) {\n        for(uint i=0; i<3; i++) {\n            authorizedNodes[_nodes[i]] = true;\n        }\n    }\n\n    function submitRequest(string calldata cid, string[] calldata keywords ) external payable {\n        require(msg.value>0, \"Payment amount required\");\n        VerificationRequest storage request = requests[cid];\n\n        if (request.paymentAmount > 0) { \n             require(request.isProcessed, \"Active request exists\");\n        }\n\n        request.owner = msg.sender;\n        request.timestamp = block.timestamp;\n        request.paymentAmount = msg.value;\n        request.isProcessed = false;\n\n        emit VerificationRequested(cid, keywords, msg.sender);\n    }\n\n    function submitHtmlRoot(string calldata cid, bytes32 htmlRoot) external authNodes{\n        VerificationRequest storage request = requests[cid];\n\n        require(request.paymentAmount > 0, \"Request not found\"); \n        require(!request.isProcessed, \"Request processed\");\n        require(!hasVoted[cid][msg.sender], \"Voted\"); //çifte oy kontrolü\n\n        hasVoted[cid][msg.sender] = true;\n        request.cidRootVotes[htmlRoot].push(msg.sender); //bu cid için bu root a oy verenlere ekle \n        uint256 matchVoteCount = request.cidRootVotes[htmlRoot].length;\n\n        if(matchVoteCount >= REQUIRED_CONSENSUS) {\n            request.isProcessed = true;\n            results[cid] = RequestResult({cid:cid, resultRoot: htmlRoot});\n\n            address[] memory winners = request.cidRootVotes[htmlRoot];\n            uint256 payPerNode = request.paymentAmount / matchVoteCount;\n\n            for(uint i=0; i < winners.length; i++) {\n                payable(winners[i]).transfer(payPerNode);\n            }\n\n            emit RequestCompleted(cid, true);\n        }\n    }\n\n    function claimRefund(string calldata cid) external {\n        VerificationRequest storage request = requests[cid];\n        \n        require(request.paymentAmount > 0, \"Not found\");\n        require(!request.isProcessed, \"Already processed\");\n        require(block.timestamp > request.timestamp + VERIFICATION_TIMEOUT, \"Wait timeout\");\n        require(msg.sender == request.owner, \"Not owner\"); \n        request.isProcessed = true;\n\n        payable(request.owner).transfer(request.paymentAmount);\n        emit RequestCompleted(cid, false); \n    }\n\n    function getRequestDetails(string calldata cid) external view returns (\n        string memory CID,\n        bytes32 resultRoot\n    ) {\n        RequestResult memory result = results[cid];\n        return (result.cid, result.resultRoot);\n    } \n\n    function cleanIsNotProcessedRequest(string calldata cid) external authNodes(){\n        VerificationRequest storage request = requests[cid];\n\n        require(request.paymentAmount>0, \"Request not found\");\n        require(!request.isProcessed, \"Processed\");\n        require(block.timestamp > request.timestamp + VERIFICATION_TIMEOUT, \"Not expired request verification time\");\n        delete requests[cid];\n    }   \n}"
+      }
+    }
+  }
+}

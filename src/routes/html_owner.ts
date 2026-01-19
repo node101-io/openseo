@@ -2,8 +2,8 @@ import express, { Request, Response } from 'express';
 import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
-import { CircuitProof } from '../helper/utils/prover/CircuitProof.js';
-import { HTMLParser } from '../helper/utils/common/HTMLParser.js';
+import { CircuitProof } from '../zk/utils/prover/CircuitProof.js';
+import { HTMLParser } from '../zk/utils/common/HTMLParser.js';
 import { getOpenSEOABI } from '../services/contractABI.js';
 import { ethers } from 'ethers';
 import * as dotenv from 'dotenv';
@@ -18,6 +18,7 @@ app.use(router);
 
 const PORT = 3005;
 const FILECOIN_URL = process.env.FILECOIN_URL || 'http://localhost:3000';
+const DA_URL = process.env.DA_URL || 'http://localhost:3007';
 
 // Multer
 const TEMP_UPLOADS_DIR = path.join(process.cwd(), 'uploads', 'temp');
@@ -116,10 +117,8 @@ app.post('/send_file', upload.single('file'), async (req: Request, res: Response
         const cid = String(filecoinResponse.data.cid);
         console.log(`[HTML Owner] CID received: ${cid}`);
 
-        // Delete temporary file
         fs.unlinkSync(tempFilePath);
 
-        // Check contract 
         const contractAddress = process.env.CONTRACT_ADDRESS;
         if (!contractAddress) {
             return res.status(200).json({
@@ -148,7 +147,7 @@ app.post('/send_file', upload.single('file'), async (req: Request, res: Response
         try {
             const contract = new ethers.Contract(contractAddress, getOpenSEOABI(), wallet);
             
-            // Verification fee
+            // fee
             let feeAmount = process.env.VERIFICATION_FEE || "";
             feeAmount = feeAmount.replace(/\s*(ETH|eth)\s*/gi, '').trim();
             const verificationFee = ethers.parseEther(feeAmount);
@@ -234,6 +233,201 @@ app.get('/request_status/:cid', async (req: Request, res: Response) => {
     } catch (error: any) {
         console.error('Error in /request_status:', error);
         return res.status(500).json({ error: error.message || 'Internal server error' });
+    }
+});
+
+// Wait for consensus (RequestCompleted event) by polling contract results
+async function waitForConsensus(
+    contract: ethers.Contract,
+    expectedRoot: string,
+    maxWaitMs: number = 60000,
+    pollIntervalMs: number = 2000
+): Promise<{ success: boolean; cid?: string; error?: string }> {
+    const startTime = Date.now();
+    const normalizeRoot = (r: string) => r.toLowerCase().replace(/^0x/, '');
+    const normalizedExpected = normalizeRoot(expectedRoot);
+
+    console.log(`[HTML Owner] Waiting for consensus on root: ${expectedRoot.substring(0, 20)}...`);
+
+    while (Date.now() - startTime < maxWaitMs) {
+        try {
+            // Get recent RequestCompleted events
+            const provider = contract.runner?.provider as ethers.Provider;
+            if (!provider) break;
+
+            const currentBlock = await provider.getBlockNumber();
+            const fromBlock = Math.max(0, currentBlock - 50);
+
+            const events = await contract.queryFilter(
+                contract.filters.RequestCompleted(),
+                fromBlock,
+                currentBlock
+            );
+
+            for (const event of events) {
+                if (event instanceof ethers.EventLog && event.args) {
+                    const cid = String(event.args[0]);
+                    const success = event.args[1];
+
+                    if (success) {
+                        const result = await contract.results(cid);
+                        const resultRoot = result.resultRoot;
+
+                        if (resultRoot && normalizeRoot(resultRoot) === normalizedExpected) {
+                            console.log(`[HTML Owner] Consensus reached! CID: ${cid}`);
+                            return { success: true, cid };
+                        }
+                    }
+                }
+            }
+        } catch (error) {
+            // Continue polling
+        }
+
+        await new Promise(resolve => setTimeout(resolve, pollIntervalMs));
+        console.log(`[HTML Owner] Still waiting for consensus... (${Math.round((Date.now() - startTime) / 1000)}s)`);
+    }
+
+    return { success: false, error: 'Consensus timeout - nodes may not have reached agreement' };
+}
+
+app.post('/generate_proof_and_submit', upload.single('file'), async (req: Request, res: Response) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'HTML file is required' });
+        }
+
+        const keywords = req.body.keywords 
+            ? (typeof req.body.keywords === 'string' ? JSON.parse(req.body.keywords) : req.body.keywords)
+            : [];
+
+        if (!Array.isArray(keywords) || keywords.length === 0) {
+            return res.status(400).json({ error: 'keywords (array) is required' });
+        }
+
+        const siteUrl = req.body.siteUrl || req.body.site_url;
+        if (!siteUrl) {
+            return res.status(400).json({ error: 'siteUrl is required' });
+        }
+
+        // Read HTML content
+        const tempFilePath = req.file.path;
+        const htmlContent = fs.readFileSync(tempFilePath, 'utf-8');
+
+        console.log(`[HTML Owner] Generating proof for site: ${siteUrl}`);
+        console.log(`[HTML Owner] Keywords: ${keywords.join(', ')}`);
+
+        // generate proof
+        const proofResult = await CircuitProof.generateProof(htmlContent, keywords, 'v4');
+
+        if (!proofResult.success || !proofResult.proof) {
+            fs.unlinkSync(tempFilePath);
+            return res.status(400).json({ 
+                error: 'Proof generation failed',
+                details: proofResult.error 
+            });
+        }
+
+        console.log(`[HTML Owner] Proof generated. Root: ${proofResult.htmlRoot}`);
+
+        // verify proof locally
+        const verifyResult = await CircuitProof.verifyProof(proofResult.proof, proofResult.htmlRoot);
+        console.log(`[HTML Owner] Local verify result: ${verifyResult.isValid}`);
+        if (!verifyResult.isValid) {
+            fs.unlinkSync(tempFilePath);
+            return res.status(400).json({ 
+                error: 'Proof verification failed',
+                details: verifyResult.error 
+            });
+        }
+
+        console.log(`[HTML Owner] Proof verified locally`);
+
+        // Wait for Ethereum consensus before submitting to DA
+        const contractAddress = process.env.CONTRACT_ADDRESS;
+        if (contractAddress) {
+            const rpcUrl = process.env.ETHEREUM_RPC_URL || 'http://localhost:8545';
+            const provider = new ethers.JsonRpcProvider(rpcUrl);
+            const contract = new ethers.Contract(contractAddress, getOpenSEOABI(), provider);
+
+            const consensusResult = await waitForConsensus(contract, proofResult.htmlRoot, 120000, 3000);
+            
+            if (!consensusResult.success) {
+                fs.unlinkSync(tempFilePath);
+                return res.status(400).json({
+                    error: 'Consensus not reached',
+                    details: consensusResult.error,
+                    proof: {
+                        root: proofResult.htmlRoot,
+                        totalScore: proofResult.totalScore
+                    }
+                });
+            }
+
+            console.log(`[HTML Owner] Ethereum consensus confirmed for CID: ${consensusResult.cid}`);
+        }
+
+        // submit to DA (after consensus)
+        console.log(`[HTML Owner] Submitting to DA: ${DA_URL}`);
+
+        const daResponse = await axios.post(`${DA_URL}/submit_proof`, {
+            proof: proofResult.proof,
+            root: proofResult.htmlRoot,
+            keywords: keywords,
+            siteUrl: siteUrl,
+            totalScore: proofResult.totalScore
+        }, {
+            timeout: 60000,
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        fs.unlinkSync(tempFilePath);
+
+        if (daResponse.data.success) {
+            console.log(`[HTML Owner] Successfully submitted to DA`);
+            return res.status(200).json({
+                success: true,
+                message: 'Proof generated, verified and submitted to DA',
+                proof: {
+                    proof: proofResult.proof,
+                    root: proofResult.htmlRoot,
+                    totalScore: proofResult.totalScore,
+                    verified: true
+                },
+                da: daResponse.data
+            });
+        } else {
+            return res.status(400).json({
+                success: false,
+                error: 'DA submission failed',
+                proof: {
+                    proof: proofResult.proof, 
+                    root: proofResult.htmlRoot,
+                    totalScore: proofResult.totalScore,
+                    verified: true
+                },
+                da: daResponse.data
+            });
+        }
+
+    } catch (error: any) {
+        console.error('[HTML Owner] Error in /generate_proof_and_submit:', error.message);
+        
+        if (req.file?.path && fs.existsSync(req.file.path)) {
+            fs.unlinkSync(req.file.path);
+        }
+
+        if (error.response) {
+            console.error('[HTML Owner] DA Response Error:', error.response.data);
+            return res.status(error.response.status).json({ 
+                error: error.message,
+                daError: error.response.data
+            });
+        }
+
+        return res.status(500).json({ 
+            error: error.message || 'Internal server error' 
+        });
     }
 });
 

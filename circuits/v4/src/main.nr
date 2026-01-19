@@ -76,7 +76,7 @@ fn main(
     assert(root == html_root);
     assert(found == keyword_count);
     assert(score == total_score);
-    let mask = (1 << word_count) - 1; 
+    let mask: u32 = if word_count >= 32 { 0xFFFFFFFF } else { (1 << word_count) - 1 };
     assert((is_keyword & !mask) == 0);
 }
 

@@ -12,6 +12,7 @@ contract OpenSEO {
         uint256 timestamp;
         uint256 paymentAmount;
         bool isProcessed; 
+        mapping(bytes32 => address[]) cidRootVotes; //"0xRootHash...": [Node1, Node2]
     }
 
     struct RequestResult {
@@ -27,7 +28,6 @@ contract OpenSEO {
 
     mapping(string => RequestResult) public results; //if isProcessed true 
     mapping(string => VerificationRequest) public requests; 
-    mapping(string => mapping(bytes32 => address[])) public cidRootVotes; //"Qm123" -> { "0xRootHash...": [Node1, Node2] }
     mapping(string => mapping(address => bool)) public hasVoted; //o mode un o cid için oy kullanıp kullanmadığı
 
     event VerificationRequested(string cid, string[] keywords, address owner);
@@ -52,12 +52,10 @@ contract OpenSEO {
              require(request.isProcessed, "Active request exists");
         }
 
-        requests[cid] = VerificationRequest({
-            owner: msg.sender,
-            timestamp: block.timestamp,
-            paymentAmount: msg.value,
-            isProcessed: false
-        });
+        request.owner = msg.sender;
+        request.timestamp = block.timestamp;
+        request.paymentAmount = msg.value;
+        request.isProcessed = false;
 
         emit VerificationRequested(cid, keywords, msg.sender);
     }
@@ -70,14 +68,14 @@ contract OpenSEO {
         require(!hasVoted[cid][msg.sender], "Voted"); //çifte oy kontrolü
 
         hasVoted[cid][msg.sender] = true;
-        cidRootVotes[cid][htmlRoot].push(msg.sender); //bu cid için bu root a oy verenlere ekle 
-        uint256 matchVoteCount = cidRootVotes[cid][htmlRoot].length;
+        request.cidRootVotes[htmlRoot].push(msg.sender); //bu cid için bu root a oy verenlere ekle 
+        uint256 matchVoteCount = request.cidRootVotes[htmlRoot].length;
 
         if(matchVoteCount >= REQUIRED_CONSENSUS) {
             request.isProcessed = true;
             results[cid] = RequestResult({cid:cid, resultRoot: htmlRoot});
 
-            address[] memory winners = cidRootVotes[cid][htmlRoot];
+            address[] memory winners = request.cidRootVotes[htmlRoot];
             uint256 payPerNode = request.paymentAmount / matchVoteCount;
 
             for(uint i=0; i < winners.length; i++) {
@@ -94,7 +92,7 @@ contract OpenSEO {
         require(request.paymentAmount > 0, "Not found");
         require(!request.isProcessed, "Already processed");
         require(block.timestamp > request.timestamp + VERIFICATION_TIMEOUT, "Wait timeout");
-        require(msg.sender == request.owner, "Not owner"); // 'requester' değil 'owner'
+        require(msg.sender == request.owner, "Not owner"); 
         request.isProcessed = true;
 
         payable(request.owner).transfer(request.paymentAmount);
@@ -115,7 +113,6 @@ contract OpenSEO {
         require(request.paymentAmount>0, "Request not found");
         require(!request.isProcessed, "Processed");
         require(block.timestamp > request.timestamp + VERIFICATION_TIMEOUT, "Not expired request verification time");
-
         delete requests[cid];
     }   
 }

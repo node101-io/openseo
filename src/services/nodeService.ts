@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 import axios from 'axios';
-import { CircuitProof } from '../helper/utils/prover/CircuitProof.js';
+import { CircuitProof } from '../zk/utils/prover/CircuitProof.js';
 import { getOpenSEOABI } from './contractABI.js';
 
 export class NodeService {
@@ -83,6 +83,7 @@ export class NodeService {
             this.contract = new ethers.Contract(this.contractAddress, contractABI, this.wallet);
 
             console.log(`[${this.nodeName}] Ethereum connected. Address: ${this.wallet.address}, Balance: ${ethers.formatEther(balance)} ETH`);
+            console.log(`[${this.nodeName}] Contract address: ${this.contractAddress}`);
             return true;
         } catch (error: any) {
             console.error(`[${this.nodeName}] Failed to setup Ethereum:`, error.message);
@@ -99,45 +100,43 @@ export class NodeService {
         const currentBlock = await this.provider.getBlockNumber();
         console.log(`[${this.nodeName}] Current block: ${currentBlock}`);
 
-        this.lastProcessedBlock = currentBlock;
+        // Start from block 0 to catch all events
+        this.lastProcessedBlock = 0;
         console.log(`[${this.nodeName}] Starting polling from block ${this.lastProcessedBlock}`);
 
         this.pollingInterval = setInterval(async () => {
             this.isPolling = true;
-            const currentBlock = await this.provider.getBlockNumber();
-            if (currentBlock > this.lastProcessedBlock) {
-                const fromBlock = this.lastProcessedBlock + 1;
-                console.log(`[${this.nodeName}] Polling blocks ${fromBlock} to ${currentBlock}...`);
+            try {
+                const currentBlock = await this.provider.getBlockNumber();
+                if (currentBlock > this.lastProcessedBlock) {
+                    const fromBlock = this.lastProcessedBlock + 1;
+                    console.log(`[${this.nodeName}] Polling blocks ${fromBlock} to ${currentBlock}...`);
 
-                const completedEvents = await this.contract.queryFilter(
-                    this.contract.filters.RequestCompleted(),
-                    fromBlock,
-                    currentBlock
-                );
+                    const completedEvents = await this.contract.queryFilter(
+                        this.contract.filters.RequestCompleted(),
+                        fromBlock,
+                        currentBlock
+                    );
 
-                if (completedEvents.length > 0) {
-                    console.log(`[${this.nodeName}] Found ${completedEvents.length} RequestCompleted events`);
-                }
+                    console.log(`[${this.nodeName}] RequestCompleted events found: ${completedEvents.length}`);
 
-                for (const event of completedEvents) {
-                    if (event instanceof ethers.EventLog && event.args) {
-                        const cid = String(event.args[0]);
-                        const success = event.args[1];
-                        this.completedRequests.add(cid);
-                        this.processingRequests.delete(cid);
-                        console.log(`[${this.nodeName}] Request ${cid} completed (success: ${success})`);
+                    for (const event of completedEvents) {
+                        if (event instanceof ethers.EventLog && event.args) {
+                            const cid = String(event.args[0]);
+                            const success = event.args[1];
+                            this.completedRequests.add(cid);
+                            this.processingRequests.delete(cid);
+                            console.log(`[${this.nodeName}] Request ${cid} completed (success: ${success})`);
+                        }
                     }
-                }
 
-                const newEvents = await this.contract.queryFilter(
-                    this.contract.filters.VerificationRequested(),
-                    fromBlock,
-                    currentBlock
-                );
+                    const newEvents = await this.contract.queryFilter(
+                        this.contract.filters.VerificationRequested(),
+                        fromBlock,
+                        currentBlock
+                    );
 
-                if (newEvents.length > 0) {
-                    console.log(`[${this.nodeName}] Found ${newEvents.length} VerificationRequested events`);
-                }
+                    console.log(`[${this.nodeName}] VerificationRequested events found: ${newEvents.length}`);
 
                 for (const event of newEvents) {
                     if (event instanceof ethers.EventLog && event.args) {
@@ -159,6 +158,9 @@ export class NodeService {
                     }
                 }
                 this.lastProcessedBlock = currentBlock;
+            }
+            } catch (pollError: any) {
+                console.error(`[${this.nodeName}] Polling error:`, pollError.message);
             }
         }, 3000);
         console.log(`[${this.nodeName}] Event listener started`);
