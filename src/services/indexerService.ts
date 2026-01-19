@@ -324,7 +324,26 @@ export class IndexerService {
     }
 
     async getProofsByKeywords(keywordArray: string[]): Promise<IZkProofMetadata[]> {
-        return await ZkProofMetadata.find({ keywordArray });
+        return await ZkProofMetadata.find({ keywords: { $in: keywordArray } });
+    }
+
+    async searchByKeywords(query: string): Promise<IZkProofMetadata[]> {
+        const searchTerms = query
+            .toLowerCase()
+            .split(/\s+/)
+            .filter(term => term.length > 0);
+
+        if (searchTerms.length === 0) {
+            return [];
+        }
+
+        const results = await ZkProofMetadata.find({
+            keywords: {
+                $in: searchTerms.map(term => new RegExp(term, 'i'))
+            }
+        }).sort({ totalScore: -1 }); 
+
+        return results;
     }
 }
 
