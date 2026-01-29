@@ -1,44 +1,18 @@
-# OpenSEO Webapp
-
-The OpenSEO webapp provides a user interface for searching and verifying decentralized SEO proofs. It serves as the primary way for end users to interact with the OpenSEO ecosystem.
-
-## Primary Functions
-
-- **Keyword Search**
-
-  Users can search for websites by entering keywords. The search queries the indexer service and returns a ranked list of verified websites that contain the specified keywords. Results are ordered by SEO score, which is computed based on keyword placement within HTML tags.
-
-- **Proof Verification**
-
-  Each search result includes a "Verify" button that allows users to independently verify the zero-knowledge proof associated with that result. This verification is performed client-side by calling the indexer's verification endpoint, ensuring that users don't need to trust the search results blindly.
-
-- **Result Display**
-
-  Search results display the website URL, matched keywords, total SEO score, and verification status. Users can click through to visit the actual website or verify the proof before trusting the ranking.
+# OpenSEO Frontend
+The OpenSEO frontend provides the user interface for searching and verifying decentralized SEO proofs. It is the main application through which users interact with the OpenSEO ecosystem.
 
 ## Purpose
+This app demonstrates the end-user experience of a decentralized search engine. Rankings are based on cryptographically verifiable proofs; because proofs are stored in the indexer and on-chain, users can verify any result at any time.
 
-This webapp demonstrates the end-user experience of a decentralized search engine. Unlike traditional search engines where rankings are opaque and controlled by a central authority, OpenSEO rankings are based on cryptographically verifiable proofs.
+## Features
+- **Keyword search**  
+  Users search for websites by entering keywords. The search queries the indexer service and returns a ranked list of verified sites that match. Results are ordered by SEO score, computed from keyword placement within HTML tags.
 
-The interface is intentionally minimal to focus on the core functionality. Website owners submit their sites through the backend API, and users search and verify through this webapp. The separation ensures that the search experience remains simple while the complexity of proof generation and verification happens behind the scenes.
+- **Proof verification**  
+  Each result includes a "Verify" button so users can independently verify the zero-knowledge proof. Verification uses the indexer’s verification endpoint and Noir/bb.js in the browser.
 
-Since all proofs are stored on-chain and in the indexer, users can verify any result at any time. The webapp simply provides a convenient interface for this verification - the same verification could be performed using command-line tools or other interfaces.
+- **Result display**  
+  Shows URL, matched keywords, SEO score, and verification status. Users can visit the site or verify the proof first.
 
-## Running
-
-```bash
-# Development server
-pnpm dev
-
-# Production build
-pnpm build
-
-# Start production server
-pnpm start
-```
-
-## Technology
-
-- Next.js 14 with App Router
-- Tailwind CSS for styling
-- Client-side proof verification
+# Running the Service:
+pnpm --filter frontend run start

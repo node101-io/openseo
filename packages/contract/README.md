@@ -1,50 +1,37 @@
 # OpenSEO Contract
-
-The OpenSEO smart contract is the on-chain component that coordinates verification requests and stores consensus results. It acts as the source of truth for all verified HTML roots.
-
-## Primary Functions
-
-- **Verification Request Management**
-
-  Website owners submit verification requests by providing a content identifier (CID) and a list of keywords they want to prove exist in their HTML. A fee is required to incentivize node operators to perform the verification.
-
-- **Consensus Mechanism**
-
-  Multiple verification nodes independently compute the HTML root for a given CID and submit their results to the contract. The contract tracks votes and determines consensus when a threshold of nodes agree on the same root value.
-
-- **Result Storage**
-
-  Once consensus is reached, the agreed-upon HTML root is permanently stored on-chain. This root can be used by anyone to verify that a specific HTML document contains certain keywords with a specific SEO score.
-
-- **Timeout and Refund Handling**
-
-  If verification nodes fail to reach consensus within the timeout period, the original requester can claim a refund. This protects users from losing funds due to network issues or node unavailability.
+The OpenSEO contract package provides the Solidity smart contract and Node.js utilities for deployment and ABI access. The contract is the on-chain source of truth for verified HTML roots and coordinates verification requests and consensus among nodes.
 
 ## Purpose
+The smart contract anchors trust for the system. Website owners submit a CID and keywords and pay a fee; authorized nodes compute the HTML root and vote. When enough nodes agree on the same root, it is stored on-chain. The indexer and other services use this package to read the contract (ABI) and deploy it to a network.
 
-The smart contract serves as the trust anchor for the entire system. While the backend services handle computation and storage, the contract provides the cryptographic guarantee that verification results cannot be tampered with after consensus is reached.
+## Features
+- **Verification requests**  
+  `submitRequest(cid, keywords)` — requester pays and emits a request. Only one active request per CID.
 
-By storing only the HTML root (a 32-byte hash) rather than the full content, the contract maintains minimal on-chain footprint while still enabling full verification. Anyone with access to the original HTML can recompute the root and verify it matches the on-chain value.
+- **Node voting**  
+  Authorized nodes call `submitHtmlRoot(cid, htmlRoot)`. Votes are grouped by root; when `REQUIRED_CONSENSUS` (2) nodes agree on the same root, the request is finalized.
 
-The contract is designed to be node-operator agnostic. Any entity can run a verification node and participate in consensus, provided they stake the required amount and follow the protocol.
+- **Result storage**  
+  Finalized `(cid, resultRoot)` is stored in `results`. Anyone can read the agreed root for a CID.
 
-## Deployment
+- **Payouts**  
+  When consensus is reached, the payment is split among the nodes that voted for the winning root.
 
-```bash
-# Compile the contract
-pnpm compile
-
-# Deploy to local Hardhat node
-pnpm deploy:localhost
-
-# Deploy to Sepolia testnet
-pnpm deploy:sepolia
-```
+- **Timeout and refund**  
+  If the request is not processed within `VERIFICATION_TIMEOUT`, the owner can claim a refund.
 
 ## Usage
+This package is consumed as `@openseo/contract` by the backend, indexer, and nodes. Import the ABI and deploy helpers:
 
-This package is exported as `@openseo/contract` for use by other packages:
+## Running (contract package only)
+From the monorepo root:
 
-```typescript
-import { getOpenSEOABI } from '@openseo/contract';
+```bash
+pnpm --filter @openseo/contract compile
+pnpm --filter @openseo/contract deploy:localhost
+pnpm --filter @openseo/contract deploy:sepolia
 ```
+
+## Environment (for deploy)
+- `SEPOLIA_RPC_URL` — RPC URL for Sepolia (for `deploy:sepolia`)
+- Deployer private key in Hardhat config or `PRIVATE_KEY` in `.env`

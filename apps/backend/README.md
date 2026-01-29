@@ -15,19 +15,14 @@ Submits verification requests to the OpenSEO Smart Contract, including the CID a
 # ZK Proof Generation:
 Generates cryptographic proofs (using Noir/UltraHonk) verifying keyword presence and SEO scores.
 
-# Consensus Waiting:
-Polls the blockchain network, waiting for consensus among verifier nodes before finalizing the process.
-
 # DA Layer Submission: 
 Submits the generated proof and metadata to the Data Availability Layer for permanent indexing.
 
 # Refund Claiming: 
 Allows users to claim refunds for expired or unfulfilled verification requests.
 
-
 # Installation:
 pnpm install
-
 
 # Configuration:
 OWNER_PRIVATE_KEY 
@@ -38,7 +33,6 @@ VERIFICATION_FEE=
 HTML_OWNER_PORT
 DA_URL
 HARDHAT_TEST_ACCOUNT
-
 
 # Running the Service:
 pnpm --filter backend run start

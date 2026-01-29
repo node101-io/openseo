@@ -1,47 +1,25 @@
 # OpenSEO ZKProof
-The zkproof package provides zero-knowledge proof generation and verification capabilities for HTML content. It uses Noir circuits compiled with Barretenberg to create succinct proofs that a given HTML document contains specific keywords.
-
-## Primary Functions
-- **HTML Parsing and Scoring**
-  Parses HTML documents and extracts text content with associated tag weights. Keywords found in high-value tags (title, h1, meta) receive higher scores than those in body text. This scoring system forms the basis of the SEO ranking.
-
-- **Proof Generation**
-  Generates a zero-knowledge proof that commits to the HTML content structure and keyword positions. The proof includes a Merkle root (html_root) that uniquely identifies the document-keyword combination, along with the total SEO score.
-
-- **Proof Verification**
-  Verifies that a given proof is valid for a specific HTML root. This verification can be performed by anyone without access to the original HTML content, enabling trustless verification of SEO claims.
-
-- **Root Computation**
-  Provides a lightweight function to compute only the HTML root without generating a full proof. This is used by verification nodes to quickly compute expected values before participating in consensus.
+The zkproof package provides zero-knowledge proof generation and verification for HTML content. It uses a Noir circuit (compiled with Nargo/Barretenberg) to prove that a given HTML document contains specific keywords and yields a specific SEO score, and exposes Node.js APIs used by the backend and indexer.
 
 ## Purpose
-Zero-knowledge proofs are the cryptographic foundation that makes OpenSEO trustless. Without ZK proofs, users would need to trust that the indexer correctly computed SEO scores. With ZK proofs, anyone can verify that a claimed score is mathematically correct.
+ZK proofs are the cryptographic basis for trustless OpenSEO. The backend generates proofs when a site is submitted; the indexer and frontend verify them. The circuit commits to an HTML root and total score without revealing the full document, so anyone can check that a claimed score is correct.
 
-The circuit design ensures that:
-1. The HTML root uniquely identifies a specific HTML document with specific keywords
-2. The SEO score is computed deterministically based on keyword positions and tag weights
-3. No information about non-keyword content is revealed in the proof
+## Features
+- **HTML parsing and scoring**  
+  `HTMLParser` parses HTML and extracts words with tag weights. Used to build circuit inputs and compute SEO score.
 
-This package is designed to be used both by the backend (for proof generation) and potentially by clients (for verification). The separation from the backend allows for future optimizations like client-side proving or dedicated prover infrastructure.
+- **Proof generation**  
+  `CircuitProof.generateProof(html, keywords)` — parses HTML, builds circuit inputs, runs the Noir prover (via Barretenberg), and returns proof + public inputs (html_root, total_score). Used by the backend when submitting a site.
+
+- **Proof verification**  
+  `ProofVerifier.verifyProof(proofWrapperJSON, expectedHtmlRoot)` — verifies a proof against an expected root using bb.js. Used by the indexer and can be used by the frontend (or the frontend uses Noir/bb.js directly).
+
+- **Root computation**  
+  The circuit’s public output includes the HTML root; the same root can be computed from the circuit inputs for consistency with the contract and indexer.
 
 ## Usage
-This package is exported as `@openseo/zkproof`:
+This package is consumed as `@openseo/zkproof` by the backend, indexer, and frontend
 
-```typescript
-import { CircuitProof, ProofVerifier, HTMLParser } from '@openseo/zkproof';
-
-// Generate a full proof
-const result = await CircuitProof.generateProof(htmlContent, keywords);
-// Returns: { proof, htmlRoot, totalScore, wordScorePairs, ... }
-
-// Verify a proof
-const verification = await ProofVerifier.verifyProof(proof, expectedHtmlRoot);
-// Returns: { isValid, verifyTime, error }
-
-// Compute only the root (no proof)
-const { htmlRoot, totalScore } = await CircuitProof.generateHtmlRoot(htmlContent, keywords);
-```
-
-## Requirements
-- Nargo (Noir compiler) for circuit compilation
-- Barretenberg CLI (bb) for proof generation and verification
+## Running (zkproof package only)
+pnpm --filter @openseo/zkproof prove   # nargo prove
+pnpm --filter @openseo/zkproof verify  # nargo verify

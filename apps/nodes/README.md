@@ -1,6 +1,5 @@
 # OpenSEO Nodes (Verifier Network)
 The Nodes Service represents the decentralized verifier network of the OpenSEO platform. Each node acts as an independent verifier that listens for blockchain verification requests, fetches HTML content from Filecoin, computes the cryptographic root hash, and submits votes to achieve consensus.
-
 This service acts as the Verifier in the ZK system, independently validating website content and participating in the decentralized consensus mechanism.
 
 # Blockchain Event Listening:
@@ -15,19 +14,11 @@ Independently computes the merkle root hash of the HTML content using the ZK cir
 # Consensus Voting:
 Submits computed root hashes to the smart contract, participating in the multi-node consensus mechanism.
 
-# Duplicate Prevention:
-Tracks processed and completed requests to avoid duplicate voting and unnecessary computation.
-
 # Expired Request Cleanup:
 Automatically cleans up expired verification requests from the blockchain (runs every 24 hours).
 
-# Multi-Node Support:
-Supports running multiple independent nodes (Node1, Node2, Node3) each with their own wallet and configuration.
-
-
 # Installation:
 pnpm install
-
 
 # Configuration:
 NODE1_PORT
@@ -72,13 +63,11 @@ Submits the computed root hash to the smart contract via submitHtmlRoot().
 6. Consensus
 When enough nodes submit matching root hashes, the smart contract achieves consensus and emits RequestCompleted.
 
-
 # Consensus Mechanism
 - Multiple nodes independently verify the same content
 - Each node computes the root hash and submits a vote
 - Smart contract requires a threshold of matching votes for consensus
 - Prevents single point of failure and ensures decentralized verification
-
 
 # Node Configuration
 For local development with Hardhat, nodes automatically use test accounts:
