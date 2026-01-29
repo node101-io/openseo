@@ -1,0 +1,27 @@
+{
+  "name": "@openseo/contract",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "node": "hardhat node",
+    "deploy": "hardhat run scripts/deploy.ts",
+    "deploy:localhost": "hardhat run src/services/deploy.ts --network localhost",
+    "deploy:sepolia": "hardhat run src/services/deploy.ts --network sepolia"
+  },
+  "dependencies": {
+    "ethers": "^6.16.0"
+  },
+  "devDependencies": {
+    "dotenv": "^17.2.3",
+    "hardhat": "^3.1.4",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3",
+    "@types/node": "^20.0.0"
+  }
+}

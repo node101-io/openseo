@@ -1,3 +1,0 @@
-console.log(ethers.formatEther(balance));
-const balance = await provider.getBalance("0xbDA5747bFD65F08deb54cb465eB87D40e51B197E");
-const provider = ethers.provider;

@@ -1,0 +1,12 @@
+# ZK-SEO Circuit
+# Keywords: talcahuano
+# Total Score: 5
+
+keyword_count = 2
+is_keyword = 10
+keyword_positions = [1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+word_hashes = ["0x0a4202c9ad4c19a7edc88a55760466a2bf9f1d5868e5248d2df2dc609993eb0b", "0x0dbee5e40277a33f81a7891bc57d6bca581094494f818e89af2448b4a9f88961", "0x2a2f9caf198fa584b71276b33e7a7357eedd9ce707c625b1400bc9b1fd14b135", "0x0dbee5e40277a33f81a7891bc57d6bca581094494f818e89af2448b4a9f88961", "0x2cdfcb4cf7592050acc00e3ee1f0ccdcee42a1482d47f639c33f9ae589fdc332", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0", "0x0"]
+tag_ids = [0, 14, 0, 13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+word_count = 5
+html_root = "0x14f04046dcc6fbe67c75f71f699628e43fe736be8b1269493136a6d4ef71922f"
+total_score = 5

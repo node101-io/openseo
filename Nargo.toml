@@ -1,8 +1,0 @@
-[workspace]
-members = ["circuits/v2", "circuits/v3", "circuits/v4"]
-name = "zkseo"
-type = "bin"
-authors = [""]
-compiler_version = ">=0.26.0"
-
-[dependencies]

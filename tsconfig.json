@@ -1,50 +1,9 @@
 {
-  "compilerOptions": {
-    "target": "ES2022",
-    "module": "esnext",
-    "lib": [
-      "ES2022",
-      "dom",
-      "dom.iterable"
-    ],
-    "moduleResolution": "bundler",
-    "outDir": "./dist",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "allowSyntheticDefaultImports": true,
-    "allowJs": true,
-    "noEmit": true,
-    "incremental": true,
-    "isolatedModules": true,
-    "jsx": "preserve",
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
-    "paths": {
-      "@/*": [
-        "./*"
-      ]
-    }
-  },
-  "include": [
-    "src/**/*",
-    "app/**/*",
-    "components/**/*",
-    "lib/**/*",
-    "next-env.d.ts",
-    ".next/types/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    ".next"
+  "files": [],
+  "references": [
+    { "path": "./apps/webapp" },
+    { "path": "./apps/backend" },
+    { "path": "./apps/contract" },
+    { "path": "./apps/zkproof"}
   ]
 }
