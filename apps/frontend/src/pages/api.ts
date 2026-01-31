@@ -1,14 +1,20 @@
 import type { SearchResult, SearchResponse } from '@openseo/types';
 
-const INDEXER_URL = process.env.NEXT_PUBLIC_INDEXER_URL || 'http://localhost:3008';
-const API_BASE_URL = INDEXER_URL;
+const INDEXER_URL_SAFE = 'http://localhost:3008';
+const INDEXER_URL_DARK = 'http://localhost:3012';
 
+export type IndexerMode = 'safe' | 'dark';
 export type { SearchResult, SearchResponse } from '@openseo/types';
 
-export async function searchByKeyword(query: string): Promise<SearchResponse> {
+export function getIndexerBaseUrl(mode: IndexerMode): string {
+  return mode === 'dark' ? INDEXER_URL_DARK : INDEXER_URL_SAFE;
+}
+
+export async function searchByKeyword(query: string, indexerMode: IndexerMode = 'safe'): Promise<SearchResponse> {
+  const baseUrl = getIndexerBaseUrl(indexerMode);
   try {
     const response = await fetch(
-      `${API_BASE_URL}/search?query=${encodeURIComponent(query)}`,
+      `${baseUrl}/search?query=${encodeURIComponent(query)}`,
       {
         method: 'GET',
         headers: {

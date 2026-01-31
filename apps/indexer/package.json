@@ -2,7 +2,10 @@
   "name": "indexer",
   "version": "1.0.0",
   "scripts": {
-    "start": "tsx src/indexer_route.ts"
+    "dev": "concurrently --names safe,dark \"pnpm run dev:safe\" \"pnpm run dev:dark\"",
+    "dev:safe": "env INDEXER_PORT=3008 MONGODB_DATABASE=openseo_safe INDEXER_COLLECTION=proofs INDEXER_BLACKLIST_FILE=./blacklist-safe.example.txt DA_WS_URL=ws://localhost:3011 tsx src/indexer-route.ts",
+    "dev:dark": "env INDEXER_PORT=3012 MONGODB_DATABASE=openseo_dark INDEXER_COLLECTION=proofs INDEXER_BLACKLIST_FILE=./blacklist-dark.example.txt DA_WS_URL=ws://localhost:3011 tsx src/indexer-route.ts",
+    "start": "tsx src/indexer-route.ts"
   },
   "dependencies": {
     "@openseo/types": "workspace:*",
@@ -16,6 +19,7 @@
     "ws": "^8.19.0"
   },
   "devDependencies": {
+    "concurrently": "^9.1.0",
     "@types/express": "^4.17.21",
     "@types/node": "^20.0.0",
     "@types/ws": "^8.18.1",

@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev",
+    "dev": "turbo run dev --filter=!@openseo/contract",
+    "dev:node": "pnpm --filter @openseo/contract dev",
+    "deploy:local": "pnpm --filter @openseo/contract deploy:localhost",
     "lint": "turbo run lint",
     "clean": "turbo run clean"
   },

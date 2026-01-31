@@ -1,7 +1,5 @@
 import express, { Request, Response } from 'express';
 import multer from 'multer';
-import fs from 'fs';
-import path from 'path';
 import { CircuitProof } from "@openseo/zkproof";
 import { getOpenSEOABI } from "@openseo/contract";
 import { ethers } from 'ethers';
@@ -12,25 +10,13 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
-const PORT = process.env.HTML_OWNER_PORT || "";
+const PORT = 3005;
 const FILECOIN_URL = process.env.FILECOIN_URL || '';
 const DA_URL = process.env.DA_URL || '';
 
 const pendingRoots: Record<string, string> = {};
-// file upload
-const TEMP_UPLOADS_DIR = path.join(process.cwd(), 'uploads', 'temp');
-if (!fs.existsSync(TEMP_UPLOADS_DIR)) {
-    fs.mkdirSync(TEMP_UPLOADS_DIR, { recursive: true });
-}
-
 const upload = multer({
-    storage: multer.diskStorage({
-        destination: (req, file, cb) => cb(null, TEMP_UPLOADS_DIR),
-        filename: (req, file, cb) => {
-            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-            cb(null, `temp-${uniqueSuffix}-${file.originalname}`);
-        }
-    }),
+    storage: multer.memoryStorage(),
     limits: { fileSize: 10 * 1024 * 1024 }
 });
 
@@ -102,18 +88,15 @@ app.post('/send_file', upload.single('file'), async (req: Request, res: Response
             return res.status(400).json({ error: 'keywords (array) is required' });
         }
 
-        // Read file content
-        const tempFilePath = req.file.path;
-        const htmlContent = fs.readFileSync(tempFilePath, 'utf-8');
+        const htmlContent = (req.file.buffer as Buffer).toString('utf-8');
 
-        // Send file to FileCoin
+        // Send file to FileCoin 
         const filecoinResponse = await axios.post(`${FILECOIN_URL}/send_file`, { file: htmlContent });
         if (!filecoinResponse.data.success || !filecoinResponse.data.cid) {
             return res.status(500).json({ error: 'Failed to store file in FileCoin' });
         }
 
         const cid = String(filecoinResponse.data.cid);
-        fs.unlinkSync(tempFilePath);
 
         const contractAddress = process.env.CONTRACT_ADDRESS;
         if (!contractAddress) {
@@ -142,13 +125,15 @@ app.post('/send_file', upload.single('file'), async (req: Request, res: Response
         feeAmount = feeAmount.replace(/\s*(ETH|eth)\s*/gi, '').trim();
         const verificationFee = ethers.parseEther(feeAmount);
 
-        // simulate transaction bu gerekli mi mesela 
+        // simulate transaction
         try {
             await contract.submitRequest.staticCall(cid, keywords, { value: verificationFee });
         } catch (simError: any) {
-            const reason = simError.reason || simError.message || 'Unknown error';
-            throw new Error(reason.includes('already exists') || reason.includes('Active request')
-                ? 'verification request already exists for this cid'
+            const reason = simError.reason || simError.message || String(simError);
+            const isActiveRequest = reason.includes('already exists') || reason.includes('Active request') ||
+                reason.includes('missing revert data') || simError.code === 'CALL_EXCEPTION';
+            throw new Error(isActiveRequest
+                ? 'Verification request already exists for this CID. Wait for consensus or claim refund after timeout (5 min), then try again.'
                 : reason
             );
         }
@@ -239,15 +224,12 @@ app.post('/generate_proof_and_submit', upload.single('file'), async (req: Reques
             return res.status(400).json({ error: 'siteUrl is required' });
         }
 
-        // Read HTML content
-        const tempFilePath = req.file.path;
-        const htmlContent = fs.readFileSync(tempFilePath, 'utf-8');
+        const htmlContent = (req.file.buffer as Buffer).toString('utf-8');
 
         // generate proof
         const proofResult = await CircuitProof.generateProof(htmlContent, keywords);
 
         if (!proofResult.success || !proofResult.proof) {
-            fs.unlinkSync(tempFilePath);
             return res.status(400).json({
                 error: 'Proof generation failed',
                 details: proofResult.error
@@ -257,7 +239,6 @@ app.post('/generate_proof_and_submit', upload.single('file'), async (req: Reques
         // verify proof 
         const verifyResult = await CircuitProof.verifyProof(proofResult.proof, proofResult.htmlRoot);
         if (!verifyResult.isValid) {
-            fs.unlinkSync(tempFilePath);
             return res.status(400).json({
                 error: 'Proof verification failed',
                 details: verifyResult.error
@@ -267,7 +248,6 @@ app.post('/generate_proof_and_submit', upload.single('file'), async (req: Reques
         // Upload to FileCoin
         const filecoinResponse = await axios.post(`${FILECOIN_URL}/send_file`, { file: htmlContent });
         if (!filecoinResponse.data.success || !filecoinResponse.data.cid) {
-            fs.unlinkSync(tempFilePath);
             return res.status(500).json({ error: 'Failed to store file in FileCoin' });
         }
         const cid = String(filecoinResponse.data.cid);
@@ -281,7 +261,6 @@ app.post('/generate_proof_and_submit', upload.single('file'), async (req: Reques
             const wallet = await getWalletWithBalance(provider, process.env.OWNER_PRIVATE_KEY, isLocalhost);
 
             if (!wallet) {
-                fs.unlinkSync(tempFilePath);
                 return res.status(400).json({ 
                     error: 'No wallet with balance available. Please configure OWNER_PRIVATE_KEY or ensure Hardhat node is running.' 
                 });
@@ -296,10 +275,11 @@ app.post('/generate_proof_and_submit', upload.single('file'), async (req: Reques
             try {
                 await contract.submitRequest.staticCall(cid, keywords, { value: verificationFee });
             } catch (simErr: any) {
-                fs.unlinkSync(tempFilePath);
                 const msg = simErr.reason || simErr.message || String(simErr);
-                const userMsg = msg.includes('Active request') || msg.includes('already exists')
-                    ? 'Verification request already exists for this CID. Wait for consensus or use a different file.'
+                const isActiveRequest = msg.includes('Active request') || msg.includes('already exists') ||
+                    msg.includes('missing revert data') || simErr.code === 'CALL_EXCEPTION';
+                const userMsg = isActiveRequest
+                    ? 'Verification request already exists for this CID. Wait for consensus or claim refund after timeout (5 min), then try again.'
                     : msg;
                 return res.status(400).json({ error: userMsg });
             }
@@ -312,14 +292,16 @@ app.post('/generate_proof_and_submit', upload.single('file'), async (req: Reques
                     gasLimit: 500000
                 });
             } catch (sendErr: any) {
-                fs.unlinkSync(tempFilePath);
                 const errMsg = sendErr.message || String(sendErr);
+                const isActiveOrRevert = errMsg.includes('Active request') || errMsg.includes('already exists') ||
+                    errMsg.includes('missing revert data') || sendErr.code === 'CALL_EXCEPTION';
                 const isRpcInternal = errMsg.includes('Internal error') || errMsg.includes('-32603') || errMsg.includes('UNKNOWN_ERROR');
-                return res.status(400).json({
-                    error: isRpcInternal
+                const userMsg = isActiveOrRevert
+                    ? 'Verification request already exists for this CID. Wait for consensus or claim refund after timeout (5 min), then try again.'
+                    : isRpcInternal
                         ? 'Transaction rejected by RPC (often: request already exists for this CID, or chain ID mismatch). Try again with a new file or restart Hardhat.'
-                        : errMsg
-                });
+                        : errMsg;
+                return res.status(400).json({ error: userMsg });
             }
             const receipt = await tx.wait();
             if (receipt) {
@@ -332,7 +314,6 @@ app.post('/generate_proof_and_submit', upload.single('file'), async (req: Reques
             console.log('[HTML Owner] Consensus Result:', consensusResult);
 
             if (!consensusResult.success) {
-                fs.unlinkSync(tempFilePath);
                 return res.status(400).json({
                     error: 'Consensus not reached',
                     details: consensusResult.error,
@@ -356,7 +337,6 @@ app.post('/generate_proof_and_submit', upload.single('file'), async (req: Reques
             headers: { 'Content-Type': 'application/json' }
         });
 
-        fs.unlinkSync(tempFilePath);
         if (daResponse.data.success) {
             return res.status(200).json({
                 success: true,
@@ -385,9 +365,6 @@ app.post('/generate_proof_and_submit', upload.single('file'), async (req: Reques
 
     } catch (error: any) {
         console.error('[HTML Owner] Error in /generate_proof_and_submit:', error.message);
-        if (req.file?.path && fs.existsSync(req.file.path)) {
-            fs.unlinkSync(req.file.path);
-        }
 
         if (error.response) {
             console.error('[HTML Owner] DA Response Error:', error.response.data);

@@ -1,6 +1,6 @@
-export * from "./utils/verifier/ProofVerifier.js";
-export * from "./utils/prover/CircuitProof.js";
-export * from "./utils/common/HTMLParser.js";
+export * from "./utils/verifier/proof-verifier.js";
+export * from "./utils/prover/circuit-proof.js";
+export * from "./utils/common/html-parser.js";
 
 export type {
     WordScorePair,

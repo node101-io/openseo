@@ -1,2 +1,2 @@
-export * from "./services/contractABI.js";
+export * from "./services/contract-ABI.js";
 export * from "./services/deploy.js";

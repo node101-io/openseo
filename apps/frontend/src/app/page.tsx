@@ -1,12 +1,14 @@
 'use client';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
-import { SearchInput } from '../components/SearchInput';
-import { searchByKeyword, SearchResult } from '../pages/api';
+import { SearchInput } from '../components/search-input';
+import { searchByKeyword, SearchResult, type IndexerMode } from '../pages/api';
+
+export type VerifySingleResult = { verified: boolean; error?: string; verifyTime?: number };
 
 //lazy-loading
 const ResultCard = dynamic(
-  () => import('../components/ResultCard').then(mod => ({ default: mod.ResultCard })),
+  () => import('../components/result-card').then(mod => ({ default: mod.ResultCard })),
   { ssr: false }
 );
 
@@ -16,14 +18,22 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [hasSearched, setHasSearched] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [verifyAllEnabled, setVerifyAllEnabled] = useState(false);
+  const [verifyAllInProgress, setVerifyAllInProgress] = useState(false);
+  const [verifyAllResults, setVerifyAllResults] = useState<Record<string, VerifySingleResult>>({});
+  const [indexerMode, setIndexerMode] = useState<IndexerMode>('safe');
 
-  const handleSearch = async (query: string) => {
+  const handleSearch = async (query: string, modeOverride?: IndexerMode) => {
+    const mode = modeOverride ?? indexerMode;
     setIsLoading(true);
     setError(null);
+    setVerifyAllEnabled(false);
+    setVerifyAllResults({});
     setSearchQuery(query);
     setHasSearched(true);
+    if (modeOverride !== undefined) setIndexerMode(mode);
 
-    const response = await searchByKeyword(query);
+    const response = await searchByKeyword(query, mode);
 
     if (response.success) {
       setResults(response.results);
@@ -34,6 +44,33 @@ export default function Home() {
 
     setIsLoading(false);
   };
+
+  const handleVerifyAllToggle = useCallback(async (enabled: boolean) => {
+    setVerifyAllEnabled(enabled);
+    if (!enabled) {
+      setVerifyAllResults({});
+      return;
+    }
+    if (results.length === 0) return;
+    setVerifyAllInProgress(true);
+    setVerifyAllResults({});
+    const { verifyProofClientSide } = await import('./proof-component');
+    const next: Record<string, VerifySingleResult> = {};
+    for (const result of results) {
+      try {
+        const response = await verifyProofClientSide(result.proof, result.root);
+        next[result.cid] = {
+          verified: response.verified,
+          error: response.error,
+          verifyTime: response.verifyTime,
+        };
+      } catch (err: any) {
+        next[result.cid] = { verified: false, error: err.message || 'Verification failed' };
+      }
+      setVerifyAllResults(prev => ({ ...prev, ...next }));
+    }
+    setVerifyAllInProgress(false);
+  }, [results]);
 
   return (
     <main className="min-h-screen">
@@ -48,6 +85,27 @@ export default function Home() {
               <h1 className="text-xl font-bold text-gray-900">OpenSEO</h1>
               <p className="text-xs text-gray-500">Decentralized Search</p>
             </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <label htmlFor="indexer-mode" className="text-sm text-gray-600 sr-only">
+              Indexer
+            </label>
+            <select
+              id="indexer-mode"
+              value={indexerMode}
+              onChange={(e) => {
+                const mode = e.target.value as IndexerMode;
+                if (hasSearched && searchQuery.trim()) {
+                  handleSearch(searchQuery, mode);
+                } else {
+                  setIndexerMode(mode);
+                }
+              }}
+              className="rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+            >
+              <option value="safe">Safe</option>
+              <option value="dark">Danger</option>
+            </select>
           </div>
         </div>
       </header>
@@ -113,8 +171,8 @@ export default function Home() {
           {/* Results */}
           {!isLoading && !error && hasSearched && (
             <>
-              {/* Results */}
-              <div className="mb-6">
+              {/* Results header: left = count, right = Verify all toggle */}
+              <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
                 <p className="text-sm text-gray-500">
                   {results.length > 0 ? (
                     <>
@@ -127,13 +185,43 @@ export default function Home() {
                     </>
                   )}
                 </p>
+                {results.length > 0 && (
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <span className="text-sm text-gray-600">Verify All</span>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={verifyAllEnabled}
+                      disabled={verifyAllInProgress}
+                      onClick={() => handleVerifyAllToggle(!verifyAllEnabled)}
+                      className={`relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 ${
+                        verifyAllEnabled ? 'bg-primary-600' : 'bg-gray-200'
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                          verifyAllEnabled ? 'translate-x-5' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                    {verifyAllInProgress && (
+                      <span className="text-xs text-gray-500">Verifying…</span>
+                    )}
+                  </label>
+                )}
               </div>
 
               {/* Results list */}
               {results.length > 0 ? (
                 <div className="space-y-4">
                   {results.map((result, index) => (
-                    <ResultCard key={result.cid} result={result} index={index} />
+                    <ResultCard
+                      key={result.cid}
+                      result={result}
+                      index={index}
+                      verifyAllResult={verifyAllResults[result.cid]}
+                      verifyAllInProgress={verifyAllInProgress}
+                    />
                   ))}
                 </div>
               ) : (

@@ -2,8 +2,8 @@
 /// <reference path="../../types/bb.d.ts" />
 import crypto from 'crypto';
 import { Fr } from '@aztec/bb.js';
-import { barretenbergApi } from '../common/barretenbergApi.js';
-import { formatHashResult, cleanHex } from '../common/hashUtils.js';
+import { barretenbergApi } from '../common/barretenberg-api.js';
+import { formatHashResult, cleanHex } from '../common/hash-utils.js';
 
 //hashing words and word-score pairs
 export namespace HashService {
