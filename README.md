@@ -9,11 +9,11 @@ Decentralized SEO verification platform. Website owners submit HTML and keywords
 **Indexer** Stores and queries ZK proof metadata. Ingests DA broadcasts, verifies on-chain + ZK, exposes search and verify APIs.
 [indexer](apps/indexer/README.md)
 **Oracle Node** Verification nodes (Node1–3). Listen for contract events, fetch HTML from Filecoin, compute root, vote on-chain. 
-[oracle-node](apps/oracle-node/README.md) 
-**Mock Filecoin** Mock decentralized storage for HTML files. CID-based store/fetch. 
-[mock-filecoin](apps/mock-filecoin/README.md)
-| **Mock DA** | Mock Data Availability layer. Receives proofs and forwards to indexer.
-[mock-da](apps/mock-da/README.md)
+[oracle-node](apps/oracle-node/README.md)
+**Worker Filecoin** (Cloudflare) HTML storage in R2. POST /send_file, GET /html_file/:cid, GET /list.
+[worker-filecoin](apps/worker-filecoin/README.md)
+**Worker DA** (Cloudflare) Data Availability: POST /submit_proof, WebSocket /ws, GET /submissions. Broadcasts to indexers.
+[worker-da](apps/worker-da/README.md)
 
 ### Packages
 **@openseo/contract** OpenSEO Solidity contract (verification requests, node voting, consensus). ABI and deploy scripts. 
@@ -34,7 +34,7 @@ pnpm install
 2. **Hardhat node** 
    - pnpm --filter @openseo/contract node
 2. **Tüm servisler** `pnpm dev`  
-   - Turbo ile backend, frontend, indexer, mock-da, mock-filecoin, oracle-node paralel başlar.
+   - Turbo ile backend, frontend, indexer, oracle-node paralel başlar. DA ve Filecoin için deploy edilmiş worker'lar kullanılır (local worker çalıştırmana gerek yok).
 3. **Contract’ı bir kez deploy et:** Node ayağa kalktıktan sonra başka bir terminalde:
    ```bash
    pnpm --filter @openseo/contract deploy:localhost

@@ -1,6 +1,7 @@
 'use client';
 import { useState, useMemo } from 'react';
 import { SearchResult } from '../pages/api';
+import { verifyProofClientSide } from '../app/proof-component';
 
 export type VerifySingleResult = { verified: boolean; error?: string; verifyTime?: number };
 
@@ -34,7 +35,7 @@ export function ResultCard({ result, index, verifyAllResult, verifyAllInProgress
   const [htmlLoading, setHtmlLoading] = useState(false);
   const [htmlError, setHtmlError] = useState<string | null>(null);
 
-  const filecoinUrl = 'http://localhost:3010';
+  const filecoinUrl = process.env.NEXT_PUBLIC_FILECOIN_URL || 'https://openseo-filecoin.openseo.workers.dev';
 
   const handleCardClick = async (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest('button')) return;
@@ -64,7 +65,6 @@ export function ResultCard({ result, index, verifyAllResult, verifyAllInProgress
     setVerifyTime(null);
     
     try {
-      const { verifyProofClientSide } = await import('../app/proof-component');
       const response = await verifyProofClientSide(result.proof, result.root);
       
       if (response.verified) {

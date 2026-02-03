@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "concurrently --names safe,dark \"pnpm run dev:safe\" \"pnpm run dev:dark\"",
-    "dev:safe": "env INDEXER_PORT=3008 MONGODB_DATABASE=openseo_safe INDEXER_COLLECTION=proofs INDEXER_BLACKLIST_FILE=./blacklist-safe.example.txt DA_WS_URL=ws://localhost:3011 tsx src/indexer-route.ts",
-    "dev:dark": "env INDEXER_PORT=3012 MONGODB_DATABASE=openseo_dark INDEXER_COLLECTION=proofs INDEXER_BLACKLIST_FILE=./blacklist-dark.example.txt DA_WS_URL=ws://localhost:3011 tsx src/indexer-route.ts",
+    "dev:safe": "env INDEXER_PORT=3008 MONGODB_DATABASE=openseo_safe INDEXER_COLLECTION=proofs INDEXER_BLACKLIST_FILE=./blacklist-safe.example.txt DA_WS_URL=wss://openseo-da.openseo.workers.dev/ws DA_HTTP_URL=https://openseo-da.openseo.workers.dev tsx src/indexer-route.ts",
+    "dev:dark": "env INDEXER_PORT=3012 MONGODB_DATABASE=openseo_dark INDEXER_COLLECTION=proofs INDEXER_BLACKLIST_FILE=./blacklist-dark.example.txt DA_WS_URL=wss://openseo-da.openseo.workers.dev/ws DA_HTTP_URL=https://openseo-da.openseo.workers.dev tsx src/indexer-route.ts",
     "start": "tsx src/indexer-route.ts"
   },
   "dependencies": {

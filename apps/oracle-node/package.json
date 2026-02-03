@@ -2,8 +2,9 @@
   "name": "oracle-node",
   "version": "1.0.0",
   "scripts": {
-    "dev": "tsx src/route.ts",
-    "start": "tsx src/route.ts"
+    "dev": "tsx src/scripts/route-nodes.ts",
+    "start": "tsx src/route.ts",
+    "dev_nodes": "tsx src/scripts/route-nodes.ts" 
   },
   "dependencies": {
     "@openseo/contract": "workspace:*",

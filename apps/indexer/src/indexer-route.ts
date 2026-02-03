@@ -3,12 +3,14 @@ import { IndexerService } from './indexer-service.js';
 import { ZkProofMetadata } from './db/models/zk-proof-metadata.js';
 import { ProofVerifier } from "../../../packages/zkproof/src/index.js";
 import WebSocket from 'ws';
+import axios from 'axios';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
 const app = express();
-const PORT = 3008;
-const DA_WS_URL = 'ws://localhost:3011';
+const PORT = Number(process.env.INDEXER_PORT) || 3008;
+const DA_WS_URL: string = process.env.DA_WS_URL || 'wss://openseo-da.openseo.workers.dev/ws';
+const DA_HTTP_URL: string = process.env.DA_HTTP_URL || DA_WS_URL.replace(/^wss:\/\//, 'https://').replace(/^ws:\/\//, 'http://').replace(/\/ws\/?$/, '');
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;  
@@ -204,10 +206,41 @@ app.post('/verify-proof', async (req: Request, res: Response) => {
     }
 });
 
+async function backfillFromDA() {
+    try {
+        const url = `${DA_HTTP_URL}/submissions`;
+        const res = await axios.get(url, { timeout: 15000 });
+        if (!res.data?.submissions?.length) {
+            console.log('[Indexer] DA backfill: no submissions');
+            return;
+        }
+        const list = res.data.submissions as Array<{ root: string; keywords: string[]; siteUrl: string; proof: string; totalScore?: number }>;
+        console.log(`[Indexer] DA backfill: processing ${list.length} submission(s)`);
+        for (const s of list) {
+            if (!s.root || !s.keywords || !s.siteUrl || !s.proof) continue;
+            const result = await indexerService.handleDABroadcast({
+                root: s.root,
+                keywords: s.keywords,
+                siteUrl: s.siteUrl,
+                proof: s.proof,
+                totalScore: s.totalScore
+            });
+            if (result.success) {
+                console.log('[Indexer] Backfill stored:', s.siteUrl);
+            } else {
+                console.log('[Indexer] Backfill skipped:', s.siteUrl, '-', result.message, result.error || '');
+            }
+        }
+    } catch (err: any) {
+        console.error('[Indexer] DA backfill failed:', err.message || err);
+    }
+}
+
 function connectToDA() {
     const ws = new WebSocket(DA_WS_URL);
     ws.on('open', () => {
         console.log(`[Indexer] Connected to DA (${DA_WS_URL})`);
+        backfillFromDA().catch((err) => console.error('[Indexer] Backfill on connect failed:', err?.message || err));
     });
     ws.on('message', async (data: Buffer) => {
         try {
@@ -224,7 +257,7 @@ function connectToDA() {
                 if (result.success) {
                     console.log('[Indexer] Stored proof for', broadcastData.siteUrl);
                 } else {
-                    console.log('[Indexer] Rejected (blacklist or other):', result.message);
+                    console.log('[Indexer] Rejected:', broadcastData.siteUrl, '-', result.message, result.error || '');
                 }
             }
         } catch (error: any) {
@@ -240,6 +273,8 @@ function connectToDA() {
     });
 }
 
+const BACKFILL_INTERVAL_MS = 60 * 1000;
+
 async function startIndexer() {
     await indexerService.initialize();
     app.listen(PORT, () => {
@@ -248,6 +283,8 @@ async function startIndexer() {
     });
 
     connectToDA();
+    await backfillFromDA();
+    setInterval(() => backfillFromDA().catch((err) => console.error('[Indexer] Periodic backfill failed:', err?.message || err)), BACKFILL_INTERVAL_MS);
 }
 
 startIndexer().catch(console.error);

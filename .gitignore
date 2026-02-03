@@ -26,3 +26,4 @@ public/html_files/
 *.log
 npm-debug.log*
 pnpm-debug.log*
+.wrangler/

@@ -27,12 +27,12 @@ pnpm install
 ## Configuration
 | Env | Description |
 |-----|-------------|
-| `INDEXER_PORT` | HTTP server port (default 3008) |
+| `INDEXER_PORT` | HTTP server port |
 | `MONGODB_URI` | MongoDB connection string |
 | `MONGODB_DATABASE` | Database name (e.g. `openseo_safe` / `openseo_dark`); each indexer uses its own DB |
 | `INDEXER_COLLECTION` | Collection name (default `proofs`) |
-| `DA_WS_URL` | DA WebSocket URL to receive broadcasts (e.g. `ws://localhost:3011`) |
+| `DA_WS_URL` | DA WebSocket URL to receive broadcasts (e.g. 'https://openseo-da.openseo.workers.dev';) |
 | `INDEXER_BLACKLIST` | Comma-separated domains/substrings to reject (e.g. `adult,drugs,.onion`) |
 | `INDEXER_BLACKLIST_FILE` | Path to file: one domain or substring per line; `#` = comment |
-| `ETHEREUM_RPC_URL` | Ethereum RPC URL |
-| `CONTRACT_ADDRESS` | OpenSEO contract address |
+| `ETHEREUM_RPC_URL` | **Required for storing proofs.** Ethereum RPC URL. Indexer looks up root→CID from contract events. |
+| `CONTRACT_ADDRESS` | **Required for storing proofs.** OpenSEO contract address. |

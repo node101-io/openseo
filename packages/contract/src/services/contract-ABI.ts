@@ -6,7 +6,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export function getOpenSEOABI(): any[] {
-    // Contract package içindeki openseo.json dosyasını oku
     const artifactPath = path.resolve(__dirname, '..', '..', 'openseo.json');
     
     console.log(`Loading contract ABI from: ${artifactPath}`);

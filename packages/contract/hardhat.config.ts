@@ -1,5 +1,4 @@
 import { HardhatUserConfig } from "hardhat/config";
-//import "@nomicfoundation/hardhat-toolbox";
 import * as dotenv from "dotenv";
 
 dotenv.config();
@@ -20,14 +19,16 @@ const config: HardhatUserConfig = {
       chainId: 1337,
       type: "http",
     },
-    sepolia: {
-      url: process.env.ETHEREUM_RPC_URL || "",
-      accounts: process.env.DEPLOYER_PRIVATE_KEY 
-        ? [process.env.DEPLOYER_PRIVATE_KEY]
-        : [],
-      chainId: 11155111,
-      type: "http",
-    }
+    ...(process.env.ETHEREUM_RPC_URL && {
+      sepolia: {
+        url: process.env.ETHEREUM_RPC_URL,
+        accounts: process.env.DEPLOYER_PRIVATE_KEY
+          ? [process.env.DEPLOYER_PRIVATE_KEY]
+          : [],
+        chainId: 11155111,
+        type: "http",
+      },
+    }),
   },
   paths: {
     sources: "./src/contracts",
@@ -38,4 +39,3 @@ const config: HardhatUserConfig = {
 };
 
 export default config;
-

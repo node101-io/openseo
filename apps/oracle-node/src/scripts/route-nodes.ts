@@ -1,13 +1,13 @@
 import http from 'http';
 import express from 'express';
-import { NodeService } from './index.js';
+import { NodeService } from '../index.js';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
 
 const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS || '';
 const RPC_URL = process.env.ETHEREUM_RPC_URL || 'http://localhost:8545';
-const FILECOIN_URL = 'http://localhost:3010';
+const FILECOIN_URL = 'https://openseo-filecoin.openseo.workers.dev';
 const isLocalhost = RPC_URL.includes('localhost') || RPC_URL.includes('127.0.0.1');
 
 const HARDHAT_ACCOUNTS = [
@@ -56,15 +56,14 @@ async function main() {
       name: s.getNodeName(),
       address: s.getAddress(),
     }));
-    res.json({ ok: true, nodes: status });
+    res.json({ ok: true, mode: 'multi', nodes: status });
   });
 
   const server = http.createServer(app);
 
   server.once('error', (err: NodeJS.ErrnoException) => {
     if (err.code === 'EADDRINUSE') {
-      console.error(`[Runner] Port ${httpPort} is already in use. Stop the other process or set ORACLE_HTTP_PORT to another port (e.g. 3007).`);
-      console.error(`  To find what is using the port: lsof -i :${httpPort}`);
+      console.error(`[Runner] Port ${httpPort} is already in use.`);
     } else {
       console.error('[Runner] Server error:', err.message);
     }
@@ -75,9 +74,13 @@ async function main() {
     console.log(`[Runner] HTTP server on port ${httpPort}`);
   });
 
+  let started = 0;
   for (const service of services) {
     const ok = await service.initialize();
-    if (ok) await service.startEventListener();
+    if (ok) {
+      await service.startEventListener();
+      started++;
+    }
   }
 
   console.log('[Runner] All nodes started from single entry point.');

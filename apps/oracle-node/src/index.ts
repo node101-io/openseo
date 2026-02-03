@@ -251,7 +251,7 @@ export class NodeService {
     }
 
     private startCleanupTask() {
-        const ONE_DAY_MS = 24 * 60 * 60 * 1000; // 24 saat        
+        const ONE_DAY_MS = 24 * 60 * 60 * 1000;    
         this.lastCleanupTime = Date.now();
         this.cleanupExpiredRequests();
 
@@ -329,12 +329,19 @@ export class NodeService {
             console.log(`[${this.nodeName}] Processing CID: ${cid} with keywords: [${keywords.join(', ')}]`);
             let fileContent: string;
             try {
-                const filecoinResponse = await axios.get(`${this.filecoinUrl}/html_file/${cid}`, { timeout: 10000 });
-                if (!filecoinResponse.data.success || !filecoinResponse.data.file) {
-                    console.error(`[${this.nodeName}] File not found in FileCoin service for CID: ${cid}`);
-                    return;
+                const isR2Public = this.filecoinUrl.includes('r2.dev');
+                if (isR2Public) {
+                    const url = `${this.filecoinUrl.replace(/\/$/, '')}/${cid}`;
+                    const res = await axios.get(url, { timeout: 10000, responseType: 'text' });
+                    fileContent = typeof res.data === 'string' ? res.data : String(res.data);
+                } else {
+                    const filecoinResponse = await axios.get(`${this.filecoinUrl}/html_file/${cid}`, { timeout: 10000 });
+                    if (!filecoinResponse.data.success || !filecoinResponse.data.file) {
+                        console.error(`[${this.nodeName}] File not found in FileCoin service for CID: ${cid}`);
+                        return;
+                    }
+                    fileContent = filecoinResponse.data.file;
                 }
-                fileContent = filecoinResponse.data.file;
             } catch (err: any) {
                 console.error(`[${this.nodeName}] Error fetching file from ${this.filecoinUrl}:`, err.message);
                 return;
@@ -371,7 +378,7 @@ export class NodeService {
                 console.log(`[${this.nodeName}] Transaction rejected: Timeout.`);
             } else if (errMsg.includes("Internal error") || errMsg.includes("-32603")) {
                 this.completedRequests.add(cid);
-                console.log(`[${this.nodeName}] Transaction rejected: Request likely already processed or voted (consensus reached by other nodes).`);
+                console.log(`[${this.nodeName}] Transaction rejected: Request likely already processed or voted.`);
             } else {
                 console.error(`[${this.nodeName}] Unexpected error processing verification:`, errMsg);
             }

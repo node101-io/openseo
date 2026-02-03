@@ -11,8 +11,25 @@ const app = express();
 app.use(express.json());
 
 const PORT = 3005;
-const FILECOIN_URL = process.env.FILECOIN_URL || '';
-const DA_URL = process.env.DA_URL || '';
+const FILECOIN_URL = process.env.FILECOIN_URL || 'https://openseo-filecoin.openseo.workers.dev';
+const DA_URL = process.env.DA_URL || 'https://openseo-da.openseo.workers.dev';
+const WORKER_API_KEY = process.env.WORKER_API_KEY || '';
+
+function workerHeaders(): Record<string, string> {
+    const h: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (WORKER_API_KEY) h['X-API-Key'] = WORKER_API_KEY;
+    return h;
+}
+
+async function ensureWorkerAuth(): Promise<{ ok: boolean; error?: string }> {
+    const [workerRes] = await Promise.all([
+        axios.post(`${DA_URL}/submit_proof`, {}, { headers: workerHeaders(), timeout: 8000, validateStatus: () => true }),
+    ]);
+    if (workerRes.status === 401) {
+        return { ok: false, error: 'DA worker: invalid or missing WORKER_API_KEY' };
+    }
+    return { ok: true };
+}
 
 const pendingRoots: Record<string, string> = {};
 const upload = multer({
@@ -90,8 +107,13 @@ app.post('/send_file', upload.single('file'), async (req: Request, res: Response
 
         const htmlContent = (req.file.buffer as Buffer).toString('utf-8');
 
+        const authCheck = await ensureWorkerAuth();
+        if (!authCheck.ok) {
+            return res.status(401).json({ error: authCheck.error });
+        }
+
         // Send file to FileCoin 
-        const filecoinResponse = await axios.post(`${FILECOIN_URL}/send_file`, { file: htmlContent });
+        const filecoinResponse = await axios.post(`${FILECOIN_URL}/send_file`, { file: htmlContent }, { headers: workerHeaders() });
         if (!filecoinResponse.data.success || !filecoinResponse.data.cid) {
             return res.status(500).json({ error: 'Failed to store file in FileCoin' });
         }
@@ -114,14 +136,14 @@ app.post('/send_file', upload.single('file'), async (req: Request, res: Response
         const wallet = await getWalletWithBalance(provider, process.env.OWNER_PRIVATE_KEY, isLocalhost);
 
         if (!wallet) {
-            return res.status(400).json({ 
-                error: 'No wallet with balance available. Please configure OWNER_PRIVATE_KEY or ensure Hardhat node is running.' 
+            return res.status(400).json({
+                error: 'No wallet with balance available. Please configure OWNER_PRIVATE_KEY or ensure Hardhat node is running.'
             });
         }
 
         const contract = new ethers.Contract(contractAddress, getOpenSEOABI(), wallet);
         // fee
-        let feeAmount = process.env.VERIFICATION_FEE || "";
+        let feeAmount = "1 ETH";
         feeAmount = feeAmount.replace(/\s*(ETH|eth)\s*/gi, '').trim();
         const verificationFee = ethers.parseEther(feeAmount);
 
@@ -224,6 +246,11 @@ app.post('/generate_proof_and_submit', upload.single('file'), async (req: Reques
             return res.status(400).json({ error: 'siteUrl is required' });
         }
 
+        const authCheck = await ensureWorkerAuth();
+        if (!authCheck.ok) {
+            return res.status(401).json({ error: authCheck.error });
+        }
+
         const htmlContent = (req.file.buffer as Buffer).toString('utf-8');
 
         // generate proof
@@ -246,7 +273,7 @@ app.post('/generate_proof_and_submit', upload.single('file'), async (req: Reques
         }
 
         // Upload to FileCoin
-        const filecoinResponse = await axios.post(`${FILECOIN_URL}/send_file`, { file: htmlContent });
+        const filecoinResponse = await axios.post(`${FILECOIN_URL}/send_file`, { file: htmlContent }, { headers: workerHeaders() });
         if (!filecoinResponse.data.success || !filecoinResponse.data.cid) {
             return res.status(500).json({ error: 'Failed to store file in FileCoin' });
         }
@@ -261,14 +288,14 @@ app.post('/generate_proof_and_submit', upload.single('file'), async (req: Reques
             const wallet = await getWalletWithBalance(provider, process.env.OWNER_PRIVATE_KEY, isLocalhost);
 
             if (!wallet) {
-                return res.status(400).json({ 
-                    error: 'No wallet with balance available. Please configure OWNER_PRIVATE_KEY or ensure Hardhat node is running.' 
+                return res.status(400).json({
+                    error: 'No wallet with balance available. Please configure OWNER_PRIVATE_KEY or ensure Hardhat node is running.'
                 });
             }
 
             const contract = new ethers.Contract(contractAddress, getOpenSEOABI(), wallet);
-            
-            let feeAmount = process.env.VERIFICATION_FEE || "";
+
+            let feeAmount = "1 ETH";
             feeAmount = feeAmount.replace(/\s*(ETH|eth)\s*/gi, '').trim();
             const verificationFee = ethers.parseEther(feeAmount);
 
@@ -334,7 +361,7 @@ app.post('/generate_proof_and_submit', upload.single('file'), async (req: Reques
             totalScore: proofResult.totalScore
         }, {
             timeout: 60000,
-            headers: { 'Content-Type': 'application/json' }
+            headers: workerHeaders()
         });
 
         if (daResponse.data.success) {

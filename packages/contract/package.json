@@ -10,9 +10,8 @@
     "compile": "hardhat compile",
     "test": "hardhat test",
     "node": "hardhat node",
-    "deploy": "hardhat run scripts/deploy.ts",
-    "deploy:localhost": "hardhat run src/services/deploy.ts --network localhost",
-    "deploy:sepolia": "hardhat run src/services/deploy.ts --network sepolia"
+    "deploy": "hardhat run src/services/deploy.ts",
+    "deploy:localhost": "hardhat run src/services/deploy.ts --network localhost"
   },
   "dependencies": {
     "ethers": "^6.16.0"

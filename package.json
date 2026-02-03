@@ -3,12 +3,12 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "turbo run build",
-    "dev": "turbo run dev --filter=!@openseo/contract",
+    "build": "npx turbo run build",
+    "dev": "npx turbo run dev --filter=!@openseo/contract",
     "dev:node": "pnpm --filter @openseo/contract dev",
     "deploy:local": "pnpm --filter @openseo/contract deploy:localhost",
-    "lint": "turbo run lint",
-    "clean": "turbo run clean"
+    "lint": "npx turbo run lint",
+    "clean": "npx turbo run clean"
   },
   "devDependencies": {
     "turbo": "latest",

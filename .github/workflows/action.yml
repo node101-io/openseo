@@ -1,0 +1,34 @@
+name: OpenSEO Publish
+
+on:
+  push:
+    branches:
+      - zkproof
+    paths:
+      - '${{ env.TARGET_FOLDER }}/**.html'
+env:
+  TARGET_FOLDER: 'uploads' 
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: File Upload
+        id: file
+        run: 
+          FILE_PATH=$(git diff --name-only HEAD^ HEAD | grep "${{ env.TARGET_FOLDER }}/" | grep '.html' | head -n 1)
+          if [ -z "$FILE_PATH" ]; then
+            FILE_PATH=$(find ${{ env.TARGET_FOLDER }} -name "*.html" | head -n 1)
+          fi
+          echo "FILE_PATH=$FILE_PATH" >> $GITHUB_OUTPUT
+      
+      - name: OpenSEO 
+        env:
+          OWNER_PRIVATE_KEY: ${{ secrets.OWNER_PRIVATE_KEY }}
+          ETHEREUM_RPC_URL: http://127.0.0.1:8545
+          CONTRACT_ADDRESS: 0x8464135c8F25Da09e49BC8782676a84730C318bC
+          WORKER_API_KEY: ${{ secrets.WORKER_API_KEY }}
+        run: |
+          npx ts-node apps/backend/src/cli.ts \
+            "./${{ steps.file.outputs.FILE_PATH }}" \
+            "site_url" \
+            '["blockchain", "zk"]'

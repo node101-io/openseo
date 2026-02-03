@@ -12,7 +12,6 @@ const HARDHAT_KEYS = {
   NODE3: "0x7c852118294e51e653712a81e05800f419141751be58f605c371e15141b007a6", // Account #3
 };
 
-// Private key'den adres derive et
 export function getAddressFromPrivateKey(privateKey: string): string {
   let cleanKey = privateKey.trim().split('//')[0].trim();
   if (!cleanKey.startsWith('0x')) {
@@ -23,13 +22,16 @@ export function getAddressFromPrivateKey(privateKey: string): string {
 }
 
 export async function main() {
-  const rpcUrl = (process.env.ETHEREUM_RPC_URL || "").trim();
+  const rpcUrl = (process.env.ETHEREUM_RPC_URL || "http://127.0.0.1:8545").trim();
   const provider = new ethers.JsonRpcProvider(rpcUrl);
   const isLocalhost = rpcUrl.includes("localhost") || rpcUrl.includes("127.0.0.1");
-  
-  const deployerPrivateKey = (process.env.DEPLOYER_PRIVATE_KEY || "").trim();
-  const deployer = new ethers.Wallet(deployerPrivateKey, provider);
-
+  const deployerPrivateKey = (process.env.DEPLOYER_PRIVATE_KEY || "").trim()
+    || (isLocalhost ? HARDHAT_KEYS.NODE1 : "");
+  if (!deployerPrivateKey) {
+    throw new Error("DEPLOYER_PRIVATE_KEY required for non-localhost. For localhost, it defaults to Hardhat account #1.");
+  }
+  const deployerKey = deployerPrivateKey.startsWith("0x") ? deployerPrivateKey : "0x" + deployerPrivateKey;
+  const deployer = new ethers.Wallet(deployerKey, provider);
   const node1PrivateKey = (process.env.NODE1_PRIVATE_KEY || "").trim() || (isLocalhost ? HARDHAT_KEYS.NODE1 : "");
   const node2PrivateKey = (process.env.NODE2_PRIVATE_KEY || "").trim() || (isLocalhost ? HARDHAT_KEYS.NODE2 : "");
   const node3PrivateKey = (process.env.NODE3_PRIVATE_KEY || "").trim() || (isLocalhost ? HARDHAT_KEYS.NODE3 : "");
@@ -41,11 +43,6 @@ export async function main() {
   const node1Address = getAddressFromPrivateKey(node1PrivateKey);
   const node2Address = getAddressFromPrivateKey(node2PrivateKey);
   const node3Address = getAddressFromPrivateKey(node3PrivateKey);
-
-  console.log(`Node addresses derived from private keys:`);
-  console.log(`  Node1: ${node1Address}`);
-  console.log(`  Node2: ${node2Address}`);
-  console.log(`  Node3: ${node3Address}`);
 
   const artifactPath = path.join(process.cwd(), "src", "contracts", "artifacts", "src", "contracts", "OpenSEO.sol", "OpenSEO.json");
   const artifact = JSON.parse(fs.readFileSync(artifactPath, "utf-8"));
@@ -86,8 +83,6 @@ export async function main() {
   console.log(`Deployment info saved to ${deploymentPath}`);
 }
 
-// Only run when executed directly (not when imported)
-// Check if this file is being run directly by Hardhat or node
 const isMainModule = process.argv[1]?.includes('deploy.ts') || process.argv[1]?.includes('hardhat');
 
 if (isMainModule) {

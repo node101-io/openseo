@@ -3,6 +3,7 @@ import { useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { SearchInput } from '../components/search-input';
 import { searchByKeyword, SearchResult, type IndexerMode } from '../pages/api';
+import { verifyProofClientSide } from './proof-component';
 
 export type VerifySingleResult = { verified: boolean; error?: string; verifyTime?: number };
 
@@ -54,7 +55,6 @@ export default function Home() {
     if (results.length === 0) return;
     setVerifyAllInProgress(true);
     setVerifyAllResults({});
-    const { verifyProofClientSide } = await import('./proof-component');
     const next: Record<string, VerifySingleResult> = {};
     for (const result of results) {
       try {
