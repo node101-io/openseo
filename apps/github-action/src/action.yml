@@ -1,0 +1,129 @@
+name: 'OpenSEO Publish'
+description: 'Generate ZK proof, upload HTML to Filecoin, submit verification request to Ethereum, broadcast proof to DA'
+
+inputs:
+  node-version:
+    description: 'Node.js version to use'
+    required: false
+    default: '20'
+  pnpm-version:
+    description: 'pnpm version to use'
+    required: false
+    default: '9'
+  target-folder:
+    description: 'Folder containing HTML files to process'
+    required: false
+    default: 'public'
+  site-url:
+    description: 'Site URL for DA'
+    required: true
+  keywords:
+    description: 'JSON array of keywords'
+    required: true
+  filecoin-url:
+    description: 'Filecoin worker URL'
+    required: false
+  da-url:
+    description: 'DA layer URL'
+    required: false
+  ethereum-rpc-url:
+    description: 'Ethereum RPC URL'
+    required: true
+  contract-address:
+    description: 'OpenSEO contract address'
+    required: true
+  owner-private-key:
+    description: 'Owner wallet private key'
+    required: true
+  worker-api-key:
+    description: 'Worker API key for Filecoin/DA'
+    required: false
+    default: ''
+
+runs:
+  using: 'composite' # birden fazla adım
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v1
+      with:
+        fetch-depth: 2 # son 2 commit 
+
+    - name: Resolve HTML file path
+      id: file
+      shell: bash
+      run: |
+        set -euo pipefail
+        TARGET="${{ inputs.target-folder }}"
+        FILE_PATH=$(git diff --name-only HEAD^ HEAD 2>/dev/null | grep -E "^${TARGET}/.*\.html$" | head -n 1 || true)
+        if [ -z "$FILE_PATH" ]; then
+          FILE_PATH=$(find "$TARGET" -name "*.html" 2>/dev/null | head -n 1 || true)
+        fi
+        if [ -z "$FILE_PATH" ]; then
+          echo "No HTML file found in $TARGET"
+          exit 1
+        fi
+        echo "file_path=${FILE_PATH}" >> "$GITHUB_OUTPUT"
+        echo "Resolved HTML file: ${FILE_PATH}"
+
+    - name: Create output directory
+      shell: bash
+      run: mkdir -p apps/github-action/output 
+
+    - name: Generate proof
+      id: proof
+      shell: bash
+      env:
+        TEST_HTML_PATH: ${{ github.workspace }}/${{ steps.file.outputs.file_path }}
+        TEST_KEYWORDS: ${{ inputs.keywords }}
+      run: |
+        set -euo pipefail
+        cd apps/github-action
+        pnpm exec tsx src/scripts/generate-proof.ts
+        echo "Proof generated; output/proof-output.json"
+
+    - name: Upload to Filecoin
+      id: filecoin
+      shell: bash
+      env:
+        TEST_HTML_PATH: ${{ github.workspace }}/${{ steps.file.outputs.file_path }}
+        FILECOIN_URL: ${{ inputs.filecoin-url }}
+        WORKER_API_KEY: ${{ inputs.worker-api-key }}
+      run: |
+        set -euo pipefail
+        cd apps/github-action
+        pnpm exec tsx src/scripts/upload-filecoin.ts
+        CID=$(node -p "require('./output/cid.json').cid")
+        echo "cid=${CID}" >> "$GITHUB_OUTPUT"
+        echo "Uploaded to Filecoin; CID:${CID}"
+
+    - name: Submit request to Ethereum
+      id: eth
+      shell: bash
+      env:
+        CONTRACT_ADDRESS: ${{ inputs.contract-address }}
+        ETHEREUM_RPC_URL: ${{ inputs.ethereum-rpc-url }}
+        OWNER_PRIVATE_KEY: ${{ inputs.owner-private-key }}
+      run: |
+        set -euo pipefail
+        cd apps/github-action
+        pnpm exec tsx src/scripts/submit-request-eth.ts
+        echo "Ethereum request submitted"
+
+    - name: Submit proof to DA
+      id: da
+      shell: bash
+      env:
+        TEST_SITE_URL: ${{ inputs.site-url }}
+        DA_URL: ${{ inputs.da-url }}
+        WORKER_API_KEY: ${{ inputs.worker-api-key }}
+      run: |
+        set -euo pipefail # eğer hata varsa, set edilmemiş değişken varsa, o pipe içinde hata varsa durur
+        cd apps/github-action
+        pnpm exec tsx src/scripts/submit-proof-da.ts
+        echo "Proof broadcast to DA"
+
+    - name: Summary
+      shell: bash
+      run: |
+        echo "OpenSEO pipeline completed: proof → Filecoin → Ethereum → DA"
+        echo "CID: ${{ steps.filecoin.outputs.cid }}"

@@ -20,7 +20,6 @@ contract OpenSEO {
         bytes32 resultRoot; 
     }
 
-    //her bir node dan gelen root 
     struct Vote {
         address node;
         bytes32 root;
@@ -28,7 +27,7 @@ contract OpenSEO {
 
     mapping(string => RequestResult) public results; //if isProcessed true 
     mapping(string => VerificationRequest) public requests; 
-    mapping(string => mapping(address => bool)) public hasVoted; //o mode un o cid için oy kullanıp kullanmadığı
+    mapping(string => mapping(address => bool)) public hasVoted; 
 
     event VerificationRequested(string cid, string[] keywords, address owner);
     event RequestCompleted(string cid, bool success);
@@ -65,10 +64,10 @@ contract OpenSEO {
 
         require(request.paymentAmount > 0, "Request not found"); 
         require(!request.isProcessed, "Request processed");
-        require(!hasVoted[cid][msg.sender], "Voted"); //çifte oy kontrolü
+        require(!hasVoted[cid][msg.sender], "Voted"); 
 
         hasVoted[cid][msg.sender] = true;
-        request.cidRootVotes[htmlRoot].push(msg.sender); //bu cid için bu root a oy verenlere ekle 
+        request.cidRootVotes[htmlRoot].push(msg.sender); 
         uint256 matchVoteCount = request.cidRootVotes[htmlRoot].length;
 
         if(matchVoteCount >= REQUIRED_CONSENSUS) {

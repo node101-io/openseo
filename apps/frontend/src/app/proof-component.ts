@@ -47,10 +47,6 @@ let noir: any = null;
 let initPromise: Promise<void> | null = null;
 
 async function initializeBackend(): Promise<void> {
-  /*if (typeof window === 'undefined') {
-    throw new Error('Can only run in browser');
-  }*/
-
   if (honkBackend && noir) {
     return;
   }

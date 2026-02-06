@@ -31,7 +31,3 @@ pnpm --filter @openseo/contract compile
 pnpm --filter @openseo/contract deploy:localhost
 pnpm --filter @openseo/contract deploy:sepolia
 ```
-
-## Environment (for deploy)
-- `SEPOLIA_RPC_URL` — RPC URL for Sepolia (for `deploy:sepolia`)
-- Deployer private key in Hardhat config or `PRIVATE_KEY` in `.env`

@@ -4,10 +4,10 @@ import dynamic from 'next/dynamic';
 import { SearchInput } from '../components/search-input';
 import { searchByKeyword, SearchResult, type IndexerMode } from '../pages/api';
 import { verifyProofClientSide } from './proof-component';
+import { setStoredVerified } from '../components/result-card';
 
 export type VerifySingleResult = { verified: boolean; error?: string; verifyTime?: number };
 
-//lazy-loading
 const ResultCard = dynamic(
   () => import('../components/result-card').then(mod => ({ default: mod.ResultCard })),
   { ssr: false }
@@ -59,13 +59,21 @@ export default function Home() {
     for (const result of results) {
       try {
         const response = await verifyProofClientSide(result.proof, result.root);
-        next[result.cid] = {
+        const entry = {
           verified: response.verified,
           error: response.error,
           verifyTime: response.verifyTime,
         };
+        next[result.cid] = entry;
+        setStoredVerified(result.cid, {
+          verified: entry.verified,
+          verifyTime: entry.verifyTime,
+          error: entry.error,
+        });
       } catch (err: any) {
-        next[result.cid] = { verified: false, error: err.message || 'Verification failed' };
+        const errMsg = err.message || 'Verification failed';
+        next[result.cid] = { verified: false, error: errMsg };
+        setStoredVerified(result.cid, { verified: false, error: errMsg });
       }
       setVerifyAllResults(prev => ({ ...prev, ...next }));
     }

@@ -10,7 +10,7 @@ Decentralized SEO verification platform. Website owners submit HTML and keywords
 [indexer](apps/indexer/README.md)
 **Oracle Node** Verification nodes (Node1–3). Listen for contract events, fetch HTML from Filecoin, compute root, vote on-chain. 
 [oracle-node](apps/oracle-node/README.md)
-**Worker Filecoin** (Cloudflare) HTML storage in R2. POST /send_file, GET /html_file/:cid, GET /list.
+**Worker Filecoin** (Cloudflare) HTML storage in R2. POST /send_file, GET /html_file/:cid
 [worker-filecoin](apps/worker-filecoin/README.md)
 **Worker DA** (Cloudflare) Data Availability: POST /submit_proof, WebSocket /ws, GET /submissions. Broadcasts to indexers.
 [worker-da](apps/worker-da/README.md)
@@ -25,22 +25,19 @@ Decentralized SEO verification platform. Website owners submit HTML and keywords
 ## Installation
 pnpm install
 
-## Configuration
-- Root: no required env; each app has its own `.env` (see each app’s README).
-- Common: `CONTRACT_ADDRESS`, `ETHEREUM_RPC_URL` for chain; `FILECOIN_URL`, indexer/DA URLs for services.
-
 ## Quick start (local)
 1. `pnpm install`
 2. **Hardhat node** 
    - pnpm --filter @openseo/contract node
-2. **Tüm servisler** `pnpm dev`  
-   - Turbo ile backend, frontend, indexer, oracle-node paralel başlar. DA ve Filecoin için deploy edilmiş worker'lar kullanılır (local worker çalıştırmana gerek yok).
-3. **Contract’ı bir kez deploy et:** Node ayağa kalktıktan sonra başka bir terminalde:
+2. **All services** `pnpm dev`  
+   - With Turbo, the backend, frontend, indexer, and oracle node start in parallel. Deployed workers are used for DA and Filecoin (you don't need to run local workers).
+3. **Deploy contract one time** After the node starts up, on another terminal:
    ```bash
    pnpm --filter @openseo/contract deploy:localhost
    ```
-   - Çıkan `CONTRACT_ADDRESS`’i backend, indexer ve oracle-node `.env` dosyalarına yaz.
-4. MongoDB’yi ayrıca çalıştır (indexer için).
-
+   - Write `CONTRACT_ADDRESS` on backend, indexer and oracle-node' s `.env` file.
 
 Then open the frontend URL (e.g. `http://localhost:3000`) to search and verify.
+
+# Use-Case Diagrams:
+![use-case](/diagram/use-case.png) 

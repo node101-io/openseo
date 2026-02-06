@@ -27,7 +27,6 @@ pnpm run dev
 ### Env before deploy
 - Backend: `FILECOIN_URL=http://localhost:8788`
 - Frontend: `NEXT_PUBLIC_FILECOIN_URL=http://localhost:8788`
----
 
 ## Env after deploy
 - **Backend:** `FILECOIN_URL` = `https://<worker-filecoin>.workers.dev`
