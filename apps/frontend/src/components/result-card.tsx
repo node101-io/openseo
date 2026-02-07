@@ -3,22 +3,55 @@ import { useState, useMemo, useEffect } from 'react';
 import { SearchResult } from '../pages/api';
 import { verifyProofClientSide } from '../app/proof-component';
 
-export type VerifySingleResult = { verified: boolean; error?: string; verifyTime?: number };
+export type VerifySingleResult = { verified: boolean; error?: string };
 
 const VERIFIED_STORAGE_KEY = 'openseo';
-type StoredVerified = { verified: boolean; verifyTime?: number; error?: string };
+type StoredVerified = { verified: 1 | 0; error?: string };
+
+function toString(result: SearchResult): string {
+  return [
+    result.cid,
+    result.root,
+    result.proof,
+    result.siteUrl,
+    String(result.rank),
+    result.id,
+    [...result.keywords].sort().join(','),
+    String(result.totalScore),
+    result.createdAt,
+  ].join('|');
+}
+
+async function hashResult(result: SearchResult): Promise<string> {
+  const digest = await crypto.subtle.digest(
+    'SHA-256',
+    new TextEncoder().encode(toString(result)),
+  );
+  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('');
+}
 
 function getStoredVerified(): Record<string, StoredVerified> {
-  return JSON.parse(window.sessionStorage.getItem(VERIFIED_STORAGE_KEY) ?? '{}');
+  return JSON.parse(window.localStorage.getItem(VERIFIED_STORAGE_KEY) ?? '{}');
 }
 
-function setStoredVerified(cid: string, entry: StoredVerified) {
+export function setStoredVerified(hash: string, entry: StoredVerified) {
   const prev = getStoredVerified();
-  prev[cid] = entry;
-  window.sessionStorage.setItem(VERIFIED_STORAGE_KEY, JSON.stringify(prev));
+  prev[hash] = entry;
+  try {
+    window.localStorage.setItem(VERIFIED_STORAGE_KEY, JSON.stringify(prev));
+  } catch(e) {
+    if(e instanceof DOMException && (
+      e.code === 22 ||
+      e.code === 1014 ||
+      e.name === 'QuataExceedError' || 
+      e.name === 'NS_ERROR_DOM_QUOTA_REACHED')
+    ) {
+      window.localStorage.clear();
+      const freshStart: Record<string, StoredVerified> = { [hash]: entry };
+      window.localStorage.setItem(VERIFIED_STORAGE_KEY, JSON.stringify(freshStart));
+    }
+  }
 }
-
-export { setStoredVerified };
 
 interface ResultCardProps {
   result: SearchResult;
@@ -32,23 +65,30 @@ export function ResultCard({ result, index, verifyAllResult, verifyAllInProgress
     'idle' | 'loading' | 'success' | 'failed'
   >('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [verifyTime, setVerifyTime] = useState<number | null>(null);
+  const [resultHash, setResultHash] = useState<string | null>(null);
 
   useEffect(() => {
-    const entry = getStoredVerified()[result.cid];
-    if (entry?.verified) {
+    let cancelled = false;
+    hashResult(result).then((h) => {
+      if (!cancelled) setResultHash(h);
+    });
+    return () => { cancelled = true; };
+  }, [result]);
+
+  useEffect(() => {
+    if (resultHash == null) return;
+    const entry = getStoredVerified()[resultHash];
+    if (entry?.verified === 1) {
       setVerifyState('success');
-      setVerifyTime(entry.verifyTime ?? null);
       setErrorMessage(null);
     } else if (entry?.error) {
       setVerifyState('failed');
       setErrorMessage(entry.error);
     } else {
       setVerifyState('idle');
-      setVerifyTime(null);
       setErrorMessage(null);
     }
-  }, [result.cid]);
+  }, [resultHash]);
 
   const displayState = useMemo(() => {
     if (verifyAllResult !== undefined && verifyAllResult !== null) {
@@ -59,7 +99,6 @@ export function ResultCard({ result, index, verifyAllResult, verifyAllInProgress
   }, [verifyAllResult, verifyAllInProgress, verifyState]);
 
   const displayError = verifyAllResult?.error ?? errorMessage;
-  const displayVerifyTime = verifyAllResult?.verifyTime ?? verifyTime;
   const [htmlPreviewOpen, setHtmlPreviewOpen] = useState(false);
   const [htmlContent, setHtmlContent] = useState<string | null>(null);
   const [htmlLoading, setHtmlLoading] = useState(false);
@@ -91,26 +130,24 @@ export function ResultCard({ result, index, verifyAllResult, verifyAllInProgress
     e.stopPropagation();
     setVerifyState('loading');
     setErrorMessage(null);
-    setVerifyTime(null);
+    const hash = resultHash ?? await hashResult(result);
 
     try {
       const response = await verifyProofClientSide(result.proof, result.root);
       if (response.verified) {
         setVerifyState('success');
-        const time = response.verifyTime ?? null;
-        setVerifyTime(time);
-        setStoredVerified(result.cid, { verified: true, verifyTime: time ?? undefined });
+        setStoredVerified(hash, { verified: 1, error: undefined });
       } else {
         setVerifyState('failed');
         const err = response.error || 'Verification failed';
         setErrorMessage(err);
-        setStoredVerified(result.cid, { verified: false, error: err });
+        setStoredVerified(hash, { verified: 0, error: err });
       }
     } catch (error: any) {
       setVerifyState('failed');
       const err = error.message || 'Verification failed';
       setErrorMessage(err);
-      setStoredVerified(result.cid, { verified: false, error: err });
+      setStoredVerified(hash, { verified: 0, error: err });
     }
   };
 
@@ -230,7 +267,7 @@ export function ResultCard({ result, index, verifyAllResult, verifyAllInProgress
               )}
               {displayState === 'idle' && 'Verify'}
               {displayState === 'loading' && 'Verifying...'}
-              {displayState === 'success' && (displayVerifyTime != null ? `Verified (${displayVerifyTime.toFixed(0)}ms)` : 'Verified')}
+              {displayState === 'success' && 'Verified'}
               {displayState === 'failed' && 'Retry'}
             </button>
             {displayState === 'failed' && displayError && (

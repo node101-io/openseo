@@ -1,7 +1,7 @@
 # OpenSEO 
 The HTML Owner Service is the user-facing gateway of the OpenSEO platform. It allows users to upload their website's HTML content, generate Zero-Knowledge Proofs (ZKP), and submit verification requests to the blockchain and Data Availability (DA) layer.
 
-# What the action does
+## What the action does
 1.Resolve HTML file – Picks the changed '.html' in target-folder(public)
 2.Generate proof – Runs 'generate-proof.ts', writes 'output/proof-output.json'
 3.Upload to Filecoin – Runs 'upload-filecoin.ts', writes 'output/cid.json'
@@ -10,7 +10,7 @@ The HTML Owner Service is the user-facing gateway of the OpenSEO platform. It al
 
 CI: **generate proof** → **upload to Filecoin** → **submit request to Ethereum** → **submit proof to DA**.
 
-# Configuration
+## Configuration
 OWNER_PRIVATE_KEY  
 CONTRACT_ADDRESS  
 ETHEREUM_RPC_URL  
@@ -23,11 +23,11 @@ TEST_HTML_PATH
 TEST_KEYWORDS
 TEST_SITE_URL
 
-# Running the service
+## Running the service
 ```bash
 cd apps/github-action
 pnpm run dev
 ```
 
-# Use-Case Diagram
+## Use-Case Diagram
 ![use-case](/apps/github-action/diagram/use-case.png)

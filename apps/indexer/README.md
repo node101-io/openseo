@@ -14,7 +14,7 @@ The **DA layer** broadcasts every proof to both indexers. Each indexer decides (
 ```bash
 pnpm --filter indexer dev
 ```
-
+x
 Or run separately:
 ```bash
 pnpm -C apps/indexer run dev:safe   
@@ -22,16 +22,20 @@ pnpm -C apps/indexer run dev:dark
 ```
 
 ## Installation
+```bash
 pnpm install
+```
 
 ## Configuration
  - MONGODB_URI: MongoDB connection string
  - CONTRACT_ADDRESS: OpenSEO contract address. 
  - ETHEREUM_RPC_URL: Ethereum RPC URL. Indexer looks up root→CID from contract events.
 
-# Use-Case Diagram: 
+## Use-Case Diagram: 
 Proof Web Site:
+
 ![use-case](/apps/indexer/diagram/use-case-proof.png)
 
 Search Process:
+
 ![use-case](/apps/indexer/diagram/use-case-process.png)

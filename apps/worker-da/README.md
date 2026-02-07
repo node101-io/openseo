@@ -2,7 +2,6 @@
 This service acts as the central communication hub for the OpenSEO platform. It receives Zero-Knowledge Proofs to the Indexer for real-time state updates.
 
 ## Setup
-
 1. **KV namespace:** `npx wrangler kv:namespace create DA_KV`  
    Please write this id in wrangler.toml
 

@@ -1,5 +1,5 @@
 {
-  "contractAddress": "0x94B2fDf6847341e05238d09467e23908494779a9",
+  "contractAddress": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
   "abi": [
     {
       "inputs": [
@@ -270,7 +270,7 @@
       "type": "function"
     }
   ],
-  "network": "production",
+  "network": "localhost",
   "authorizedNodes": {
     "node1": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
     "node2": "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
