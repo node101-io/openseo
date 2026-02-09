@@ -1,7 +1,6 @@
 use dep::std;
 global MAX_WORDS: u32 = 32;
 
-// tag_id: 0=default, 1=title, 2=h1, 3=h2, 4=h3, 5=h4, 6=h5, 7=h6, 8=meta, 9=strong, 10=b, 11=i, 12=a, 13=p, 14=span, 15=div, 16=li, 17=td, 18=th, 19=blockquote, 20=code
 // tag id - weight
 
 fn get_weight(tag_id: u32) -> Field {

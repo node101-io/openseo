@@ -3,11 +3,8 @@ import { useState, useMemo, useEffect } from 'react';
 import { SearchResult } from '../pages/api';
 import { verifyProofClientSide } from '../app/proof-component';
 
-export type VerifySingleResult = { verified: boolean; error?: string };
-
-const VERIFIED_STORAGE_KEY = 'openseo';
 type StoredVerified = { verified: 1 | 0; error?: string };
-
+const prefix = 'openseo_';
 function toString(result: SearchResult): string {
   return [
     result.cid,
@@ -27,18 +24,18 @@ async function hashResult(result: SearchResult): Promise<string> {
     'SHA-256',
     new TextEncoder().encode(toString(result)),
   );
-  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('');
+  return new Uint8Array(digest).toHex();
 }
 
-function getStoredVerified(): Record<string, StoredVerified> {
-  return JSON.parse(window.localStorage.getItem(VERIFIED_STORAGE_KEY) ?? '{}');
+function getStoredVerified(hash: string): Record<string, StoredVerified> {
+  return JSON.parse(window.localStorage.getItem(`${prefix}${hash}`,) ?? '{}');
 }
 
 export function setStoredVerified(hash: string, entry: StoredVerified) {
-  const prev = getStoredVerified();
+  const prev = getStoredVerified(hash);
   prev[hash] = entry;
   try {
-    window.localStorage.setItem(VERIFIED_STORAGE_KEY, JSON.stringify(prev));
+    window.localStorage.setItem(`${prefix}${hash}`, JSON.stringify(prev));
   } catch(e) {
     if(e instanceof DOMException && (
       e.code === 22 ||
@@ -48,7 +45,7 @@ export function setStoredVerified(hash: string, entry: StoredVerified) {
     ) {
       window.localStorage.clear();
       const freshStart: Record<string, StoredVerified> = { [hash]: entry };
-      window.localStorage.setItem(VERIFIED_STORAGE_KEY, JSON.stringify(freshStart));
+      window.localStorage.setItem(`${prefix}${hash}`, JSON.stringify(freshStart));
     }
   }
 }
@@ -56,7 +53,7 @@ export function setStoredVerified(hash: string, entry: StoredVerified) {
 interface ResultCardProps {
   result: SearchResult;
   index: number;
-  verifyAllResult?: VerifySingleResult | null;
+  verifyAllResult?: StoredVerified | null;
   verifyAllInProgress?: boolean;
 }
 
@@ -77,7 +74,7 @@ export function ResultCard({ result, index, verifyAllResult, verifyAllInProgress
 
   useEffect(() => {
     if (resultHash == null) return;
-    const entry = getStoredVerified()[resultHash];
+    const entry = getStoredVerified(resultHash)[resultHash];
     if (entry?.verified === 1) {
       setVerifyState('success');
       setErrorMessage(null);

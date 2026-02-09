@@ -2,7 +2,11 @@
 const nextConfig = {  
   async rewrites() {
     return [
-    ];
+      {
+        source: '/aztec-crs/:path*',
+        destination: 'https://crs.aztec.network/:path*',
+      },
+    ]
   },
 
   webpack: (config) => {

@@ -15,46 +15,6 @@ importers:
         specifier: latest
         version: 2.8.1
 
-  apps/backend:
-    dependencies:
-      '@openseo/contract':
-        specifier: workspace:*
-        version: link:../../packages/contract
-      '@openseo/zkproof':
-        specifier: workspace:*
-        version: link:../../packages/zkproof
-      axios:
-        specifier: ^1.13.2
-        version: 1.13.4
-      ethers:
-        specifier: ^6.13.0
-        version: 6.16.0
-      express:
-        specifier: ^4.19.2
-        version: 4.22.1
-      multer:
-        specifier: ^1.4.5-lts.1
-        version: 1.4.5-lts.2
-    devDependencies:
-      '@types/express':
-        specifier: ^4.17.21
-        version: 4.17.25
-      '@types/multer':
-        specifier: ^1.4.11
-        version: 1.4.13
-      '@types/node':
-        specifier: ^20.0.0
-        version: 20.19.30
-      dotenv:
-        specifier: ^17.2.3
-        version: 17.2.3
-      tsx:
-        specifier: ^4.7.0
-        version: 4.21.0
-      typescript:
-        specifier: ^5.3.3
-        version: 5.9.3
-
   apps/frontend:
     dependencies:
       '@aztec/bb.js':
@@ -97,6 +57,43 @@ importers:
       tailwindcss:
         specifier: ^3.4.3
         version: 3.4.19(tsx@4.21.0)
+      typescript:
+        specifier: ^5.3.3
+        version: 5.9.3
+
+  apps/github-action:
+    dependencies:
+      '@openseo/contract':
+        specifier: workspace:*
+        version: link:../../packages/contract
+      '@openseo/zkproof':
+        specifier: workspace:*
+        version: link:../../packages/zkproof
+      ethers:
+        specifier: ^6.13.0
+        version: 6.16.0
+      express:
+        specifier: ^4.19.2
+        version: 4.22.1
+      multer:
+        specifier: ^1.4.5-lts.1
+        version: 1.4.5-lts.2
+    devDependencies:
+      '@types/express':
+        specifier: ^4.17.21
+        version: 4.17.25
+      '@types/multer':
+        specifier: ^1.4.11
+        version: 1.4.13
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.30
+      dotenv:
+        specifier: ^17.2.3
+        version: 17.2.3
+      tsx:
+        specifier: ^4.7.0
+        version: 4.21.0
       typescript:
         specifier: ^5.3.3
         version: 5.9.3

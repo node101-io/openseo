@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { ProofResult, WordScorePair } from '../common/prover-types.js';
-import { HashService } from './Hashing.js';
+import { HashService } from './hashing.js';
 import { hashToNoirField } from '../common/hash-utils.js';
 import { sanitizeText, getTagId } from '../common/text-utils.js';
 import { MAX_WORDS } from '../common/constants.js';
@@ -229,12 +229,6 @@ export namespace CircuitProof {
                 success: false
             };
         }
-
-        /*return {
-            htmlRoot: '0x00',
-            totalScore: 0,
-            success: true
-        };*/
     }
 
     export const verifyProof = ProofVerifier.verifyProof;

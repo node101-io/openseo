@@ -1,5 +1,4 @@
 'use client';
-
 export interface ProofPackage {
   proof_type: string;
   proof_file_path: string;
@@ -36,7 +35,7 @@ function toFieldHex(val: string | number): string {
     hex = val.toString(16);
   }
   hex = hex.replace(/^0x/, '');
-  hex = hex.padStart(64, '0'); // 32 byte padding
+  hex = hex.padStart(64, '0'); 
   return '0x' + hex;
 }
 
@@ -65,10 +64,23 @@ async function initializeBackend(): Promise<void> {
     circuit = await response.json();    
     noir = new Noir(circuit);    
     const threads = Math.min(navigator.hardwareConcurrency || 4, 8);
-    bbApi = await Barretenberg.new({ threads });
+
+    const prevFetch = globalThis.fetch;
+    globalThis.fetch = (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(typeof input === 'object' && 'url' in input ? input.url : input);
+      if (url.startsWith('https://crs.aztec.network')) {
+        return prevFetch(url.replace('https://crs.aztec.network', '/aztec-crs'), init);
+      }
+      return prevFetch(input, init);
+    };
+
+    try {
+      bbApi = await Barretenberg.new({ threads });
+    } finally {
+      globalThis.fetch = prevFetch;
+    }
     honkBackend = new UltraHonkBackend(circuit.bytecode, bbApi);
-    
-    console.log('[Backend] Initialized');
+    console.log('[Verify] Initialized');
   })();
 
   await initPromise;
@@ -78,9 +90,7 @@ export async function verifyProofClientSide(proofBase64: string, expectedRoot: s
   const startTime = performance.now();
   try {
     await initializeBackend();
-
     if (!honkBackend) throw new Error('Backend not initialized');
-
     const proofPackage = decodeProof(proofBase64);
     const proof = new Uint8Array(proofPackage.proof || []);
     const { html_root, total_score } = proofPackage.public_inputs;

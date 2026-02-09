@@ -116,7 +116,7 @@ export namespace ProofVerifier {
             });
 
             verifyTime = performance.now() - verifyStart;
-            console.log(`[ProofVerifier] Result: ${isValid ? '✅ SUCCESS' : '❌ FAILED'}`);
+            console.log(`[ProofVerifier] Result: ${isValid ? 'SUCCESS' : 'FAILED'}`);
             
             if (!isValid) {
                  return {

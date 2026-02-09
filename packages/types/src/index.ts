@@ -54,8 +54,6 @@ export interface Summary {
     summary_path?: string;
 }
 
-// HTML Parser Types
-
 export interface LinearizedWord {
     word: string;
     weight: number;
