@@ -3,8 +3,6 @@ import { useState, useMemo, useEffect } from 'react';
 import { SearchResult } from '../pages/api';
 import { verifyProofClientSide } from '../app/proof-component';
 
-type StoredVerified = { verified: 1 | 0; error?: string };
-const prefix = 'openseo_';
 function toString(result: SearchResult): string {
   return [
     result.cid,
@@ -19,7 +17,7 @@ function toString(result: SearchResult): string {
   ].join('|');
 }
 
-async function hashResult(result: SearchResult): Promise<string> {
+export async function hashResult(result: SearchResult): Promise<string> {
   const digest = await crypto.subtle.digest(
     'SHA-256',
     new TextEncoder().encode(toString(result)),
@@ -27,25 +25,20 @@ async function hashResult(result: SearchResult): Promise<string> {
   return new Uint8Array(digest).toHex();
 }
 
-function getStoredVerified(hash: string): Record<string, StoredVerified> {
-  return JSON.parse(window.localStorage.getItem(`${prefix}${hash}`,) ?? '{}');
+function getStoredVerified(hash: string): string | null {
+  return window.localStorage.getItem(`${hash}`);
 }
 
-export function setStoredVerified(hash: string, entry: StoredVerified) {
-  const prev = getStoredVerified(hash);
-  prev[hash] = entry;
+export function setStoredVerified(hash: string, status: 1 | 0) {
   try {
-    window.localStorage.setItem(`${prefix}${hash}`, JSON.stringify(prev));
+    window.localStorage.setItem(`${hash}`, String(status));
   } catch(e) {
     if(e instanceof DOMException && (
-      e.code === 22 ||
-      e.code === 1014 ||
       e.name === 'QuataExceedError' || 
       e.name === 'NS_ERROR_DOM_QUOTA_REACHED')
     ) {
       window.localStorage.clear();
-      const freshStart: Record<string, StoredVerified> = { [hash]: entry };
-      window.localStorage.setItem(`${prefix}${hash}`, JSON.stringify(freshStart));
+      window.localStorage.setItem(`${hash}`, String(status));
     }
   }
 }
@@ -53,7 +46,7 @@ export function setStoredVerified(hash: string, entry: StoredVerified) {
 interface ResultCardProps {
   result: SearchResult;
   index: number;
-  verifyAllResult?: StoredVerified | null;
+  verifyAllResult?: '1' | '0' | null;
   verifyAllInProgress?: boolean;
 }
 
@@ -74,28 +67,26 @@ export function ResultCard({ result, index, verifyAllResult, verifyAllInProgress
 
   useEffect(() => {
     if (resultHash == null) return;
-    const entry = getStoredVerified(resultHash)[resultHash];
-    if (entry?.verified === 1) {
+
+    const status = getStoredVerified(resultHash);
+    
+    if(status === "1") {
       setVerifyState('success');
-      setErrorMessage(null);
-    } else if (entry?.error) {
-      setVerifyState('failed');
-      setErrorMessage(entry.error);
+    } else if (status === "0") {
+    setVerifyState('failed');
     } else {
       setVerifyState('idle');
-      setErrorMessage(null);
     }
   }, [resultHash]);
 
   const displayState = useMemo(() => {
     if (verifyAllResult !== undefined && verifyAllResult !== null) {
-      return verifyAllResult.verified ? 'success' : 'failed';
+      return verifyAllResult === "1" ? 'success' : 'failed';
     }
     if (verifyAllInProgress) return 'loading';
     return verifyState;
   }, [verifyAllResult, verifyAllInProgress, verifyState]);
 
-  const displayError = verifyAllResult?.error ?? errorMessage;
   const [htmlPreviewOpen, setHtmlPreviewOpen] = useState(false);
   const [htmlContent, setHtmlContent] = useState<string | null>(null);
   const [htmlLoading, setHtmlLoading] = useState(false);
@@ -133,18 +124,18 @@ export function ResultCard({ result, index, verifyAllResult, verifyAllInProgress
       const response = await verifyProofClientSide(result.proof, result.root);
       if (response.verified) {
         setVerifyState('success');
-        setStoredVerified(hash, { verified: 1, error: undefined });
+        setStoredVerified(hash, 1);
       } else {
         setVerifyState('failed');
         const err = response.error || 'Verification failed';
         setErrorMessage(err);
-        setStoredVerified(hash, { verified: 0, error: err });
+        setStoredVerified(hash, 0);
       }
     } catch (error: any) {
       setVerifyState('failed');
       const err = error.message || 'Verification failed';
       setErrorMessage(err);
-      setStoredVerified(hash, { verified: 0, error: err });
+      setStoredVerified(hash, 0);
     }
   };
 
@@ -267,11 +258,6 @@ export function ResultCard({ result, index, verifyAllResult, verifyAllInProgress
               {displayState === 'success' && 'Verified'}
               {displayState === 'failed' && 'Retry'}
             </button>
-            {displayState === 'failed' && displayError && (
-              <span className="text-xs text-red-500 max-w-[150px] text-right">
-                {displayError.length > 50 ? displayError.substring(0, 50) + '...' : displayError}
-              </span>
-            )}
           </div>
         </div>
       </div>

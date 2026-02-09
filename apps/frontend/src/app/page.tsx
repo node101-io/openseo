@@ -4,9 +4,7 @@ import dynamic from 'next/dynamic';
 import { SearchInput } from '../components/search-input';
 import { searchByKeyword, SearchResult, type IndexerMode } from '../pages/api';
 import { verifyProofClientSide } from './proof-component';
-import { setStoredVerified } from '../components/result-card';
-
-export type VerifySingleResult = { verified: boolean; error?: string; verifyTime?: number };
+import { setStoredVerified, hashResult } from '../components/result-card';
 
 const ResultCard = dynamic(
   () => import('../components/result-card').then(mod => ({ default: mod.ResultCard })),
@@ -21,7 +19,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [verifyAllEnabled, setVerifyAllEnabled] = useState(false);
   const [verifyAllInProgress, setVerifyAllInProgress] = useState(false);
-  const [verifyAllResults, setVerifyAllResults] = useState<Record<string, VerifySingleResult>>({});
+  const [verifyAllResults, setVerifyAllResults] = useState<Record<string, '1' | '0'>>({});
   const [indexerMode, setIndexerMode] = useState<IndexerMode>('safe');
 
   const handleSearch = async (query: string, modeOverride?: IndexerMode) => {
@@ -55,25 +53,17 @@ export default function Home() {
     if (results.length === 0) return;
     setVerifyAllInProgress(true);
     setVerifyAllResults({});
-    const next: Record<string, VerifySingleResult> = {};
+    const next: Record<string, '1' | '0'> = {};
     for (const result of results) {
+      const hash = await hashResult(result);
       try {
         const response = await verifyProofClientSide(result.proof, result.root);
-        const entry = {
-          verified: response.verified,
-          error: response.error,
-          verifyTime: response.verifyTime,
-        };
-        next[result.cid] = entry;
-        setStoredVerified(result.cid, {
-          verified: entry.verified,
-          verifyTime: entry.verifyTime,
-          error: entry.error,
-        });
-      } catch (err: any) {
-        const errMsg = err.message || 'Verification failed';
-        next[result.cid] = { verified: false, error: errMsg };
-        setStoredVerified(result.cid, { verified: false, error: errMsg });
+        const status = response.verified ? 1 : 0;
+        next[result.cid] = status ? '1' : '0';
+        setStoredVerified(hash, status);
+      } catch {
+        next[result.cid] = '0';
+        setStoredVerified(hash, 0);
       }
       setVerifyAllResults(prev => ({ ...prev, ...next }));
     }
@@ -227,7 +217,7 @@ export default function Home() {
                       key={result.cid}
                       result={result}
                       index={index}
-                      verifyAllResult={verifyAllResults[result.cid]}
+                      verifyAllResult={verifyAllResults[result.cid] ?? null}
                       verifyAllInProgress={verifyAllInProgress}
                     />
                   ))}
