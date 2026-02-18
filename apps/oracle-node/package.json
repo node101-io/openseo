@@ -1,0 +1,23 @@
+{
+  "name": "oracle-node",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "tsx src/scripts/route-nodes.ts",
+    "start": "tsx src/route.ts",
+    "dev_nodes": "tsx src/scripts/route-nodes.ts" 
+  },
+  "dependencies": {
+    "@openseo/contract": "workspace:*",
+    "@openseo/zkproof": "workspace:*",
+    "axios": "^1.13.2",
+    "ethers": "^6.13.0",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.0.0",
+    "dotenv": "^17.2.3",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  }
+}

@@ -1,0 +1,15 @@
+name = "openseo-da"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+[[kv_namespaces]]
+binding = "DA_KV"
+id = "def1be8e78304f79bdabb516308f5795"
+
+[[durable_objects.bindings]]
+name = "DA_BROADCAST"
+class_name = "DABroadcast"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["DABroadcast"]

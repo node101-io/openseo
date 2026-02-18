@@ -1,0 +1,18 @@
+{
+  "name": "openseo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "npx turbo run build",
+    "dev": "npx turbo run dev --filter=!@openseo/contract",
+    "dev:node": "pnpm --filter @openseo/contract dev",
+    "deploy:local": "pnpm --filter @openseo/contract deploy:localhost",
+    "lint": "npx turbo run lint",
+    "clean": "npx turbo run clean"
+  },
+  "devDependencies": {
+    "turbo": "latest",
+    "prettier": "^3.0.0"
+  },
+  "packageManager": "pnpm@9.0.0"
+}

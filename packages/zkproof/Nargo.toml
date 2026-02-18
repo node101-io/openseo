@@ -1,0 +1,6 @@
+[package]
+name = "zkseo"
+type = "bin"
+authors = [""]
+
+[dependencies]

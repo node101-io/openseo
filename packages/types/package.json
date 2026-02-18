@@ -1,0 +1,12 @@
+{
+  "name": "@openseo/types",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}
