@@ -9,7 +9,7 @@ export interface SubmitProofParams {
     totalScore: number;
 }
 
-function fetchWithTimeout(url: string, options: RequestInit, ms: number): Promise<Response> {
+export async function fetchWithTimeout(url: string, options: RequestInit, ms: number): Promise<Response> {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), ms);
     return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timeout));
@@ -45,10 +45,9 @@ const PROOF_OUTPUT_FILE = 'output/proof-output.json';
 async function main() {
     const [proofOutputPathArg, siteUrlArg] = process.argv.slice(2);
     const proofOutputPath = proofOutputPathArg || process.env.PROOF_OUTPUT_FILE || PROOF_OUTPUT_FILE;
-    const siteUrl = siteUrlArg || process.env.TEST_SITE_URL || process.env.SITE_URL;
+    const siteUrl = siteUrlArg || process.env.TEST_SITE_URL;
     if (!siteUrl) {
         console.error('Usage: tsx submit-proof-da.ts <proof-output.json> <siteUrl>');
-        console.error('Or set env: TEST_SITE_URL (or SITE_URL). Proof file defaults to .proof-output.json');
         process.exit(1);
     }
     if (!fs.existsSync(proofOutputPath)) {
@@ -68,7 +67,7 @@ async function main() {
         siteUrl,
         totalScore: data.totalScore,
     });
-    console.log(JSON.stringify({ success: true }));
+    console.log("Proof submitted to DA");
 }
 
 const run = process.argv[1]?.includes('submit-proof-da');

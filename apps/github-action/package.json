@@ -2,12 +2,13 @@
   "name": "backend",
   "version": "1.0.0",
   "scripts": {
-    "dev": "tsx src/scripts/generate-proof.ts && tsx src/scripts/upload-filecoin.ts && tsx src/scripts/submit-request-eth.ts && tsx src/scripts/submit-proof-da.ts"
+    "dev": "tsx src/scripts/generate-proof.ts && tsx src/scripts/upload-filecoin.ts && tsx src/scripts/submit-request-solana.ts && tsx src/scripts/submit-proof-da.ts"
   },
   "dependencies": {
-    "@openseo/contract": "workspace:*",
+    "@coral-xyz/anchor": "^0.32.1",
+    "@openseo/contracts": "workspace:*",
     "@openseo/zkproof": "workspace:*",
-    "ethers": "^6.13.0",
+    "@solana/web3.js": "^1.95.0",
     "express": "^4.19.2",
     "multer": "^1.4.5-lts.1"
   },

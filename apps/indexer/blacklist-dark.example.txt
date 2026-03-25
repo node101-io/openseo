@@ -1,4 +1,3 @@
-home 
-service
 news
 safe
+contact

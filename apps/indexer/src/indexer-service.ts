@@ -1,31 +1,35 @@
 import { ZkProofMetadata, IZkProofMetadata } from './db/models/zk-proof-metadata.js';
 import { mongoService } from './mongo-service.js';
 import { isBlacklisted } from './blacklist.js';
-import { ethers } from 'ethers';
-import { getOpenSEOABI } from '@openseo/contract';
+import { Connection, Keypair } from '@solana/web3.js';
+import { cidToHash, createProgram, getProgramId } from '@openseo/contracts';
 import { ProofVerifier } from '@openseo/zkproof';
 import type { DABroadcastData, IndexerResult } from '@openseo/types';
 
 export class IndexerService {
-    private provider!: ethers.JsonRpcProvider;
-    private contract!: ethers.Contract;
+    private connection!: Connection;
+    private program!: ReturnType<typeof createProgram>;
     private processedRoots = new Set<string>();
     private initialized = false;
 
     private initializeContract(): boolean {
-        if (this.initialized) return !!this.contract;
-        const rpcUrl = process.env.ETHEREUM_RPC_URL || '';
-        const contractAddress = process.env.CONTRACT_ADDRESS;
+        if (this.initialized) return !!this.program;
+        const rpcUrl = process.env.SOLANA_RPC_URL || '';
 
-        if (contractAddress) {
-            this.provider = new ethers.JsonRpcProvider(rpcUrl);
-            this.contract = new ethers.Contract(contractAddress, getOpenSEOABI(), this.provider);
+        if (rpcUrl) {
+            this.connection = new Connection(rpcUrl);
+            const readOnlyKeypair = Keypair.generate();
+            const readOnlyWallet = {
+                publicKey: readOnlyKeypair.publicKey,
+                payer: readOnlyKeypair,
+                signTransaction: async <T extends import('@solana/web3.js').Transaction | import('@solana/web3.js').VersionedTransaction>(tx: T) => tx,
+                signAllTransactions: async <T extends import('@solana/web3.js').Transaction | import('@solana/web3.js').VersionedTransaction>(txs: T[]) => txs,
+            };
+            this.program = createProgram(this.connection, readOnlyWallet);
             this.initialized = true;
             return true;
-        } else {
-            console.warn('Contract address not found');
-            return false;
         }
+        return false;
     }
 
     private normalizeRoot = (r: string) => r.toLowerCase().replace(/^0x/, '');
@@ -60,17 +64,17 @@ export class IndexerService {
         }
         
         try {
-            // search on ethereum for this root
-            const ethResult = await this.findRootInEthereum(daData.root);
-            if (!ethResult.found) {
+            // search on solana for this root
+            const chainResult = await this.findRootOnChain(daData.root);
+            if (!chainResult.found) {
                 return {
                     success: false,
-                    message: 'Root not found in Ethereum',
-                    error: 'This root has no matching CID in Ethereum results'
+                    message: 'Root not found on chain',
+                    error: 'This root has no matching CID in chain results'
                 };
             }
             // verify proof
-            const verificationResult = await ProofVerifier.verifyProof(daData.proof, ethResult.root!);
+            const verificationResult = await ProofVerifier.verifyProof(daData.proof, chainResult.root!);
             
             if (!verificationResult.isValid) {
                 return {
@@ -82,7 +86,7 @@ export class IndexerService {
 
             // save to db
             const result = await this.saveToMongoDB({
-                cid: ethResult.cid!,
+                cid: chainResult.cid!,
                 root: daData.root,
                 keywords: daData.keywords,
                 siteUrl: daData.siteUrl,
@@ -104,59 +108,36 @@ export class IndexerService {
         }
     }
 
-    //search on eth root if found return cid and root
-    private async findRootInEthereum(targetRoot: string): Promise<{
+    // Search Solana program for a completed request whose result_root matches targetRoot
+    private async findRootOnChain(targetRoot: string): Promise<{
         found: boolean;
-        cid?: string; 
+        cid?: string;
         root?: string;
     }> {
-        if (!this.initialized) {
-            this.initializeContract();
-        }
-        
-        // Check if contract is initialized
-        if (!this.contract || !this.provider) {
-            return { found: false };
-        }
+        if (!this.initialized) this.initializeContract();
+        if (!this.program) return { found: false };
 
         const targetNormalized = this.normalizeRoot(targetRoot);
 
         try {
-            const contractAddress = await this.contract.getAddress();
-            // get RequestCompleted events for found cid
-            const currentBlock = await this.provider.getBlockNumber();
-            const fromBlock = 0; 
-
-            const events = await this.contract.queryFilter(
-                this.contract.filters.RequestCompleted(),
-                fromBlock,
-                currentBlock
-            );
-
-            for (const event of events) {
-                if (event instanceof ethers.EventLog && event.args) {
-                    const cid = String(event.args[0]);
-                    const success = event.args[1];
-
-                    if (success) {
-                        const result = await this.contract.results(cid);
-                        const resultRoot = result.resultRoot;
-
-                        if (resultRoot && this.normalizeRoot(resultRoot) === targetNormalized) {
-                            return {
-                                found: true,
-                                cid: cid,
-                                root: resultRoot
-                            };
-                        }
-                    }
-                }
+            const accounts = await this.program.account.verificationRequest.all();
+            for (const { account } of accounts) {
+                if (!account.isProcessed || !account.resultRoot) continue;
+                const resultRootBytes = account.resultRoot as number[] | Uint8Array;
+                const resultRootHex = Buffer.from(resultRootBytes).toString('hex');
+                if (this.normalizeRoot(resultRootHex) !== targetNormalized) continue;
+                const cidHashBytes = (account.cid ?? []) as number[] | Uint8Array;
+                const cid = Buffer.from(cidHashBytes).toString('hex');
+                return {
+                    found: true,
+                    cid,
+                    root: resultRootHex,
+                };
             }
+            return { found: false};
+        } catch {
             return { found: false };
-
-        } catch (error: any) {
-            return { found: false };
-        }
+        } 
     }
 
     //save mongo 
@@ -187,7 +168,6 @@ export class IndexerService {
                 totalScore: data.totalScore,
                 verified: true
             });
-
             const saved = await newRecord.save();
             return {
                 success: true,
