@@ -4,9 +4,7 @@
   "private": true,
   "scripts": {
     "build": "npx turbo run build",
-    "dev": "turbo run dev --filter=!@openseo/contract",
-    "dev:node": "pnpm --filter @openseo/contract dev",
-    "deploy:local": "pnpm --filter @openseo/contract deploy:localhost",
+    "dev": "turbo run dev",
     "lint": "npx turbo run lint",
     "clean": "npx turbo run clean"
   },
