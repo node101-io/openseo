@@ -4,9 +4,9 @@ import path from "path";
 import { Connection, Keypair, SystemProgram } from "@solana/web3.js";
 import { BN, Wallet } from "@coral-xyz/anchor";
 import {
+  cidToHash,
   createProgram,
   getRequestPda,
-  cidToHash,
 } from "@openseo/contracts";
 import { SOLANA_RPC_URL, KEYPAIR_PATH } from "./config";
 
@@ -97,7 +97,7 @@ async function main() {
 const run = process.argv[1]?.includes('submit-request-solana');
 if (run) {
   main().catch((e) => {
-    console.error(e.message);
+    console.error("error", e.message);
     process.exit(1);
   });
 }

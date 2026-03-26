@@ -8,7 +8,7 @@ The smart contract anchors trust for the system. Website owners submit a CID and
 
 ## Features
 
-- **Verification requests** `submitRequest(cid, cid_str, keywords)` — requester pays and emits a request. Only one active request per CID.
+- **Verification requests** `submitRequest(cid_hash, cid, keywords)` — requester pays and emits a request. Only one active request per CID.
 
 - **Node voting** Authorized nodes call `submit_html_root(cid, htmlRoot)`. Votes are grouped by root; when `REQUIRED_CONSENSUS` (2) nodes agree on the same root, the request is finalized.
 
@@ -64,13 +64,25 @@ solana balance <NODE_PUBKEY> --url devnet
 1. Build the contract
 
 ```bash
-anchor builld
+anchor build
 ```
 
 2. Deploy the contract to devnet:
 
 ```bash
 anchor deploy --provider.cluster devnet
+```
+
+3. Initialize the program:
+
+```bash
+RPC_URL="" \
+PROGRAM_ID="" \
+KEYPAIR_PATH="/.config/solana/id.json" \
+NODE1_PUBKEY="" \
+NODE2_PUBKEY="" \
+NODE3_PUBKEY="" \
+pnpm run init
 ```
 
 **Localnet Deployment**
@@ -100,7 +112,7 @@ solana airdrop 100 <NODE_3_PUBKEY>
 4. Build the contract
 
 ```bash
-anchor builld
+anchor build
 ```
 
 5. Deploy the contract to localnet:
@@ -109,14 +121,28 @@ anchor builld
 anchor deploy --provider.cluster localnet
 ```
 
+6. Initialize the program:
+
+```bash
+RPC_URL="" \
+PROGRAM_ID="" \
+KEYPAIR_PATH="/.config/solana/id.json" \
+NODE1_PUBKEY="" \
+NODE2_PUBKEY="" \
+NODE3_PUBKEY="" \
+pnpm run init
+```
+
 **Important:**
 
 - When you run Localnet, a folder named `test-ledger` is created on your computer.
 - When switching between localnet and devnet, make sure to update the RPC_URL in your .env files across your backend, indexer, and oracle-nodes (SOLANA_RPC_URL= https://api.devnet.solana.com to http://127.0.0.1:8899).
+- If you use public rpc url you get 429 rate limit error. You can use private rpc url.
 
 ## Running (contract package only)
 
-From the monorepo root:
-pnpm --filter @openseo/contracts compile
-pnpm --filter @openseo/contracts deploy:local
-pnpm --filter @openseo/contracts deploy:devnet
+**From the monorepo root:**
+
+- pnpm --filter @openseo/contracts compile
+- pnpm --filter @openseo/contracts deploy:local
+- pnpm --filter @openseo/contracts deploy:devnet

@@ -1,3 +1,4 @@
+import bs58 from "bs58";
 import { ZkProofMetadata, IZkProofMetadata } from './db/models/zk-proof-metadata.js';
 import { mongoService } from './mongo-service.js';
 import { isBlacklisted } from './blacklist.js';
@@ -108,7 +109,7 @@ export class IndexerService {
         }
     }
 
-    // Search Solana program for a completed request whose result_root matches targetRoot
+    // search Solana program for a completed request whose result_root matches targetRoot
     private async findRootOnChain(targetRoot: string): Promise<{
         found: boolean;
         cid?: string;
@@ -120,14 +121,20 @@ export class IndexerService {
         const targetNormalized = this.normalizeRoot(targetRoot);
 
         try {
-            const accounts = await this.program.account.verificationRequest.all();
+           const accounts = await this.program.account.verificationRequest.all([
+                {
+                    memcmp: {
+                        offset: 56, 
+                        bytes: bs58.encode(Buffer.from([1])),
+                    },
+                },
+            ]);
             for (const { account } of accounts) {
-                if (!account.isProcessed || !account.resultRoot) continue;
+                if (!account.resultRoot) continue;
                 const resultRootBytes = account.resultRoot as number[] | Uint8Array;
                 const resultRootHex = Buffer.from(resultRootBytes).toString('hex');
                 if (this.normalizeRoot(resultRootHex) !== targetNormalized) continue;
-                const cidHashBytes = (account.cid ?? []) as number[] | Uint8Array;
-                const cid = Buffer.from(cidHashBytes).toString('hex');
+                const cid = account.cid;
                 return {
                     found: true,
                     cid,

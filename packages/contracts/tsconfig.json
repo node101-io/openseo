@@ -12,6 +12,6 @@
     "typeRoots": ["./node_modules/@types", "../../node_modules/@types"],
     "composite": true,
   },
-  "include": ["src/**/*", "scripts/**/*", "tests/**/*", "target/types/**/*"],
+  "include": ["src/**/*", "scripts/**/*", "tests/**/*", "target/types/**/*", "scripts"],
   "exclude": ["node_modules", "dist"]
 }

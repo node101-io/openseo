@@ -9,8 +9,10 @@
   },
   "dependencies": {
     "@aztec/bb.js": "3.0.0-nightly.20260102",
+    "@openseo/contracts": "workspace:*",
     "@noir-lang/noir_js": "1.0.0-beta.18",
     "@openseo/types": "workspace:*",
+    "@solana/web3.js": "^1.95.0",
     "axios": "^1.13.2",
     "next": "^14.2.0",
     "react": "^18.2.0",

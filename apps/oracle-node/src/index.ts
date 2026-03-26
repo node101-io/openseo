@@ -1,6 +1,7 @@
 import axios from "axios";
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import { CircuitProof } from "@openseo/zkproof";
+import bs58 from "bs58";
 import {
   createProgram,
   getConfigPda,
@@ -82,15 +83,22 @@ export class NodeService {
       } catch (e: any) {
         console.error(`[${this.nodeName}] polling error:`, e.message);
       }
-    }, 3000);
+    }, 15000);
 
     this.startCleanupTask();
   }
 
   private async poll(): Promise<void> {
-    const requests = await this.program.account.verificationRequest.all();
+    const requests = await this.program.account.verificationRequest.all([
+      {
+        memcmp: {
+          offset: 56, 
+          bytes: bs58.encode(Buffer.from([0])), 
+        },
+      },
+    ]);
     for (const { publicKey, account } of requests) {
-      const cid = account.cidStr;
+      const cid = account.cid;
       const keywords = account.keywords as string[];
       if (this.completedRequests.has(cid) || this.processingRequests.has(cid)) continue;
 
@@ -123,11 +131,11 @@ export class NodeService {
     for (const { publicKey, account } of requests) {
       if (account.isProcessed) continue;
       if (now <= account.timestamp.toNumber() + VERIFICATION_TIMEOUT) continue;
-      const cidRaw = Array.from(account.cid as number[]); 
-
+      const cidHash = Array.from(account.cidHash as number[]);
+      
       try {
         await this.program.methods
-          .cleanExpiredRequest(cidRaw) 
+          .cleanExpiredRequest(cidHash) 
           .accounts({ 
             caller: this.keypair.publicKey 
           })

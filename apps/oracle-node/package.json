@@ -12,9 +12,11 @@
     "@openseo/zkproof": "workspace:*",
     "@solana/web3.js": "^1.95.0",
     "axios": "^1.13.2",
+    "bs58": "^6.0.0",
     "express": "^4.19.2"
   },
   "devDependencies": {
+    "@types/bs58": "^5.0.0",
     "@types/express": "^4.17.21",
     "@types/node": "^20.0.0",
     "dotenv": "^17.2.3",
