@@ -19,8 +19,8 @@ pub mod contracts {
 
     pub fn submit_request(
         ctx: Context<SubmitRequest>,
-        cid_hash: [u8; 32],
-        cid: String,
+        cid_part1: String, 
+        cid_part2: String,
         keywords: Vec<String>,
         payment_amount: u64,
     ) -> Result<()> {
@@ -31,8 +31,8 @@ pub mod contracts {
         request.timestamp = Clock::get()?.unix_timestamp;
         request.payment_amount = payment_amount;
         request.is_processed = false;
-        request.cid_hash = cid_hash;
-        request.cid = cid.clone();
+        request.cid_part1 = cid_part1.clone();
+        request.cid_part2 = cid_part2.clone();
         request.keywords = keywords.clone();
         request.result_root = [0; 32];
 
@@ -44,10 +44,9 @@ pub mod contracts {
             },
         );
         transfer(cpi_context, payment_amount)?; 
-        
+        let cid = format!("{}{}", cid_part1, cid_part2);
         emit!(VerificationRequested {
-            cid_hash,
-            cid,
+            cid: cid,
             keywords,
             owner: ctx.accounts.owner.key(),
         });
@@ -56,7 +55,8 @@ pub mod contracts {
 
     pub fn submit_html_root(
         ctx: Context<SubmitHtmlRoot>,
-        cid_hash: [u8; 32],
+        cid_part1: String,
+        cid_part2: String,
         html_root: [u8; 32],
     ) -> Result<()> {
         let request = &mut ctx.accounts.request_state;
@@ -96,40 +96,42 @@ pub mod contracts {
                     **winner_account.try_borrow_mut_lamports()? += pay_per_node;
                 }
             }
+            let cid = format!("{}{}", cid_part1, cid_part2);
             emit!(RequestCompleted {
-                cid_hash,
+                cid: cid,
                 success: true,
             });
         }
         Ok(())
     }
 
-    pub fn claim_refund(ctx: Context<ClaimRefund>, cid_hash: [u8; 32]) -> Result<()> {
+    pub fn claim_refund(ctx: Context<ClaimRefund>, cid_part1: String, cid_part2: String) -> Result<()> {
         let request = &ctx.accounts.request_state;
         let current_time = Clock::get()?.unix_timestamp;
         
         require!(!request.is_processed, Errors::AlreadyProcessed);
         require!(current_time > request.timestamp + VERIFICATION_TIMEOUT, Errors::TimeOutNotReached);
         
+        let cid = format!("{}{}", cid_part1, cid_part2);
         emit!(RequestCompleted {
-            cid_hash,
+            cid: cid,
             success: false,
         });
         Ok(())
     }
 
-    pub fn clean_expired_request(ctx: Context<CleanExpiredRequest>, cid_hash: [u8; 32],) -> Result<()> {
+    pub fn clean_expired_request(ctx: Context<CleanExpiredRequest>, cid_part1: String, cid_part2: String) -> Result<()> {
         let request = &ctx.accounts.request_state;
         let current_time = Clock::get()?.unix_timestamp;
 
         require!(!request.is_processed, Errors::AlreadyProcessed);
         require!(current_time > request.timestamp + VERIFICATION_TIMEOUT, Errors::TimeOutNotReached);
 
+        let cid = format!("{}{}", cid_part1, cid_part2);
         emit!(RequestCompleted {
-            cid_hash,
-            success: true,
+            cid: cid,
+            success: false,
         });
-        
         Ok(())
     }
 }
@@ -152,16 +154,16 @@ pub struct Initialize<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(cid_hash: [u8; 32])]
+#[instruction(cid_part1: String, cid_part2: String)]
 pub struct SubmitRequest<'info> {
     #[account(
         init,
         payer=owner,
-        space= 8 + VerificationRequest::INIT_SPACE, 
-        seeds = [b"request", cid_hash.as_ref()],
+        space= 8 + VerificationRequestRecord::INIT_SPACE, 
+        seeds = [b"request", cid_part1.as_bytes(), cid_part2.as_bytes()],
         bump 
     )]
-    pub request_state: Account<'info, VerificationRequest>,
+    pub request_state: Account<'info, VerificationRequestRecord>,
 
     #[account(mut)]
     pub owner: Signer<'info>, 
@@ -169,7 +171,7 @@ pub struct SubmitRequest<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(cid_hash: [u8; 32])]
+#[instruction(cid_part1: String, cid_part2: String)]
 pub struct SubmitHtmlRoot<'info> {
     #[account(mut)]
     pub signer_node: Signer<'info>,
@@ -179,10 +181,10 @@ pub struct SubmitHtmlRoot<'info> {
 
     #[account(
         mut,
-        seeds = [b"request", cid_hash.as_ref()],
+        seeds = [b"request", cid_part1.as_bytes(), cid_part2.as_bytes()],
         bump
     )]
-    pub request_state: Account<'info, VerificationRequest>,
+    pub request_state: Account<'info, VerificationRequestRecord>,
 
     /// CHECK:nodea
     #[account(mut, address=config.authorized_nodes[0])]
@@ -198,31 +200,31 @@ pub struct SubmitHtmlRoot<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(cid_hash: [u8; 32])]
+#[instruction(cid_part1: String, cid_part2: String)]
 pub struct ClaimRefund<'info> {
     #[account(
         mut,
-        seeds=[b"request", cid_hash.as_ref()],
+        seeds = [b"request", cid_part1.as_bytes(), cid_part2.as_bytes()],
         bump,
         has_one=owner @ Errors::Unauthorized,
         close=owner
     )]
-    pub request_state: Account<'info, VerificationRequest>,
+    pub request_state: Account<'info, VerificationRequestRecord>,
 
     #[account(mut)]
     pub owner: Signer<'info>,
 }
 
 #[derive(Accounts)]
-#[instruction(cid_hash: [u8; 32])]
+#[instruction(cid_part1: String, cid_part2: String)]
 pub struct CleanExpiredRequest<'info> {
     #[account(
         mut,
-        seeds=[b"request", cid_hash.as_ref()],
+        seeds = [b"request", cid_part1.as_bytes(), cid_part2.as_bytes()],
         bump,
         close=caller
     )]
-    pub request_state: Account<'info, VerificationRequest>,
+    pub request_state: Account<'info, VerificationRequestRecord>,
 
     #[account(mut)]
     pub caller: Signer<'info>, 
@@ -239,17 +241,18 @@ pub struct GlobalConfig {
 //getRequestDetails cid and resultroot
 #[account]
 #[derive(InitSpace)]
-pub struct VerificationRequest {
+pub struct VerificationRequestRecord {
     pub owner: Pubkey,
     pub timestamp: i64,
     pub payment_amount: u64,
     pub is_processed: bool,
-    pub cid_hash: [u8; 32],
+    #[max_len(30)] 
+    pub cid_part1: String,
+    #[max_len(20)] 
+    pub cid_part2: String,
     pub result_root: [u8; 32],
     #[max_len(3)]
     pub votes: Vec<Vote>,
-    #[max_len(64)]
-    pub cid: String,
     #[max_len(10, 50)]
     pub keywords: Vec<String>,
 }
@@ -263,15 +266,14 @@ pub struct Vote {
 // EVENTS
 #[event]
 pub struct VerificationRequested {
-    pub cid_hash: [u8; 32],
-    pub cid: String,
+    pub cid: String, 
     pub keywords: Vec<String>,
     pub owner: Pubkey,
 }
 
 #[event]
 pub struct RequestCompleted {
-    pub cid_hash: [u8; 32],
+    pub cid: String,
     pub success: bool
 }
 

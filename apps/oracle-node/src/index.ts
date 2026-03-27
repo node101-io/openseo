@@ -6,7 +6,7 @@ import {
   createProgram,
   getConfigPda,
   getRequestPda,
-  cidToHash,
+  splitCid,
   Contracts
 } from "@openseo/contracts";
 import { Program, Wallet } from "@coral-xyz/anchor";
@@ -89,7 +89,7 @@ export class NodeService {
   }
 
   private async poll(): Promise<void> {
-    const requests = await this.program.account.verificationRequest.all([
+    const requests = await this.program.account.verificationRequestRecord.all([
       {
         memcmp: {
           offset: 56, 
@@ -98,7 +98,9 @@ export class NodeService {
       },
     ]);
     for (const { publicKey, account } of requests) {
-      const cid = account.cid;
+      const part1 = account.cidPart1 as string;
+      const part2 = account.cidPart2 as string;
+      const cid = part1 + part2;
       const keywords = account.keywords as string[];
       if (this.completedRequests.has(cid) || this.processingRequests.has(cid)) continue;
 
@@ -125,17 +127,19 @@ export class NodeService {
   private async cleanupExpiredRequests(): Promise<void> {
     console.log(`[${this.nodeName}] Expired requests cleanup started`);
     const now = Math.floor(Date.now() / 1000);
-    const requests = await this.program.account.verificationRequest.all();
+    const requests = await this.program.account.verificationRequestRecord.all();
     let cleaned = 0;
 
     for (const { publicKey, account } of requests) {
       if (account.isProcessed) continue;
       if (now <= account.timestamp.toNumber() + VERIFICATION_TIMEOUT) continue;
-      const cidHash = Array.from(account.cidHash as number[]);
+
+      const part1 = account.cidPart1 as string;
+      const part2 = account.cidPart2 as string;
       
       try {
         await this.program.methods
-          .cleanExpiredRequest(cidHash) 
+          .cleanExpiredRequest(part1, part2) 
           .accounts({ 
             caller: this.keypair.publicKey 
           })
@@ -155,9 +159,12 @@ export class NodeService {
 
   private async processVerificationRequest(cid: string, keywords: string[]): Promise<void> {
     try {
-      const cidHash = cidToHash(cid);
-      const [requestPda] = getRequestPda(cidHash, this.programId);
-      const req = await this.program.account.verificationRequest.fetch(requestPda);
+      const fullCid = cid.trim();
+
+      const { cid_part1, cid_part2 } = splitCid(fullCid);
+      
+      const [requestPda] = getRequestPda(cid_part1, cid_part2, this.programId);
+      const req = await this.program.account.verificationRequestRecord.fetch(requestPda);
 
       if (req.isProcessed) {
         this.completedRequests.add(cid);
@@ -199,7 +206,7 @@ export class NodeService {
       const [nodeA, nodeB, nodeC] = config.authorizedNodes;
 
       const sig = await this.program.methods
-        .submitHtmlRoot(cidHash, rootBytes)
+        .submitHtmlRoot(cid_part1, cid_part2, rootBytes)
         .accounts({
           signerNode: this.keypair.publicKey,
           nodeA,

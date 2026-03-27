@@ -4,7 +4,7 @@ import path from "path";
 import { Connection, Keypair, SystemProgram } from "@solana/web3.js";
 import { BN, Wallet } from "@coral-xyz/anchor";
 import {
-  cidToHash,
+  splitCid,
   createProgram,
   getRequestPda,
 } from "@openseo/contracts";
@@ -42,12 +42,15 @@ export async function submitRequestToSolana(cid: string, keywords: string[]): Pr
   const wallet = new Wallet(keypair);
   const program = createProgram(connection, wallet);
   const programId = program.programId;
-  const cidHash = cidToHash(cid);
-  const [requestPda] = getRequestPda(cidHash, programId);
+
+  const fullCid = cid.trim();
+  const {cid_part1, cid_part2 } = splitCid(fullCid);
+
+  const [requestPda] = getRequestPda(cid_part1, cid_part2, programId);
   const paymentLamports = 10_000_000; // 0.01 SOL
 
   const sig = await program.methods
-    .submitRequest(cidHash, cid, keywords, new BN(paymentLamports))
+    .submitRequest(cid_part1, cid_part2, keywords, new BN(paymentLamports))
     .accounts({ 
       owner: keypair.publicKey,
     })
@@ -68,7 +71,6 @@ const CID_FILE = "output/cid.json";
 
 async function main() {
   let cid = process.env.CID || process.argv[2];
-  console.log("Using CID:", cid);
   if (!cid && fs.existsSync(CID_FILE)) {
     const data = JSON.parse(fs.readFileSync(CID_FILE, "utf-8"));
     cid = data?.cid;

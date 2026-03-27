@@ -50,8 +50,10 @@ solana airdrop 2 <NODE_2_PUBKEY> --url devnet
 solana airdrop 2 <NODE_3_PUBKEY> --url devnet
 ```
 
-**Note**:You can verify balance for each node
-You can verify the balance of any node at any time using:
+or you can get faucet for your address with this address: https://faucet.solana.com/https://faucet.solana.com/
+
+- **Note**:You can verify balance for each node
+  You can verify the balance of any node at any time using:
 
 ```bash
 solana balance <NODE_PUBKEY> --url devnet

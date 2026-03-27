@@ -1,6 +1,6 @@
 'use client';
 import { Connection, PublicKey } from '@solana/web3.js';
-import { createProgram, getRequestPda, cidToHash } from '@openseo/contracts';
+import { createProgram, getRequestPda, splitCid } from '@openseo/contracts';
 
 export interface ProofPackage {
   proof_type: string;
@@ -98,7 +98,6 @@ export async function verifyProofClientSide(
   
   try {
     const connection = new Connection(rpcUrl, "confirmed");
-    console.log("Connection", connection);
     const dummyWallet = {
       publicKey: PublicKey.default,
       signTransaction: async (tx: any) => tx,
@@ -106,19 +105,18 @@ export async function verifyProofClientSide(
     };
     
     const program = createProgram(connection, dummyWallet as any);
-    const cleanCid = cid.trim();
-    const cidHash = cidToHash(cleanCid);
-    const [requestPda] = getRequestPda(cidHash, program.programId);
+    const fullCid = cid.trim();
+    const { cid_part1, cid_part2 } = splitCid(fullCid); 
+    const [requestPda] = getRequestPda(cid_part1, cid_part2, program.programId);
 
     let contractRootHex = "";
     
-    const account = await program.account.verificationRequest.fetch(requestPda);
+    const account = await program.account.verificationRequestRecord.fetch(requestPda);
     if (!account.isProcessed) {
       return { verified: false, error: "This request is not processed on Solana" };
     }
 
     const rootBytes = account.resultRoot as number[];
-    console.log("Root Bytes" ,rootBytes);
     contractRootHex = Array.from(rootBytes)
       .map(b => b.toString(16).padStart(2, '0'))
       .join('');

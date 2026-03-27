@@ -14,8 +14,9 @@ describe("OpenSEO Contracts Test", () => {
   const nodeB = Keypair.generate();
   const nodeC = Keypair.generate();
 
-  const cid = "QmTestIPFSCID123456789";
-  const cidHash = Array.from(Buffer.from(sha256.array(cid))); 
+  const cid = "Qmfaa05d5a40fd5cfab708d68e2de6f53b1ac4670e1917"; 
+  const part1 = cid.substring(0, 30);
+  const part2 = cid.substring(30);
   const htmlRoot = Array.from(Buffer.from(sha256.array("<html>Test Root</html>")));
 
   const [configPda] = PublicKey.findProgramAddressSync(
@@ -24,7 +25,7 @@ describe("OpenSEO Contracts Test", () => {
   );
 
   const [requestPda] = PublicKey.findProgramAddressSync(
-    [Buffer.from("request"), Buffer.from(cidHash)],
+    [Buffer.from("request"), Buffer.from(part1), Buffer.from(part2)],
     program.programId
   );
 
@@ -33,14 +34,15 @@ describe("OpenSEO Contracts Test", () => {
 
   before(async () => {
     requestEventListener = program.addEventListener("verificationRequested", (event, slot) => {
-      console.log("VerificationRequested");
-      console.log("Sahibi:", event.owner.toBase58());
+      console.log("VerificationRequested Event Fired!");
+      console.log("CID:", event.cid); 
+      console.log("Owner:", event.owner.toBase58());
       console.log("Keywords:", event.keywords); 
     });
 
     completedEventListener = program.addEventListener("requestCompleted", (event, slot) => {
-      console.log("RequestCompleted");
-      console.log("Başarılı mı?:", event.success);
+      console.log("RequestCompleted Event Fired!");
+      console.log("CID:", event.cid);
     });
   });
 
@@ -75,21 +77,23 @@ describe("OpenSEO Contracts Test", () => {
     const keywords = ["SEO", "Solana", "Crypto"]; 
 
     await program.methods
-      .submitRequest(cidHash, keywords, paymentAmount)
+      .submitRequest(part1, part2, keywords, paymentAmount)
       .accounts({
         owner: provider.wallet.publicKey,
       })
       .rpc();
 
-    const requestAccount = await program.account.verificationRequest.fetch(requestPda);
+    const requestAccount = await program.account.verificationRequestRecord.fetch(requestPda);
     assert.isFalse(requestAccount.isProcessed);
     assert.strictEqual(requestAccount.paymentAmount.toString(), paymentAmount.toString());
+    assert.strictEqual(requestAccount.cidPart1, part1);
+    assert.strictEqual(requestAccount.cidPart2, part2);
     console.log("Request created successfully");
   });
 
   it("Nodes vote and consensus is achieved (submitHtmlRoot)", async () => {
     await program.methods
-      .submitHtmlRoot(cidHash, htmlRoot)
+      .submitHtmlRoot(part1, part2, htmlRoot)
       .accounts({
         signerNode: nodeA.publicKey,
         nodeA: nodeA.publicKey,
@@ -99,11 +103,11 @@ describe("OpenSEO Contracts Test", () => {
       .signers([nodeA]) 
       .rpc();
 
-    let requestAccount = await program.account.verificationRequest.fetch(requestPda);
+    let requestAccount = await program.account.verificationRequestRecord.fetch(requestPda);
     assert.isFalse(requestAccount.isProcessed, "No consensus yet");
 
     await program.methods
-      .submitHtmlRoot(cidHash, htmlRoot)
+      .submitHtmlRoot(part1, part2, htmlRoot)
       .accounts({
         signerNode: nodeB.publicKey,
         nodeA: nodeA.publicKey,
@@ -113,7 +117,7 @@ describe("OpenSEO Contracts Test", () => {
       .signers([nodeB]) 
       .rpc();
 
-    requestAccount = await program.account.verificationRequest.fetch(requestPda);
+    requestAccount = await program.account.verificationRequestRecord.fetch(requestPda);
     
     assert.isTrue(requestAccount.isProcessed, "Consensus achieved");
     

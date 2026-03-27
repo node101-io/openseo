@@ -3,7 +3,7 @@ import { ZkProofMetadata, IZkProofMetadata } from './db/models/zk-proof-metadata
 import { mongoService } from './mongo-service.js';
 import { isBlacklisted } from './blacklist.js';
 import { Connection, Keypair } from '@solana/web3.js';
-import { cidToHash, createProgram, getProgramId } from '@openseo/contracts';
+import { createProgram, getProgramId } from '@openseo/contracts';
 import { ProofVerifier } from '@openseo/zkproof';
 import type { DABroadcastData, IndexerResult } from '@openseo/types';
 
@@ -121,7 +121,7 @@ export class IndexerService {
         const targetNormalized = this.normalizeRoot(targetRoot);
 
         try {
-           const accounts = await this.program.account.verificationRequest.all([
+           const accounts = await this.program.account.verificationRequestRecord.all([
                 {
                     memcmp: {
                         offset: 56, 
@@ -134,7 +134,11 @@ export class IndexerService {
                 const resultRootBytes = account.resultRoot as number[] | Uint8Array;
                 const resultRootHex = Buffer.from(resultRootBytes).toString('hex');
                 if (this.normalizeRoot(resultRootHex) !== targetNormalized) continue;
-                const cid = account.cid;
+
+                const part1 = account.cidPart1 as string;
+                const part2 = account.cidPart2 as string;
+                const cid = part1 + part2;
+
                 return {
                     found: true,
                     cid,

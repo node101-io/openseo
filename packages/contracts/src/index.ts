@@ -21,20 +21,26 @@ export function getConfigPda(programId: PublicKey = OPENSEO_PROGRAM_ID): [Public
   );
 }
 
-export function getRequestPda(
-  cidHash: number[] | Uint8Array, 
-  programId: PublicKey = OPENSEO_PROGRAM_ID
-): [PublicKey, number] {
-  const buf = Buffer.from(cidHash);        
-  
-  return PublicKey.findProgramAddressSync(
-    [Buffer.from("request"), buf],
-    programId
-  );
+export function splitCid(cid: string): { cid_part1: string, cid_part2: string } {
+    return {
+        cid_part1: cid.substring(0, 30),
+        cid_part2: cid.substring(30)
+    };
 }
 
-export function cidToHash(cid: string): number[] {
-  return Array.from(sha256.array(cid));
+export function getRequestPda(
+  cid_part1: string,
+  cid_part2: string,
+  programId: PublicKey = OPENSEO_PROGRAM_ID
+): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("request"),
+      Buffer.from(cid_part1),
+      Buffer.from(cid_part2)
+    ],
+    programId
+  );
 }
 
 export function createProgram(connection: Connection, wallet: Wallet): Program<Contracts> {
