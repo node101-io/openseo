@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express, { Application, Request, Response } from 'express';
 import { IndexerService } from './indexer-service.js';
 import { ZkProofMetadata } from './db/models/zk-proof-metadata.js';
 import { ProofVerifier } from "../../../packages/zkproof/src/index.js";
@@ -7,7 +7,7 @@ import axios from 'axios';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
-const app = express();
+const app: Application = express();
 const PORT = Number(process.env.INDEXER_PORT) || 3008;
 const DA_WS_URL: string = process.env.DA_WS_URL || 'wss://openseo-da.openseo.workers.dev/ws';
 const DA_HTTP_URL: string = process.env.DA_HTTP_URL || DA_WS_URL.replace(/^wss:\/\//, 'https://').replace(/^ws:\/\//, 'http://').replace(/\/ws\/?$/, '');
@@ -31,7 +31,6 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json({ limit: '50mb' }));
-
 const indexerService = new IndexerService();
 
 app.post('/da_broadcast', async (req: Request, res: Response) => {
@@ -201,7 +200,7 @@ app.post('/verify-proof', async (req: Request, res: Response) => {
         });
 
     } catch (error: any) {
-        console.error('[Indexer] Verify-proof error:', error);
+        console.error('[Indexer] Verify proof error:', error);
         return res.status(500).json({ success: false, error: error.message });
     }
 });
@@ -215,7 +214,6 @@ async function backfillFromDA() {
             return;
         }
         const list = res.data.submissions as Array<{ root: string; keywords: string[]; siteUrl: string; proof: string; totalScore?: number }>;
-        console.log(`[Indexer] DA backfill: processing ${list.length} submission(s)`);
         for (const s of list) {
             if (!s.root || !s.keywords || !s.siteUrl || !s.proof) continue;
             const result = await indexerService.handleDABroadcast({
@@ -225,11 +223,6 @@ async function backfillFromDA() {
                 proof: s.proof,
                 totalScore: s.totalScore
             });
-            if (result.success) {
-                console.log('[Indexer] Backfill stored:', s.siteUrl);
-            } else {
-                console.log('[Indexer] Backfill skipped:', s.siteUrl, '-', result.message, result.error || '');
-            }
         }
     } catch (err: any) {
         console.error('[Indexer] DA backfill failed:', err.message || err);
@@ -265,7 +258,7 @@ function connectToDA() {
         }
     });
     ws.on('close', () => {
-        console.log('[Indexer] DA WebSocket closed, reconnecting in 5s...');
+        console.log('[Indexer] DA WebSocket closed');
         setTimeout(connectToDA, 5000);
     });
     ws.on('error', (err) => {
@@ -279,7 +272,7 @@ async function startIndexer() {
     await indexerService.initialize();
     app.listen(PORT, () => {
         console.log(`[Indexer] HTTP server running on port ${PORT}`);
-        console.log(`[Indexer] Contract: ${process.env.CONTRACT_ADDRESS || 'not configured'}`);
+        console.log(`[Indexer] Contract: ${process.env.PROGRAM_ID || 'not configured'}`);
     });
 
     connectToDA();

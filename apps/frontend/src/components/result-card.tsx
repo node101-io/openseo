@@ -1,7 +1,7 @@
-'use client';
-import { useState, useMemo, useEffect } from 'react';
-import { SearchResult } from '../pages/api';
-import { verifyProofClientSide } from '../app/proof-component';
+"use client";
+import { useState, useMemo, useEffect } from "react";
+import { SearchResult } from "../pages/api";
+import { verifyProofClientSide } from "../app/proof-component";
 
 function toString(result: SearchResult): string {
   return [
@@ -11,15 +11,15 @@ function toString(result: SearchResult): string {
     result.siteUrl,
     String(result.rank),
     result.id,
-    [...result.keywords].sort().join(','),
+    [...result.keywords].sort().join(","),
     String(result.totalScore),
     result.createdAt,
-  ].join('|');
+  ].join("|");
 }
 
 export async function hashResult(result: SearchResult): Promise<string> {
   const digest = await crypto.subtle.digest(
-    'SHA-256',
+    "SHA-256",
     new TextEncoder().encode(toString(result)),
   );
   return new Uint8Array(digest).toHex();
@@ -32,10 +32,10 @@ function getStoredVerified(hash: string): string | null {
 export function setStoredVerified(hash: string, status: 1 | 0) {
   try {
     window.localStorage.setItem(`${hash}`, String(status));
-  } catch(e) {
-    if(e instanceof DOMException && (
-      e.name === 'QuataExceedError' || 
-      e.name === 'NS_ERROR_DOM_QUOTA_REACHED')
+  } catch (e) {
+    if (
+      e instanceof DOMException &&
+      (e.name === "QuataExceedError" || e.name === "NS_ERROR_DOM_QUOTA_REACHED")
     ) {
       window.localStorage.clear();
       window.localStorage.setItem(`${hash}`, String(status));
@@ -46,14 +46,19 @@ export function setStoredVerified(hash: string, status: 1 | 0) {
 interface ResultCardProps {
   result: SearchResult;
   index: number;
-  verifyAllResult?: '1' | '0' | null;
+  verifyAllResult?: "1" | "0" | null;
   verifyAllInProgress?: boolean;
 }
 
-export function ResultCard({ result, index, verifyAllResult, verifyAllInProgress }: ResultCardProps) {
+export function ResultCard({
+  result,
+  index,
+  verifyAllResult,
+  verifyAllInProgress,
+}: ResultCardProps) {
   const [verifyState, setVerifyState] = useState<
-    'idle' | 'loading' | 'success' | 'failed'
-  >('idle');
+    "idle" | "loading" | "success" | "failed"
+  >("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [resultHash, setResultHash] = useState<string | null>(null);
 
@@ -62,28 +67,30 @@ export function ResultCard({ result, index, verifyAllResult, verifyAllInProgress
     hashResult(result).then((h) => {
       if (!cancelled) setResultHash(h);
     });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [result]);
 
   useEffect(() => {
     if (resultHash == null) return;
 
     const status = getStoredVerified(resultHash);
-    
-    if(status === "1") {
-      setVerifyState('success');
+
+    if (status === "1") {
+      setVerifyState("success");
     } else if (status === "0") {
-    setVerifyState('failed');
+      setVerifyState("failed");
     } else {
-      setVerifyState('idle');
+      setVerifyState("idle");
     }
   }, [resultHash]);
 
   const displayState = useMemo(() => {
     if (verifyAllResult !== undefined && verifyAllResult !== null) {
-      return verifyAllResult === "1" ? 'success' : 'failed';
+      return verifyAllResult === "1" ? "success" : "failed";
     }
-    if (verifyAllInProgress) return 'loading';
+    if (verifyAllInProgress) return "loading";
     return verifyState;
   }, [verifyAllResult, verifyAllInProgress, verifyState]);
 
@@ -91,24 +98,28 @@ export function ResultCard({ result, index, verifyAllResult, verifyAllInProgress
   const [htmlContent, setHtmlContent] = useState<string | null>(null);
   const [htmlLoading, setHtmlLoading] = useState(false);
   const [htmlError, setHtmlError] = useState<string | null>(null);
-  const filecoinUrl = process.env.NEXT_PUBLIC_FILECOIN_URL || 'https://openseo-filecoin.openseo.workers.dev';
+  const filecoinUrl =
+    process.env.NEXT_PUBLIC_FILECOIN_URL ||
+    "https://openseo-filecoin.openseo.workers.dev";
 
   const handleCardClick = async (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest('button')) return;
+    if ((e.target as HTMLElement).closest("button")) return;
     setHtmlPreviewOpen(true);
     setHtmlContent(null);
     setHtmlError(null);
     setHtmlLoading(true);
     try {
-      const res = await fetch(`${filecoinUrl}/html_file/${encodeURIComponent(result.cid)}`);
+      const res = await fetch(
+        `${filecoinUrl}/html_file/${encodeURIComponent(result.cid)}`,
+      );
       const data = await res.json();
       if (data.success && data.file != null) {
         setHtmlContent(data.file);
       } else {
-        setHtmlError(data.error || 'Could not load page');
+        setHtmlError(data.error || "Could not load page");
       }
     } catch (err: any) {
-      setHtmlError(err.message || 'Could not load page');
+      setHtmlError(err.message || "Could not load page");
     } finally {
       setHtmlLoading(false);
     }
@@ -116,24 +127,24 @@ export function ResultCard({ result, index, verifyAllResult, verifyAllInProgress
 
   const handleVerify = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    setVerifyState('loading');
+    setVerifyState("loading");
     setErrorMessage(null);
-    const hash = resultHash ?? await hashResult(result);
+    const hash = resultHash ?? (await hashResult(result));
 
     try {
-      const response = await verifyProofClientSide(result.proof, result.root);
+      const response = await verifyProofClientSide(result.proof, result.cid);
       if (response.verified) {
-        setVerifyState('success');
+        setVerifyState("success");
         setStoredVerified(hash, 1);
       } else {
-        setVerifyState('failed');
-        const err = response.error || 'Verification failed';
+        setVerifyState("failed");
+        const err = response.error || "Verification failed";
         setErrorMessage(err);
         setStoredVerified(hash, 0);
       }
     } catch (error: any) {
-      setVerifyState('failed');
-      const err = error.message || 'Verification failed';
+      setVerifyState("failed");
+      const err = error.message || "Verification failed";
       setErrorMessage(err);
       setStoredVerified(hash, 0);
     }
@@ -165,7 +176,12 @@ export function ResultCard({ result, index, verifyAllResult, verifyAllInProgress
         onClick={handleCardClick}
         role="button"
         tabIndex={0}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleCardClick(e as unknown as React.MouseEvent); } }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            handleCardClick(e as unknown as React.MouseEvent);
+          }
+        }}
         aria-label={`Önizle: ${getDomain(result.siteUrl)}`}
       >
         <div className="flex items-start justify-between gap-4">
@@ -175,7 +191,10 @@ export function ResultCard({ result, index, verifyAllResult, verifyAllInProgress
                 {result.rank}
               </span>
               <span className="text-sm text-gray-500">
-                Score: <span className="font-semibold text-gray-700">{result.totalScore}</span>
+                Score:{" "}
+                <span className="font-semibold text-gray-700">
+                  {result.totalScore}
+                </span>
               </span>
             </div>
 
@@ -186,7 +205,7 @@ export function ResultCard({ result, index, verifyAllResult, verifyAllInProgress
                   alt=""
                   className="w-4 h-4"
                   onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
+                    (e.target as HTMLImageElement).style.display = "none";
                   }}
                 />
               )}
@@ -210,22 +229,28 @@ export function ResultCard({ result, index, verifyAllResult, verifyAllInProgress
             </div>
           </div>
 
-          <div className="flex flex-col items-end gap-2" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="flex flex-col items-end gap-2"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               onClick={handleVerify}
-              disabled={displayState === 'loading' || displayState === 'success'}
+              disabled={
+                displayState === "loading" || displayState === "success"
+              }
               className={`verify-btn px-4 py-2 text-sm font-medium rounded-lg flex items-center gap-2
-              ${displayState === 'idle'
-                  ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  : displayState === 'loading'
-                    ? 'bg-gray-100 text-gray-500 cursor-wait'
-                    : displayState === 'success'
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-red-100 text-red-700 hover:bg-red-200'
-                }
+              ${
+                displayState === "idle"
+                  ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  : displayState === "loading"
+                    ? "bg-gray-100 text-gray-500 cursor-wait"
+                    : displayState === "success"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-red-100 text-red-700 hover:bg-red-200"
+              }
               disabled:cursor-not-allowed transition-all`}
             >
-              {displayState === 'loading' && (
+              {displayState === "loading" && (
                 <svg className="h-4 w-4 spinner" viewBox="0 0 24 24">
                   <circle
                     className="opacity-25"
@@ -243,20 +268,40 @@ export function ResultCard({ result, index, verifyAllResult, verifyAllInProgress
                   />
                 </svg>
               )}
-              {displayState === 'success' && (
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              {displayState === "success" && (
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
               )}
-              {displayState === 'failed' && (
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              {displayState === "failed" && (
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               )}
-              {displayState === 'idle' && 'Verify'}
-              {displayState === 'loading' && 'Verifying...'}
-              {displayState === 'success' && 'Verified'}
-              {displayState === 'failed' && 'Retry'}
+              {displayState === "idle" && "Verify"}
+              {displayState === "loading" && "Verifying..."}
+              {displayState === "success" && "Verified"}
+              {displayState === "failed" && "Retry"}
             </button>
           </div>
         </div>
@@ -270,8 +315,13 @@ export function ResultCard({ result, index, verifyAllResult, verifyAllInProgress
           aria-label="Sayfa önizlemesi"
           onClick={() => setHtmlPreviewOpen(false)}
         >
-          <div className="flex items-center justify-between mb-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-            <span className="text-white font-medium truncate">{getDomain(result.siteUrl)}</span>
+          <div
+            className="flex items-center justify-between mb-2 flex-shrink-0"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <span className="text-white font-medium truncate">
+              {getDomain(result.siteUrl)}
+            </span>
             <button
               type="button"
               onClick={() => setHtmlPreviewOpen(false)}
@@ -280,7 +330,10 @@ export function ResultCard({ result, index, verifyAllResult, verifyAllInProgress
               Kapat
             </button>
           </div>
-          <div className="flex-1 min-h-0 rounded-lg overflow-hidden bg-white relative" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="flex-1 min-h-0 rounded-lg overflow-hidden bg-white relative"
+            onClick={(e) => e.stopPropagation()}
+          >
             {htmlLoading && (
               <div className="absolute inset-0 flex items-center justify-center bg-white z-10">
                 <span className="text-gray-500">Yükleniyor…</span>

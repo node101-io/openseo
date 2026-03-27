@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback } from "react";
 
 interface SearchInputProps {
   onSearch: (query: string) => void;
@@ -8,7 +8,7 @@ interface SearchInputProps {
 }
 
 export function SearchInput({ onSearch, isLoading = false }: SearchInputProps) {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
 
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
@@ -17,20 +17,20 @@ export function SearchInput({ onSearch, isLoading = false }: SearchInputProps) {
         onSearch(query.trim());
       }
     },
-    [query, onSearch, isLoading]
+    [query, onSearch, isLoading],
   );
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (e.key === 'Enter' && query.trim() && !isLoading) {
+      if (e.key === "Enter" && query.trim() && !isLoading) {
         onSearch(query.trim());
       }
     },
-    [query, onSearch, isLoading]
+    [query, onSearch, isLoading],
   );
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-2xl mx-auto">
+    <form onSubmit={handleSubmit} className="w-full max-w-3xl mx-auto">
       <div className="relative">
         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
           <svg
@@ -85,7 +85,7 @@ export function SearchInput({ onSearch, isLoading = false }: SearchInputProps) {
               />
             </svg>
           ) : (
-            'Search'
+            "Search"
           )}
         </button>
       </div>

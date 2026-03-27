@@ -1,4 +1,5 @@
-home 
-service
 news
 safe
+contact
+makyaj
+solutions

@@ -28,3 +28,11 @@ npm-debug.log*
 pnpm-debug.log*
 .wrangler/
 output/
+.anchor
+target/
+**/*.rs.bk
+.yarn
+pubkeys/
+*.sock
+*.ipc
+flycheck0/

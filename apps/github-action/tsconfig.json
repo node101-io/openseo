@@ -12,8 +12,11 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "sourceMap": true,
-    "noEmit": false, 
-    "allowJs": true
+    "composite": true,
+    "noEmit": false,
+    "allowJs": true,
+    "types": ["node"],
+    "typeRoots": ["./node_modules/@types", "../../../node_modules/@types"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

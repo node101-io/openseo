@@ -13,8 +13,14 @@
     "resolveJsonModule": true,
     "sourceMap": true,
     "noEmit": false, 
-    "allowJs": true
+    "allowJs": true,
+    "composite": true,
   },
   "include": ["src/**/*", "src/db/models"],
+  "references": [
+    { "path": "../../packages/zkproof" },
+    { "path": "../../packages/contracts" },
+    { "path": "../../packages/types" }
+  ],
   "exclude": ["node_modules", "dist"]
 }

@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import * as dotenv from 'dotenv';
 dotenv.config();
 
@@ -12,6 +13,6 @@ export function workerHeaders(): Record<string, string> {
 }
 
 export { FILECOIN_URL, DA_URL };
-export const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS;
-export const ETHEREUM_RPC_URL = process.env.ETHEREUM_RPC_URL || '';
-export const OWNER_PRIVATE_KEY = process.env.OWNER_PRIVATE_KEY;
+export const PROGRAM_ID = process.env.PROGRAM_ID || "";
+export const SOLANA_RPC_URL = process.env.SOLANA_RPC_URL || "";
+export const KEYPAIR_PATH = process.env.KEYPAIR_PATH;
