@@ -2,9 +2,9 @@
   "name": "indexer",
   "version": "1.0.0",
   "scripts": {
-    "dev": "concurrently --names safe,dark \"pnpm run dev:safe\" \"pnpm run dev:dark\"",
+    "dev": "concurrently --names safe,danger \"pnpm run dev:safe\" \"pnpm run dev:danger\"",
     "dev:safe": "env INDEXER_PORT=3008 MONGODB_DATABASE=openseo_safe INDEXER_COLLECTION=proofs INDEXER_BLACKLIST_FILE=./blacklist-safe.example.txt DA_WS_URL=wss://openseo-da.openseo.workers.dev/ws DA_HTTP_URL=https://openseo-da.openseo.workers.dev tsx src/indexer-route.ts",
-    "dev:dark": "env INDEXER_PORT=3012 MONGODB_DATABASE=openseo_dark INDEXER_COLLECTION=proofs INDEXER_BLACKLIST_FILE=./blacklist-dark.example.txt DA_WS_URL=wss://openseo-da.openseo.workers.dev/ws DA_HTTP_URL=https://openseo-da.openseo.workers.dev tsx src/indexer-route.ts",
+    "dev:danger": "env INDEXER_PORT=3012 MONGODB_DATABASE=openseo_dark INDEXER_COLLECTION=proofs INDEXER_BLACKLIST_FILE=./blacklist-danger.example.txt DA_WS_URL=wss://openseo-da.openseo.workers.dev/ws DA_HTTP_URL=https://openseo-da.openseo.workers.dev tsx src/indexer-route.ts",
     "start": "tsx src/indexer-route.ts"
   },
   "dependencies": {
@@ -15,6 +15,7 @@
     "@solana/web3.js": "^1.95.0",
     "axios": "^1.13.2",
     "bs58": "^6.0.0",
+    "cors": "^2.8.6",
     "express": "^4.19.2",
     "mongodb": "^7.0.0",
     "mongoose": "^9.1.4",
@@ -22,6 +23,7 @@
   },
   "devDependencies": {
     "@types/bs58": "^5.0.0",
+    "@types/cors": "^2.8.19",
     "@types/express": "^4.17.21",
     "@types/node": "^20.0.0",
     "@types/ws": "^8.18.1",

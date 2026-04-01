@@ -1,14 +1,14 @@
 import type { SearchResult, SearchResponse } from '@openseo/types';
 
-const INDEXER_URL_SAFE = process.env.NEXT_PUBLIC_INDEXER_URL_SAFE || 'http://localhost:3008';
-const INDEXER_URL_DARK = process.env.NEXT_PUBLIC_INDEXER_URL_DARK || 'http://localhost:3012';
-const FILECOIN_URL = process.env.NEXT_PUBLIC_FILECOIN_URL || 'https://openseo-filecoin.openseo.workers.dev';
+const INDEXER_URL_SAFE = 'http://91.99.175.202/safe';
+const INDEXER_URL_DANGER = 'http://91.99.175.202/danger';
+const FILECOIN_URL =  'https://openseo-filecoin.openseo.workers.dev';
 
-export type IndexerMode = 'safe' | 'dark';
+export type IndexerMode = 'safe' | 'danger';
 export type { SearchResult, SearchResponse } from '@openseo/types';
 
 export function getIndexerBaseUrl(mode: IndexerMode): string {
-  return mode === 'dark' ? INDEXER_URL_DARK : INDEXER_URL_SAFE;
+  return mode === 'danger' ? INDEXER_URL_DANGER : INDEXER_URL_SAFE;
 }
 
 export async function searchByKeyword(query: string, indexerMode: IndexerMode = 'safe'): Promise<SearchResponse> {

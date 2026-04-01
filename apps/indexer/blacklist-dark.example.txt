@@ -3,3 +3,10 @@ safe
 contact
 makyaj
 solutions
+Fitness
+Studio
+Trainer
+Cardio
+node101
+validator
+node

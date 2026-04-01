@@ -52,7 +52,7 @@ export function SearchInput({ onSearch, isLoading = false }: SearchInputProps) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Search keywords..."
+          placeholder="Search..."
           disabled={isLoading}
           className="search-input w-full pl-12 pr-24 py-4 text-lg border-2 border-gray-200 rounded-2xl 
                      focus:outline-none focus:border-primary-500 

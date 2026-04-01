@@ -9,8 +9,8 @@
   },
   "dependencies": {
     "@aztec/bb.js": "3.0.0-nightly.20260102",
-    "@openseo/contracts": "workspace:*",
     "@noir-lang/noir_js": "1.0.0-beta.18",
+    "@openseo/contracts": "workspace:*",
     "@openseo/types": "workspace:*",
     "@solana/web3.js": "^1.95.0",
     "axios": "^1.13.2",
@@ -26,6 +26,7 @@
     "autoprefixer": "^10.4.19",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.3",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "wrangler": "^3.91.0"
   }
 }

@@ -5,6 +5,7 @@ import { ProofVerifier } from "../../../packages/zkproof/src/index.js";
 import WebSocket from 'ws';
 import axios from 'axios';
 import * as dotenv from 'dotenv';
+import cors from 'cors';
 
 dotenv.config();
 const app: Application = express();
@@ -12,23 +13,7 @@ const PORT = Number(process.env.INDEXER_PORT) || 3008;
 const DA_WS_URL: string = process.env.DA_WS_URL || 'wss://openseo-da.openseo.workers.dev/ws';
 const DA_HTTP_URL: string = process.env.DA_HTTP_URL || DA_WS_URL.replace(/^wss:\/\//, 'https://').replace(/^ws:\/\//, 'http://').replace(/\/ws\/?$/, '');
 
-app.use((req, res, next) => {
-  const origin = req.headers.origin;  
-  if (origin) {
-    res.header('Access-Control-Allow-Origin', origin);
-  } else {
-    res.header('Access-Control-Allow-Origin', '*');
-  }
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
-  next();
-});
+app.use(cors());
 
 app.use(express.json({ limit: '50mb' }));
 const indexerService = new IndexerService();
