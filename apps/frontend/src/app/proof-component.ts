@@ -67,20 +67,11 @@ async function initializeBackend(): Promise<void> {
     circuit = await response.json();    
     noir = new Noir(circuit);    
     const threads = Math.min(navigator.hardwareConcurrency || 4, 8);
-
-    const prevFetch = globalThis.fetch;
-    globalThis.fetch = (input: RequestInfo | URL, init?: RequestInit) => {
-      const url = String(typeof input === 'object' && 'url' in input ? input.url : input);
-      if (url.startsWith('https://crs.aztec.network')) {
-        return prevFetch(url.replace('https://crs.aztec.network', '/aztec-crs'), init);
-      }
-      return prevFetch(input, init);
-    };
-
     try {
       bbApi = await Barretenberg.new({ threads });
-    } finally {
-      globalThis.fetch = prevFetch;
+    } catch (error) {
+      console.error("Barretenberg initialized error:", error);
+      throw error;
     }
     honkBackend = new UltraHonkBackend(circuit.bytecode, bbApi);
     console.log('[Verify] Initialized');
@@ -134,7 +125,6 @@ export async function verifyProofClientSide(
     if (!honkBackend) throw new Error('Backend not initialized');
     const proof = new Uint8Array(proofPackage.proof || []);
     const { html_root, total_score } = proofPackage.public_inputs;
-    console.log("Result:", proof + html_root + total_score);
     
     const publicInputs = [
       toFieldHex(html_root),

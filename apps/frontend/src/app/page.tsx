@@ -122,7 +122,7 @@ export default function Home() {
                 className="w-36 appearance-none rounded-lg border border-gray-200 bg-white pl-4 pr-10 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 cursor-pointer"
               >
                 <option value="safe">Safe</option>
-                <option value="dark">Danger</option>
+                <option value="danger">Danger</option>
               </select>
               <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
                 <img
@@ -204,10 +204,9 @@ export default function Home() {
                   />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                Search Error
-              </h3>
-              <p className="text-gray-500">{error}</p>
+              <h2 className="text-lg font-medium text-gray-900 mb-2">
+                404 Not Found
+              </h2>
             </div>
           )}
 

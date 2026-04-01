@@ -17,9 +17,11 @@ This app demonstrates the end-user experience of a decentralized search engine. 
 - **Result display**  
   Shows URL, matched keywords, SEO score, and verification status. Users can visit the site or verify the proof first.
 
-# Running the Service:
+## Running the service
 
-pnpm --filter frontend run start
+```bash
+pnpm --filter frontend dev
+```
 
 **Search Process**:
 

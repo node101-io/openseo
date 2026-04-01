@@ -217,7 +217,7 @@ export function ResultCard({
             <p className="text-lg font-medium text-primary-600 truncate">
               {getDomain(result.siteUrl)}
             </p>
-            <div className="flex flex-wrap gap-1.5 mt-3">
+            {/* <div className="flex flex-wrap gap-1.5 mt-3">
               {result.keywords.map((keyword, i) => (
                 <span
                   key={i}
@@ -226,7 +226,7 @@ export function ResultCard({
                   {keyword}
                 </span>
               ))}
-            </div>
+            </div> */}
           </div>
 
           <div

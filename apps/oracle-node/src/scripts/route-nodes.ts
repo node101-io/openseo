@@ -37,7 +37,6 @@ async function main() {
     console.error(`[Runner] Sunucu hatası (${err.code}):`, err.message);
     process.exit(1);
   });
-  server.listen(HTTP_PORT, () => console.log(`[Runner] HTTP sunucusu port ${HTTP_PORT}`));
 
   const services: NodeService[] = [];
   for (const n of NODES) {

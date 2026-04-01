@@ -20,7 +20,6 @@ SOLANA_RPC_URL
 FILECOIN_URL  
 HTML_OWNER_PORT  
 DA_URL  
-HARDHAT_TEST_ACCOUNT  
 WORKER_API_KEY  
 TEST_HTML_PATH
 TEST_KEYWORDS
@@ -29,8 +28,7 @@ TEST_SITE_URL
 ## Running the service
 
 ```bash
-cd apps/github-action
-pnpm run dev
+pnpm --filter github-action dev
 ```
 
 ## Use-Case Diagram
