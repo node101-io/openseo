@@ -1,8 +1,13 @@
 "use client";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { SearchInput } from "../components/search-input";
-import { searchByKeyword, SearchResult, type IndexerMode } from "../pages/api";
+import {
+  fetchAvailableKeywords,
+  searchByKeyword,
+  SearchResult,
+  type IndexerMode,
+} from "../pages/api";
 import { verifyProofClientSide } from "./proof-component";
 import { setStoredVerified, hashResult } from "../components/result-card";
 
@@ -20,18 +25,72 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [verifyAllEnabled, setVerifyAllEnabled] = useState(false);
+  const [verifyAllEnabled, setVerifyAllEnabled] = useState(true);
   const [verifyAllInProgress, setVerifyAllInProgress] = useState(false);
   const [verifyAllResults, setVerifyAllResults] = useState<
     Record<string, "1" | "0">
   >({});
   const [indexerMode, setIndexerMode] = useState<IndexerMode>("safe");
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+
+  useEffect(() => {
+    const storedPref = localStorage.getItem("autoVerify");
+
+    if (storedPref === "false") {
+      setVerifyAllEnabled(false);
+    } else if (storedPref === null) {
+      localStorage.setItem("autoVerify", "true");
+    }
+  }, []);
+
+  useEffect(() => {
+    async function loadSuggestions() {
+      const keywords = await fetchAvailableKeywords(indexerMode);
+      setSuggestions(keywords);
+    }
+    loadSuggestions();
+  }, [indexerMode]);
+
+  const runVerification = async (dataToVerify: SearchResult[]) => {
+    if (dataToVerify.length === 0) return;
+    setVerifyAllInProgress(true);
+    setVerifyAllResults({});
+
+    const next: Record<string, "1" | "0"> = {};
+    for (const result of dataToVerify) {
+      const hash = await hashResult(result);
+
+      const storedStatus = localStorage.getItem(hash);
+
+      if (storedStatus === "1") {
+        next[result.cid] = storedStatus as "1";
+        setVerifyAllResults((prev) => ({ ...prev, ...next }));
+        continue;
+      }
+
+      try {
+        const response = await verifyProofClientSide(
+          result.proof,
+          result.cid,
+          result.totalScore,
+          result.keywordScores,
+        );
+        const status = response.verified ? 1 : 0;
+        next[result.cid] = status ? "1" : "0";
+        setStoredVerified(hash, status);
+      } catch {
+        next[result.cid] = "0";
+        setStoredVerified(hash, 0);
+      }
+      setVerifyAllResults((prev) => ({ ...prev, ...next }));
+    }
+    setVerifyAllInProgress(false);
+  };
 
   const handleSearch = async (query: string, modeOverride?: IndexerMode) => {
     const mode = modeOverride ?? indexerMode;
     setIsLoading(true);
     setError(null);
-    setVerifyAllEnabled(false);
     setVerifyAllResults({});
     setSearchQuery(query);
     setHasSearched(true);
@@ -41,6 +100,9 @@ export default function Home() {
 
     if (response.success) {
       setResults(response.results);
+      if (verifyAllEnabled) {
+        runVerification(response.results);
+      }
     } else {
       setError(response.error || "Search failed");
       setResults([]);
@@ -52,31 +114,14 @@ export default function Home() {
   const handleVerifyAllToggle = useCallback(
     async (enabled: boolean) => {
       setVerifyAllEnabled(enabled);
+      localStorage.setItem("autoVerify", enabled ? "true" : "false");
+
       if (!enabled) {
         setVerifyAllResults({});
         return;
       }
-      if (results.length === 0) return;
-      setVerifyAllInProgress(true);
-      setVerifyAllResults({});
-      const next: Record<string, "1" | "0"> = {};
-      for (const result of results) {
-        const hash = await hashResult(result);
-        try {
-          const response = await verifyProofClientSide(
-            result.proof,
-            result.root,
-          );
-          const status = response.verified ? 1 : 0;
-          next[result.cid] = status ? "1" : "0";
-          setStoredVerified(hash, status);
-        } catch {
-          next[result.cid] = "0";
-          setStoredVerified(hash, 0);
-        }
-        setVerifyAllResults((prev) => ({ ...prev, ...next }));
-      }
-      setVerifyAllInProgress(false);
+
+      runVerification(results);
     },
     [results],
   );
@@ -153,7 +198,12 @@ export default function Home() {
             </div>
           )}
 
-          <SearchInput onSearch={handleSearch} isLoading={isLoading} />
+          <SearchInput
+            value={searchQuery}
+            onSearch={handleSearch}
+            isLoading={isLoading}
+            indexerMode={indexerMode}
+          />
         </div>
       </section>
 
@@ -213,7 +263,6 @@ export default function Home() {
           {/* Results */}
           {!isLoading && !error && hasSearched && (
             <>
-              {/* Results header: left = count, right = Verify all toggle */}
               <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
                 <p className="text-sm text-gray-500">
                   {results.length > 0 ? (
@@ -240,7 +289,7 @@ export default function Home() {
                 </p>
                 {results.length > 0 && (
                   <label className="flex items-center gap-2 cursor-pointer select-none">
-                    <span className="text-sm text-gray-600">Verify All</span>
+                    <span className="text-sm text-gray-600">Auto Verify</span>
                     <button
                       type="button"
                       role="switch"
@@ -257,9 +306,6 @@ export default function Home() {
                         }`}
                       />
                     </button>
-                    {verifyAllInProgress && (
-                      <span className="text-xs text-gray-500">Verifying…</span>
-                    )}
                   </label>
                 )}
               </div>
@@ -274,12 +320,13 @@ export default function Home() {
                       index={index}
                       verifyAllResult={verifyAllResults[result.cid] ?? null}
                       verifyAllInProgress={verifyAllInProgress}
+                      searchQuery={searchQuery}
                     />
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-16">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="text-center py-16 animate-fade-in">
+                  <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
                     <svg
                       className="w-8 h-8 text-gray-400"
                       fill="none"
@@ -294,12 +341,30 @@ export default function Home() {
                       />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    No Results
+                  <h3 className="text-xl font-medium text-gray-900 mb-2">
+                    No Results Found
                   </h3>
-                  <p className="text-gray-500">
-                    Try searching with different keywords
+                  <p className="text-gray-500 mb-8">
+                    We couldn't find any verified sites for "{searchQuery}".
+                    <br /> We're still in the demo phase. <br />
+                    To see how the search works try clicking one of these sample
+                    keywords:
                   </p>
+                  {suggestions.length > 0 && (
+                    <div className="flex flex-wrap justify-center gap-3 max-w-2xl mx-auto">
+                      {suggestions.map((topic, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleSearch(topic)}
+                          className="px-5 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm 
+                                     hover:border-primary-500 hover:text-primary-600 hover:shadow-md hover:-translate-y-0.5
+                                     transition-all duration-200 text-sm font-medium text-gray-700 flex items-center gap-2"
+                        >
+                          {topic}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </>

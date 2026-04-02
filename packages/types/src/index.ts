@@ -73,6 +73,7 @@ export interface SearchResult {
     root: string;
     siteUrl: string;
     keywords: string[];
+    keywordScores: { keyword: string; score: number }[];
     totalScore: number;
     proof: string;
     verified: boolean;
@@ -101,6 +102,8 @@ export interface DABroadcastData {
     keywords: string[];
     siteUrl: string;
     proof: string;
+    keywordScores: { keyword: string; score: number }[];
+    rawKeywordScores?: number[];
     totalScore?: number;
 }
 

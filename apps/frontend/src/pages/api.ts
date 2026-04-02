@@ -1,7 +1,9 @@
 import type { SearchResult, SearchResponse } from '@openseo/types';
 
-const INDEXER_URL_SAFE = 'http://91.99.175.202/safe';
-const INDEXER_URL_DANGER = 'http://91.99.175.202/danger';
+//const INDEXER_URL_SAFE = 'http://91.99.175.202/safe';
+const INDEXER_URL_SAFE = 'http://localhost:3008';
+const INDEXER_URL_DANGER = 'http://localhost:3012';
+//const INDEXER_URL_DANGER = 'http://91.99.175.202/danger';
 const FILECOIN_URL =  'https://openseo-filecoin.openseo.workers.dev';
 
 export type IndexerMode = 'safe' | 'danger';
@@ -9,6 +11,29 @@ export type { SearchResult, SearchResponse } from '@openseo/types';
 
 export function getIndexerBaseUrl(mode: IndexerMode): string {
   return mode === 'danger' ? INDEXER_URL_DANGER : INDEXER_URL_SAFE;
+}
+
+export async function fetchAvailableKeywords(
+  mode: IndexerMode,
+): Promise<string[]> {
+  try {
+    const baseUrl =
+      mode === "safe"
+        ? // ? "http://91.99.175.202/safe"
+          // : "http://91.99.175.202/danger";
+          "http://localhost:3008"
+        : "http://localhost:3012";
+    const response = await fetch(`${baseUrl}/suggestions`);
+    const data = await response.json();
+
+    if (data.success) {
+      return data.keywords.map((keyword: string) => keyword.toLowerCase());
+    }
+    return [];
+  } catch (error) {
+    console.error("Fetch keywords error:", error);
+    return [];
+  }
 }
 
 export async function searchByKeyword(query: string, indexerMode: IndexerMode = 'safe'): Promise<SearchResponse> {

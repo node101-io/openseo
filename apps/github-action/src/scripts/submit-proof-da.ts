@@ -5,6 +5,8 @@ export interface SubmitProofParams {
     proof: string;
     root: string;
     keywords: string[];
+    keywordScores: { keyword: string; score: number }[];
+    rawKeywordScores?: number[];
     siteUrl: string;
     totalScore: number;
 }
@@ -25,6 +27,8 @@ export async function submitProofToDa(params: SubmitProofParams): Promise<void> 
                 proof: params.proof,
                 root: params.root,
                 keywords: params.keywords,
+                keywordScores: params.keywordScores,
+                rawKeywordScores: params.rawKeywordScores,
                 siteUrl: params.siteUrl,
                 totalScore: params.totalScore,
             }),
@@ -32,6 +36,7 @@ export async function submitProofToDa(params: SubmitProofParams): Promise<void> 
         60000
     );
     const data = (await res.json().catch(() => ({}))) as { success?: boolean; error?: string };
+    console.log("Submit Proof Da:", data);
     if (!res.ok) {
         throw new Error(data?.error || `DA request failed: ${res.status}`);
     }
@@ -59,13 +64,18 @@ async function main() {
         htmlRoot: string;
         totalScore: number;
         keywords: string[];
+        keywordScores: { keyword: string; score: number }[];
+        rawKeywordScores: number[];
     };
+    console.log("Keywordlu data:", data);
     await submitProofToDa({
         proof: data.proof,
         root: data.htmlRoot,
         keywords: data.keywords,
+        rawKeywordScores: data.rawKeywordScores,
         siteUrl,
         totalScore: data.totalScore,
+        keywordScores: data.keywordScores,
     });
     console.log("Proof submitted to DA");
 }

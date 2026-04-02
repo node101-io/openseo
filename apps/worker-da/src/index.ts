@@ -11,6 +11,8 @@ const KV_KEY_SUBMISSIONS = "submissions";
 interface DASubmission {
   root: string;
   keywords: string[];
+  keywordScores: { keyword: string; score: number }[];
+  rawKeywordScores?: number[];
   siteUrl: string;
   proof: string;
   totalScore?: number;
@@ -57,20 +59,23 @@ export default {
       if (!checkWorkerAuth(request, env)) {
         return jsonResponse({ success: false, error: "Unauthorized" }, 401);
       }
-      let body: { proof?: string; root?: string; keywords?: string[]; siteUrl?: string; totalScore?: number };
+      let body: { proof?: string; root?: string; keywords?: string[]; keywordScores?: { keyword: string; score: number }[]; siteUrl?: string; totalScore?: number };
       try {
         body = await request.json();
       } catch {
         return jsonResponse({ success: false, error: "Invalid JSON" }, 400);
       }
-      const { proof, root, keywords, siteUrl, totalScore } = body;
-      if (!proof || !root || !keywords || !siteUrl) {
+      const { proof, root, keywords, keywordScores, siteUrl, totalScore } = body;
+      const rawKeywordScores = (body as any).rawKeywordScores as number[] | undefined;
+      if (!proof || !root || !keywords || !keywordScores || !siteUrl) {
         return jsonResponse({ success: false, error: "Missing required fields: proof, root, keywords, siteUrl" }, 400);
       }
-
+      
       const submission: DASubmission = {
         root,
         keywords,
+        keywordScores: keywordScores!,
+        rawKeywordScores,
         siteUrl,
         proof,
         totalScore,
@@ -89,11 +94,14 @@ export default {
         data: {
           root: submission.root,
           keywords: submission.keywords,
+          keywordScores: submission.keywordScores,
+          rawKeywordScores: submission.rawKeywordScores,
           siteUrl: submission.siteUrl,
           proof: submission.proof,
           totalScore: submission.totalScore,
         },
       });
+      console.log("DA Data: ", broadcastPayload);
       const doId = env.DA_BROADCAST.idFromName("default");
       const stub = env.DA_BROADCAST.get(doId);
       let sent = 0;
@@ -144,7 +152,9 @@ export default {
           root: s.root,
           siteUrl: s.siteUrl,
           keywords: s.keywords,
+          keywordScores: s.keywordScores,
           totalScore: s.totalScore,
+          rawKeywordScores: s.rawKeywordScores,
           timestamp: s.timestamp,
         })),
       });

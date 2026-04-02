@@ -3,6 +3,8 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 export interface IZkProofMetadata extends Document {
+    keywordScores: any;
+    rawKeywordScores: number[];
     cid: string;            
     root: string;         
     keywords: string[];     
@@ -30,6 +32,10 @@ const ZkProofMetadataSchema: Schema = new Schema({
         required: true,
         index: true
     },
+    keywordScores: [{
+        keyword: { type: String, required: true },
+        score: { type: Number, required: true }
+    }],
     siteUrl: {
         type: String,
         required: true,
@@ -38,6 +44,10 @@ const ZkProofMetadataSchema: Schema = new Schema({
     proof: {
         type: String,
         required: true
+    },
+    rawKeywordScores: {
+        type: [Number],
+        default: []
     },
     totalScore: {
         type: Number,

@@ -13,6 +13,9 @@ export class IndexerService {
     private processedRoots = new Set<string>();
     private initialized = false;
 
+    private isProcessingQueue = false;
+    private broadcastQueue: { daData: DABroadcastData, resolve: (res: IndexerResult) => void }[] = [];
+
     private initializeContract(): boolean {
         if (this.initialized) return !!this.program;
         const rpcUrl = process.env.SOLANA_RPC_URL || '';
@@ -42,18 +45,48 @@ export class IndexerService {
     }
 
     async handleDABroadcast(daData: DABroadcastData): Promise<IndexerResult> {
+        return new Promise((resolve) => {
+            this.broadcastQueue.push({ daData, resolve });
+            this.processQueue(); 
+        });
+    }
+
+    private async processQueue() {
+        if (this.isProcessingQueue) return; 
+        this.isProcessingQueue = true;
+
+        while (this.broadcastQueue.length > 0) {
+            const item = this.broadcastQueue.shift();
+            if (item) {
+                const result = await this._processDABroadcast(item.daData);
+                item.resolve(result);
+            }
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+
+        this.isProcessingQueue = false;
+    }
+
+    private async _processDABroadcast(daData: DABroadcastData): Promise<IndexerResult> {
         if (!this.initialized) {
             this.initializeContract();
         }
-    
+
         const daRoot = this.normalizeRoot(daData.root);
 
-        // check root processed
         if (this.processedRoots.has(daRoot)) {
-            return {
-                success: true,
-                message: 'Already processed'
-            };
+            return { success: true, message: 'Already processed (in-memory)' };
+        }
+
+        try {
+            const existingRecord = await ZkProofMetadata.findOne({ root: daData.root });
+            
+            if (existingRecord) {
+                this.processedRoots.add(daRoot);
+                return { success: true, message: 'Already exists in Database' };
+            }
+        } catch (error) {
+            console.error('[DB Kontrol Hatası]', error);
         }
 
         if (isBlacklisted(daData.siteUrl)) {
@@ -75,8 +108,14 @@ export class IndexerService {
                 };
             }
             // verify proof
-            const verificationResult = await ProofVerifier.verifyProof(daData.proof, chainResult.root!);
+            const verificationResult = await ProofVerifier.verifyProof(
+                daData.proof,
+                chainResult.root!,
+                daData.totalScore,
+                daData.keywordScores
+            );
             
+            console.log("verificationResult", verificationResult);
             if (!verificationResult.isValid) {
                 return {
                     success: false,
@@ -90,10 +129,13 @@ export class IndexerService {
                 cid: chainResult.cid!,
                 root: daData.root,
                 keywords: daData.keywords,
+                keywordScores: daData.keywordScores,
+                rawKeywordScores: daData.rawKeywordScores ?? [],
                 siteUrl: daData.siteUrl,
                 proof: daData.proof,
                 totalScore: daData.totalScore
             });
+            console.log("Result ", result);
 
             if (result.success) {
                 this.processedRoots.add(daRoot);
@@ -156,6 +198,8 @@ export class IndexerService {
         cid: string;
         root: string;
         keywords: string[];
+        keywordScores: { keyword: string; score: number }[];
+        rawKeywordScores: number[];
         siteUrl: string;
         proof: string;
         totalScore?: number;
@@ -174,11 +218,14 @@ export class IndexerService {
                 cid: data.cid,
                 root: data.root,
                 keywords: data.keywords,
+                keywordScores: data.keywordScores,
+                rawKeywordScores: data.rawKeywordScores,
                 siteUrl: data.siteUrl,
                 proof: data.proof,
                 totalScore: data.totalScore,
                 verified: true
             });
+            console.log("New Record", newRecord);
             const saved = await newRecord.save();
             return {
                 success: true,

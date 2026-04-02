@@ -20,8 +20,8 @@ const indexerService = new IndexerService();
 
 app.post('/da_broadcast', async (req: Request, res: Response) => {
     try {
-        const { root, keywords, siteUrl, proof, totalScore } = req.body;
-        if (!root || !keywords || !siteUrl || !proof) {
+        const { root, keywords, keywordScores, rawKeywordScores, siteUrl, proof, totalScore } = req.body;
+        if (!root || !keywords || !siteUrl || !proof || !keywordScores) {
             return res.status(400).json({
                 success: false,
                 error: 'root, keywords, siteUrl, and proof are required'
@@ -31,6 +31,8 @@ app.post('/da_broadcast', async (req: Request, res: Response) => {
         const result = await indexerService.handleDABroadcast({
             root,
             keywords,
+            keywordScores,
+            rawKeywordScores,
             siteUrl,
             proof,
             totalScore
@@ -46,6 +48,8 @@ app.post('/da_broadcast', async (req: Request, res: Response) => {
                     root: result.record.root,
                     siteUrl: result.record.siteUrl,
                     keywords: result.record.keywords,
+                    keywordScores: result.record.keywordScores,
+                    rawKeywordScores: result.record.rawKeywordScores,
                     verified: result.record.verified
                 } : undefined
             });
@@ -79,6 +83,7 @@ app.get('/proof/:cid', async (req: Request, res: Response) => {
                 root: record.root,
                 siteUrl: record.siteUrl,
                 keywords: record.keywords,
+                keywordScores: record.keywordScores,
                 proof: record.proof,
                 totalScore: record.totalScore,
                 verified: record.verified,
@@ -116,6 +121,7 @@ app.get('/proofs', async (req: Request, res: Response) => {
                 root: r.root,
                 siteUrl: r.siteUrl,
                 keywords: r.keywords,
+                keywordScores: r.keywordScores,
                 totalScore: r.totalScore,
                 verified: r.verified,
                 createdAt: r.createdAt
@@ -149,6 +155,7 @@ app.get('/search', async (req: Request, res: Response) => {
                 root: r.root,
                 siteUrl: r.siteUrl,
                 keywords: r.keywords,
+                keywordScores: r.keywordScores,
                 totalScore: r.totalScore,
                 proof: r.proof,
                 verified: r.verified,
@@ -162,17 +169,34 @@ app.get('/search', async (req: Request, res: Response) => {
     }
 });
 
+app.get('/suggestions', async (req: Request, res: Response) => {
+    try {
+        const keywords = await ZkProofMetadata.aggregate([
+            { $unwind: "$keywords" }, 
+            { $group: { _id: "$keywords", count: { $sum: 1 } } }, 
+            { $sort: { count: -1 } },  
+            { $project: { _id: 0, keyword: "$_id" } } 
+        ]);
+
+        const resultList = keywords.map(k => k.keyword);
+        res.json({ success: true, keywords: resultList });
+    } catch (error) {
+        console.error('Keywords fetch error:', error);
+        res.status(500).json({ success: false, error: 'Failed to fetch keywords' });
+    }
+});
+
 app.post('/verify-proof', async (req: Request, res: Response) => {
     try {
-        const { proof, root } = req.body;
-        if (!proof || !root) {
+        const { proof, root, totalScore, keywordScores } = req.body;
+        if (!proof || !root || !totalScore || !keywordScores) {
             return res.status(400).json({
                 success: false,
                 error: 'Both proof and root are required'
             });
         }
 
-        const verificationResult = await ProofVerifier.verifyProof(proof, root);
+        const verificationResult = await ProofVerifier.verifyProof(proof, root, totalScore, keywordScores);
         return res.status(200).json({
             success: true,
             verified: verificationResult.isValid,
@@ -198,12 +222,14 @@ async function backfillFromDA() {
             console.log('[Indexer] DA backfill: no submissions');
             return;
         }
-        const list = res.data.submissions as Array<{ root: string; keywords: string[]; siteUrl: string; proof: string; totalScore?: number }>;
+        const list = res.data.submissions as Array<{ root: string; keywords: string[]; keywordScores: { keyword: string; score: number }[]; rawKeywordScores: number[]; siteUrl: string; proof: string; totalScore?: number }>;
         for (const s of list) {
-            if (!s.root || !s.keywords || !s.siteUrl || !s.proof) continue;
+            if (!s.root || !s.keywords || !s.siteUrl || !s.proof || !s.keywordScores) continue;
             const result = await indexerService.handleDABroadcast({
                 root: s.root,
                 keywords: s.keywords,
+                keywordScores: s.keywordScores,
+                rawKeywordScores: s.rawKeywordScores,
                 siteUrl: s.siteUrl,
                 proof: s.proof,
                 totalScore: s.totalScore
@@ -225,13 +251,17 @@ function connectToDA() {
             const message = JSON.parse(data.toString());
             if (message.type === 'da_broadcast' && message.data) {
                 const broadcastData = message.data;
+                console.log("BroadcastData", broadcastData);
                 const result = await indexerService.handleDABroadcast({
                     root: broadcastData.root,
                     keywords: broadcastData.keywords,
+                    keywordScores: broadcastData.keywordScores,
+                        rawKeywordScores: broadcastData.rawKeywordScores,
                     siteUrl: broadcastData.siteUrl,
                     proof: broadcastData.proof,
                     totalScore: broadcastData.totalScore
                 });
+                console.log("Ws", result);
                 if (result.success) {
                     console.log('[Indexer] Stored proof for', broadcastData.siteUrl);
                 } else {
