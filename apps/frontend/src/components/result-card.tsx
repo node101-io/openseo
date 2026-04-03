@@ -1,6 +1,6 @@
 "use client";
 import { useState, useMemo, useEffect } from "react";
-import { SearchResult } from "../pages/api";
+import { SearchResult } from "../services/api";
 import { verifyProofClientSide } from "../app/proof-component";
 
 function toString(result: SearchResult): string {
@@ -11,7 +11,12 @@ function toString(result: SearchResult): string {
     result.siteUrl,
     String(result.rank),
     result.id,
-    [...result.keywords].sort().join(","),
+    (result.keywordScores
+      ? [...result.keywordScores].map((k) => `${k.keyword}:${k.score}`)
+      : [...(result.keywords || [])]
+    )
+      .sort()
+      .join(","),
     String(result.totalScore),
     result.createdAt,
   ].join("|");
@@ -48,6 +53,7 @@ interface ResultCardProps {
   index: number;
   verifyAllResult?: "1" | "0" | null;
   verifyAllInProgress?: boolean;
+  searchQuery: string;
 }
 
 export function ResultCard({
@@ -55,12 +61,14 @@ export function ResultCard({
   index,
   verifyAllResult,
   verifyAllInProgress,
+  searchQuery,
 }: ResultCardProps) {
   const [verifyState, setVerifyState] = useState<
     "idle" | "loading" | "success" | "failed"
   >("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [resultHash, setResultHash] = useState<string | null>(null);
+  const [isCached, setIsCached] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -79,10 +87,13 @@ export function ResultCard({
 
     if (status === "1") {
       setVerifyState("success");
+      setIsCached(true);
     } else if (status === "0") {
       setVerifyState("failed");
+      setIsCached(false);
     } else {
       setVerifyState("idle");
+      setIsCached(false);
     }
   }, [resultHash]);
 
@@ -93,6 +104,15 @@ export function ResultCard({
     if (verifyAllInProgress) return "loading";
     return verifyState;
   }, [verifyAllResult, verifyAllInProgress, verifyState]);
+
+  const displayedScore = useMemo(() => {
+    if (!result.keywordScores || !searchQuery) return result.totalScore;
+    const match = result.keywordScores.find(
+      (k) => k.keyword.toLowerCase() === searchQuery.toLowerCase(),
+    );
+
+    return match ? match.score : result.totalScore;
+  }, [result.keywordScores, searchQuery, result.totalScore]);
 
   const [htmlPreviewOpen, setHtmlPreviewOpen] = useState(false);
   const [htmlContent, setHtmlContent] = useState<string | null>(null);
@@ -128,11 +148,17 @@ export function ResultCard({
   const handleVerify = async (e: React.MouseEvent) => {
     e.stopPropagation();
     setVerifyState("loading");
+    setIsCached(false);
     setErrorMessage(null);
     const hash = resultHash ?? (await hashResult(result));
 
     try {
-      const response = await verifyProofClientSide(result.proof, result.cid);
+      const response = await verifyProofClientSide(
+        result.proof,
+        result.cid,
+        result.totalScore,
+        result.keywordScores,
+      );
       if (response.verified) {
         setVerifyState("success");
         setStoredVerified(hash, 1);
@@ -182,7 +208,7 @@ export function ResultCard({
             handleCardClick(e as unknown as React.MouseEvent);
           }
         }}
-        aria-label={`Önizle: ${getDomain(result.siteUrl)}`}
+        aria-label={`${getDomain(result.siteUrl)}`}
       >
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
@@ -193,7 +219,7 @@ export function ResultCard({
               <span className="text-sm text-gray-500">
                 Score:{" "}
                 <span className="font-semibold text-gray-700">
-                  {result.totalScore}
+                  {displayedScore}
                 </span>
               </span>
             </div>
@@ -209,28 +235,15 @@ export function ResultCard({
                   }}
                 />
               )}
-              <span className="text-sm text-gray-500 truncate">
-                {getDomain(result.siteUrl)}
-              </span>
             </div>
 
-            <p className="text-lg font-medium text-primary-600 truncate">
+            <p className="text-md font-medium text-primary-600 truncate">
               {getDomain(result.siteUrl)}
             </p>
-            {/* <div className="flex flex-wrap gap-1.5 mt-3">
-              {result.keywords.map((keyword, i) => (
-                <span
-                  key={i}
-                  className="px-2 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-full"
-                >
-                  {keyword}
-                </span>
-              ))}
-            </div> */}
           </div>
 
           <div
-            className="flex flex-col items-end gap-2"
+            className="flex flex-col items-end gap-1.5"
             onClick={(e) => e.stopPropagation()}
           >
             <button
@@ -238,72 +251,111 @@ export function ResultCard({
               disabled={
                 displayState === "loading" || displayState === "success"
               }
-              className={`verify-btn px-4 py-2 text-sm font-medium rounded-lg flex items-center gap-2
+              className={`verify-btn px-4 py-2 text-sm font-medium rounded-lg flex flex-col justify-center items-start
               ${
                 displayState === "idle"
                   ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   : displayState === "loading"
                     ? "bg-gray-100 text-gray-500 cursor-wait"
                     : displayState === "success"
-                      ? "bg-green-100 text-green-700"
+                      ? "bg-green-100 text-green-700 text-sm"
                       : "bg-red-100 text-red-700 hover:bg-red-200"
               }
               disabled:cursor-not-allowed transition-all`}
             >
-              {displayState === "loading" && (
-                <svg className="h-4 w-4 spinner" viewBox="0 0 24 24">
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
+              <div className="flex items-center gap-1.5">
+                {displayState === "loading" && (
+                  <svg className="h-5 w-5 spinner" viewBox="0 0 24 24">
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      fill="none"
+                      className="opacity-25"
+                    />
+                    <path
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                      className="opacity-75"
+                    />
+                  </svg>
+                )}
+                {displayState === "success" && (
+                  <svg
+                    className="h-5 w-5 shrink-0"
                     fill="none"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                  />
-                </svg>
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                )}
+                {displayState === "failed" && (
+                  <svg
+                    className="h-5 w-5 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                )}
+
+                <span className="leading-none mt-[1px]">
+                  {displayState === "loading" && "Verifying..."}
+                  {displayState === "success" && "Verified"}
+                  {displayState === "failed" && "Retry"}
+                  {displayState === "idle" && "Verify"}
+                </span>
+              </div>
+
+              {displayState === "success" && isCached && (
+                <span className="text-xs text-gray-500/90 font-normal mt-1 leading-none text-center pl-1.5">
+                  (from cache)
+                </span>
               )}
-              {displayState === "success" && (
-                <svg
-                  className="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-              )}
-              {displayState === "failed" && (
-                <svg
-                  className="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              )}
-              {displayState === "idle" && "Verify"}
-              {displayState === "loading" && "Verifying..."}
-              {displayState === "success" && "Verified"}
-              {displayState === "failed" && "Retry"}
             </button>
           </div>
+        </div>
+        <div className="flex overflow-x-auto gap-2 mt-4 pb-1 scroll-smooth">
+          {result.keywordScores?.map((item, i) => {
+            const isSearched =
+              item.keyword.toLowerCase() === searchQuery.toLowerCase();
+
+            return (
+              <span
+                key={i}
+                className={`shrink-0 flex items-center gap-1.5 whitespace-nowrap pl-2 pr-1 py-0.5 text-sm font-normal rounded-md border transition-colors ${
+                  isSearched
+                    ? "bg-primary-50 text-primary-700 border-primary-200"
+                    : "bg-gray-100 text-gray-600 border-gray-200"
+                }`}
+              >
+                <span>{item.keyword}</span>
+                <span
+                  className={`flex items-center justify-center min-w-[20px] h-[20px] text-[11px] font-bold rounded shadow-sm ${
+                    isSearched
+                      ? "bg-primary-600 text-white"
+                      : "bg-white text-primary-700"
+                  }`}
+                >
+                  {item.score}
+                </span>
+              </span>
+            );
+          })}
         </div>
       </div>
 
@@ -312,7 +364,6 @@ export function ResultCard({
           className="fixed inset-0 z-50 flex flex-col bg-black/80 p-4"
           role="dialog"
           aria-modal="true"
-          aria-label="Sayfa önizlemesi"
           onClick={() => setHtmlPreviewOpen(false)}
         >
           <div
@@ -346,7 +397,7 @@ export function ResultCard({
             )}
             {!htmlLoading && htmlContent != null && (
               <iframe
-                title={`Önizleme: ${getDomain(result.siteUrl)}`}
+                title={`${getDomain(result.siteUrl)}`}
                 srcDoc={htmlContent}
                 className="w-full h-full min-h-[60vh] border-0"
                 sandbox="allow-same-origin allow-scripts"

@@ -9,7 +9,9 @@ export interface GenerateProofResult {
     htmlRoot: string;
     totalScore: number;
     keywords: string[];
-}
+    keywordScores: { keyword: string; score: number }[];
+    rawKeywordScores: number[];
+} 
 
 export async function generateProof(
     htmlContent: string,
@@ -24,6 +26,11 @@ export async function generateProof(
         htmlRoot: result.htmlRoot,
         totalScore: result.totalScore ?? 0,
         keywords,
+        keywordScores: result.keywordScores?.map(pair => ({
+            keyword: pair.keyword,
+            score: pair.score
+        })) || [],
+        rawKeywordScores: result.rawKeywordScores || [],
     };
 }
 

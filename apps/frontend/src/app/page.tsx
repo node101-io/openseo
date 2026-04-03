@@ -1,8 +1,13 @@
 "use client";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { SearchInput } from "../components/search-input";
-import { searchByKeyword, SearchResult, type IndexerMode } from "../pages/api";
+import {
+  fetchAvailableKeywords,
+  searchByKeyword,
+  SearchResult,
+  type IndexerMode,
+} from "../services/api";
 import { verifyProofClientSide } from "./proof-component";
 import { setStoredVerified, hashResult } from "../components/result-card";
 
@@ -20,18 +25,72 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [verifyAllEnabled, setVerifyAllEnabled] = useState(false);
+  const [verifyAllEnabled, setVerifyAllEnabled] = useState(true);
   const [verifyAllInProgress, setVerifyAllInProgress] = useState(false);
   const [verifyAllResults, setVerifyAllResults] = useState<
     Record<string, "1" | "0">
   >({});
   const [indexerMode, setIndexerMode] = useState<IndexerMode>("safe");
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+
+  useEffect(() => {
+    const storedPref = localStorage.getItem("autoVerify");
+
+    if (storedPref === "false") {
+      setVerifyAllEnabled(false);
+    } else if (storedPref === null) {
+      localStorage.setItem("autoVerify", "true");
+    }
+  }, []);
+
+  useEffect(() => {
+    async function loadSuggestions() {
+      const keywords = await fetchAvailableKeywords(indexerMode);
+      setSuggestions(keywords);
+    }
+    loadSuggestions();
+  }, [indexerMode]);
+
+  const runVerification = async (dataToVerify: SearchResult[]) => {
+    if (dataToVerify.length === 0) return;
+    setVerifyAllInProgress(true);
+    setVerifyAllResults({});
+
+    const next: Record<string, "1" | "0"> = {};
+    for (const result of dataToVerify) {
+      const hash = await hashResult(result);
+
+      const storedStatus = localStorage.getItem(hash);
+
+      if (storedStatus === "1") {
+        next[result.cid] = storedStatus as "1";
+        setVerifyAllResults((prev) => ({ ...prev, ...next }));
+        continue;
+      }
+
+      try {
+        const response = await verifyProofClientSide(
+          result.proof,
+          result.cid,
+          result.totalScore,
+          result.keywordScores,
+        );
+        const status = response.verified ? 1 : 0;
+        next[result.cid] = status ? "1" : "0";
+        setStoredVerified(hash, status);
+      } catch {
+        next[result.cid] = "0";
+        setStoredVerified(hash, 0);
+      }
+      setVerifyAllResults((prev) => ({ ...prev, ...next }));
+    }
+    setVerifyAllInProgress(false);
+  };
 
   const handleSearch = async (query: string, modeOverride?: IndexerMode) => {
     const mode = modeOverride ?? indexerMode;
     setIsLoading(true);
     setError(null);
-    setVerifyAllEnabled(false);
     setVerifyAllResults({});
     setSearchQuery(query);
     setHasSearched(true);
@@ -41,6 +100,9 @@ export default function Home() {
 
     if (response.success) {
       setResults(response.results);
+      if (verifyAllEnabled) {
+        runVerification(response.results);
+      }
     } else {
       setError(response.error || "Search failed");
       setResults([]);
@@ -52,31 +114,14 @@ export default function Home() {
   const handleVerifyAllToggle = useCallback(
     async (enabled: boolean) => {
       setVerifyAllEnabled(enabled);
+      localStorage.setItem("autoVerify", enabled ? "true" : "false");
+
       if (!enabled) {
         setVerifyAllResults({});
         return;
       }
-      if (results.length === 0) return;
-      setVerifyAllInProgress(true);
-      setVerifyAllResults({});
-      const next: Record<string, "1" | "0"> = {};
-      for (const result of results) {
-        const hash = await hashResult(result);
-        try {
-          const response = await verifyProofClientSide(
-            result.proof,
-            result.root,
-          );
-          const status = response.verified ? 1 : 0;
-          next[result.cid] = status ? "1" : "0";
-          setStoredVerified(hash, status);
-        } catch {
-          next[result.cid] = "0";
-          setStoredVerified(hash, 0);
-        }
-        setVerifyAllResults((prev) => ({ ...prev, ...next }));
-      }
-      setVerifyAllInProgress(false);
+
+      runVerification(results);
     },
     [results],
   );
@@ -99,15 +144,18 @@ export default function Home() {
               <p className="text-xs text-gray-500">Decentralized Search</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <label
-              htmlFor="indexer-mode"
-              className="text-sm text-gray-600 sr-only"
-            >
-              Indexer
-            </label>
-
-            <div className="relative">
+          <div className="flex items-center bg-gray-50/80 hover:bg-gray-100/80 border border-gray-200/80 rounded-full px-3 py-1.5 transition-all duration-200 shadow-sm backdrop-blur-sm">
+            <div className="flex items-center gap-2 cursor-default select-none">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-500 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-600"></span>
+              </span>
+              <span className="text-[11px] font-bold tracking-wider text-gray-500 uppercase">
+                Indexer
+              </span>
+            </div>
+            <div className="w-px h-4 bg-gray-300 mx-3"></div>
+            <div className="relative flex items-center">
               <select
                 id="indexer-mode"
                 value={indexerMode}
@@ -119,17 +167,31 @@ export default function Home() {
                     setIndexerMode(mode);
                   }
                 }}
-                className="w-36 appearance-none rounded-lg border border-gray-200 bg-white pl-4 pr-10 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 cursor-pointer"
+                className="appearance-none bg-transparent pl-0 pr-6 py-0 text-sm font-semibold text-gray-800 focus:outline-none cursor-pointer w-auto"
               >
                 <option value="safe">Safe</option>
                 <option value="danger">Danger</option>
+                <option value="family-friendly">Family Friendly</option>
+                <option value="general">General</option>
+                <option value="english">English</option>
+                <option value="blockchain">Blockchain</option>
               </select>
-              <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
-                <img
-                  src="/filter.svg"
-                  alt="Filter"
-                  className="w-4 h-4 opacity-70"
-                />
+
+              {/* İkon */}
+              <div className="pointer-events-none absolute right-0 text-gray-400">
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
               </div>
             </div>
           </div>
@@ -153,7 +215,12 @@ export default function Home() {
             </div>
           )}
 
-          <SearchInput onSearch={handleSearch} isLoading={isLoading} />
+          <SearchInput
+            value={searchQuery}
+            onSearch={handleSearch}
+            isLoading={isLoading}
+            indexerMode={indexerMode}
+          />
         </div>
       </section>
 
@@ -205,7 +272,8 @@ export default function Home() {
                 </svg>
               </div>
               <h2 className="text-lg font-medium text-gray-900 mb-2">
-                404 Not Found
+                We couldn't find any verified sites
+                <br /> We're still in the demo phase <br />
               </h2>
             </div>
           )}
@@ -213,7 +281,6 @@ export default function Home() {
           {/* Results */}
           {!isLoading && !error && hasSearched && (
             <>
-              {/* Results header: left = count, right = Verify all toggle */}
               <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
                 <p className="text-sm text-gray-500">
                   {results.length > 0 ? (
@@ -240,7 +307,7 @@ export default function Home() {
                 </p>
                 {results.length > 0 && (
                   <label className="flex items-center gap-2 cursor-pointer select-none">
-                    <span className="text-sm text-gray-600">Verify All</span>
+                    <span className="text-sm text-gray-600">Auto Verify</span>
                     <button
                       type="button"
                       role="switch"
@@ -257,9 +324,6 @@ export default function Home() {
                         }`}
                       />
                     </button>
-                    {verifyAllInProgress && (
-                      <span className="text-xs text-gray-500">Verifying…</span>
-                    )}
                   </label>
                 )}
               </div>
@@ -274,12 +338,13 @@ export default function Home() {
                       index={index}
                       verifyAllResult={verifyAllResults[result.cid] ?? null}
                       verifyAllInProgress={verifyAllInProgress}
+                      searchQuery={searchQuery}
                     />
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-16">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="text-center py-16 animate-fade-in">
+                  <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
                     <svg
                       className="w-8 h-8 text-gray-400"
                       fill="none"
@@ -294,12 +359,30 @@ export default function Home() {
                       />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    No Results
+                  <h3 className="text-xl font-medium text-gray-900 mb-2">
+                    No Results Found
                   </h3>
-                  <p className="text-gray-500">
-                    Try searching with different keywords
+                  <p className="text-gray-500 mb-8">
+                    We couldn't find any verified sites for "{searchQuery}".
+                    <br /> We're still in the demo phase. <br />
+                    To see how the search works try clicking one of these sample
+                    keywords:
                   </p>
+                  {suggestions.length > 0 && (
+                    <div className="flex flex-wrap justify-center gap-3 max-w-2xl mx-auto">
+                      {suggestions.map((topic, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleSearch(topic)}
+                          className="px-5 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm 
+                                     hover:border-primary-500 hover:text-primary-600 hover:shadow-md hover:-translate-y-0.5
+                                     transition-all duration-200 text-sm font-medium text-gray-700 flex items-center gap-2"
+                        >
+                          {topic}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </>

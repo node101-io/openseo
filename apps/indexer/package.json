@@ -2,9 +2,14 @@
   "name": "indexer",
   "version": "1.0.0",
   "scripts": {
-    "dev": "concurrently --names safe,danger \"pnpm run dev:safe\" \"pnpm run dev:danger\"",
-    "dev:safe": "env INDEXER_PORT=3008 MONGODB_DATABASE=openseo_safe INDEXER_COLLECTION=proofs INDEXER_BLACKLIST_FILE=./blacklist-safe.example.txt DA_WS_URL=wss://openseo-da.openseo.workers.dev/ws DA_HTTP_URL=https://openseo-da.openseo.workers.dev tsx src/indexer-route.ts",
-    "dev:danger": "env INDEXER_PORT=3012 MONGODB_DATABASE=openseo_dark INDEXER_COLLECTION=proofs INDEXER_BLACKLIST_FILE=./blacklist-danger.example.txt DA_WS_URL=wss://openseo-da.openseo.workers.dev/ws DA_HTTP_URL=https://openseo-da.openseo.workers.dev tsx src/indexer-route.ts",
+    "build": "tsc",
+    "dev": "concurrently --names safe,danger,family-friendly,general,english,blockchain \"pnpm run dev:safe\" \"pnpm run dev:danger\" \"pnpm run dev:family-friendly\" \"pnpm run dev:english\" \"pnpm run dev:blockchain\"",
+    "dev:safe": "env INDEXER_PORT=3008 MONGODB_DATABASE=openseo_safe INDEXER_COLLECTION=proofs INDEXER_LIST_FILE=./src/lists/list-safe.example.txt DA_WS_URL=wss://openseo-da.openseo.workers.dev/ws DA_HTTP_URL=https://openseo-da.openseo.workers.dev tsx src/indexer-route.ts",
+    "dev:danger": "env INDEXER_PORT=3012 MONGODB_DATABASE=openseo_dark INDEXER_COLLECTION=proofs INDEXER_LIST_FILE=./src/lists/list-dark.example.txt DA_WS_URL=wss://openseo-da.openseo.workers.dev/ws DA_HTTP_URL=https://openseo-da.openseo.workers.dev tsx src/indexer-route.ts",
+    "dev:family-friendly": "env INDEXER_PORT=3032 MONGODB_DATABASE=openseo_family-friendly INDEXER_COLLECTION=proofs INDEXER_LIST_FILE=./src/lists/list-family-friendly.example.txt DA_WS_URL=wss://openseo-da.openseo.workers.dev/ws DA_HTTP_URL=https://openseo-da.openseo.workers.dev tsx src/indexer-route.ts",
+    "dev:general": "env INDEXER_PORT=3033 MONGODB_DATABASE=openseo_general INDEXER_COLLECTION=proofs INDEXER_LIST_FILE=./src/lists/list-general.example.txt DA_WS_URL=wss://openseo-da.openseo.workers.dev/ws DA_HTTP_URL=https://openseo-da.openseo.workers.dev tsx src/indexer-route.ts",
+    "dev:english": "env INDEXER_PORT=3034 MONGODB_DATABASE=openseo_english INDEXER_COLLECTION=proofs INDEXER_LIST_FILE=./src/lists/list-english.example.txt DA_WS_URL=wss://openseo-da.openseo.workers.dev/ws DA_HTTP_URL=https://openseo-da.openseo.workers.dev tsx src/indexer-route.ts",
+    "dev:blockchain": "env INDEXER_PORT=3035 MONGODB_DATABASE=openseo_blockchain INDEXER_COLLECTION=proofs INDEXER_LIST_FILE=./src/lists/list-blockchain.example.txt DA_WS_URL=wss://openseo-da.openseo.workers.dev/ws DA_HTTP_URL=https://openseo-da.openseo.workers.dev tsx src/indexer-route.ts",
     "start": "tsx src/indexer-route.ts"
   },
   "dependencies": {

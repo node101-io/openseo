@@ -12,6 +12,7 @@ export interface ProofPackage {
   public_inputs: {
     html_root: string;
     total_score: number;
+    raw_keyword_scores?: number[];
   };
 }
 
@@ -81,10 +82,7 @@ async function initializeBackend(): Promise<void> {
 }
 
 export async function verifyProofClientSide(
-  proofBase64: string,
-  cid: string, 
-  rpcUrl: string = "https://api.devnet.solana.com"
-): Promise<VerifyResult> {
+proofBase64: string, cid: string, totalScore: number, keywordScores: { keyword: string; score: number; }[], rpcUrl: string = "https://api.devnet.solana.com"): Promise<VerifyResult> {
   const startTime = performance.now();
   
   try {
@@ -124,13 +122,21 @@ export async function verifyProofClientSide(
     await initializeBackend();
     if (!honkBackend) throw new Error('Backend not initialized');
     const proof = new Uint8Array(proofPackage.proof || []);
-    const { html_root, total_score } = proofPackage.public_inputs;
+    const { html_root, total_score, raw_keyword_scores } = proofPackage.public_inputs;
+
     
     const publicInputs = [
       toFieldHex(html_root),
       toFieldHex(total_score)
     ];
         
+    const MAX_WORDS = 32;
+    const proofRawScores = raw_keyword_scores || [];
+
+    for (let i = 0; i < MAX_WORDS; i++) {
+        publicInputs.push(toFieldHex(proofRawScores[i] || 0));
+    }
+
     const verified = await honkBackend.verifyProof({ proof, publicInputs });    
     const verifyTime = performance.now() - startTime;
 

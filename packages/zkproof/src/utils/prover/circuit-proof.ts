@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { ProofResult, WordScorePair } from '../common/prover-types.js';
+import { ProofResult } from '../common/prover-types.js';
 import { HashService } from './hashing.js';
 import { hashToNoirField } from '../common/hash-utils.js';
 import { sanitizeText, getTagId } from '../common/text-utils.js';
@@ -17,8 +17,9 @@ const ZKPROOF_ROOT = path.resolve(__dirname, '..', '..', '..');
 
 export interface FullProofResult extends ProofResult {
     htmlRoot: string;
-    wordScorePairs: WordScorePair[];
+    keywordScores: { keyword: string; score: number }[];
     totalScore: number;
+    rawKeywordScores: number[];
 }
 
 export namespace CircuitProof {
@@ -31,10 +32,34 @@ export namespace CircuitProof {
         };
     }
 
+    function getTagWeightForCircuit(tagId: number): number {
+        if (tagId === 1) return 12;       // title 
+        if (tagId === 2) return 10;       // h1
+        if (tagId === 3) return 8;        // h2
+        if (tagId === 4) return 6;        // h3
+        if (tagId === 5) return 5;        // h4
+        if (tagId === 6) return 4;        // h5
+        if (tagId === 7) return 3;        // h6
+        if (tagId === 8) return 7;        // meta
+        if (tagId === 9) return 5;        // strong
+        if (tagId === 10) return 5;       // b
+        if (tagId === 11) return 4;       // i
+        if (tagId === 12) return 6;       // a
+        if (tagId === 13) return 3;       // p
+        if (tagId === 14) return 2;       // span
+        if (tagId === 15) return 2;       // div
+        if (tagId === 16) return 3;       // li
+        if (tagId === 17) return 2;       // td
+        if (tagId === 18) return 4;       // th
+        if (tagId === 19) return 3;       // blockquote
+        if (tagId === 20) return 3;       // code
+        return 1;                         // default
+    }
+
     async function buildCircuitData(
         parsed: ParsedHTML,
         targetKeywords: string[]
-    ): Promise<{ inputs: any; wordHashesForReturn: string[] }> {
+    ): Promise<{ inputs: any; wordHashesForReturn: string[]; foundKeywordsList: string[] }> {
         
         const normalizedKeywords = targetKeywords.map(kw => sanitizeText(kw));
         const keywordSet = new Set(normalizedKeywords);
@@ -42,6 +67,7 @@ export namespace CircuitProof {
         let isKeywordBitmask = 0;
         const tagIds: number[] = [];
         const wordHashesForReturn: string[] = [];
+        const foundKeywordsList: string[] = [];
 
         let i = 0;
         const words = parsed.words;
@@ -52,11 +78,14 @@ export namespace CircuitProof {
             const isKw = keywordSet.has(word.word);
 
             if (isKw) {
+                foundKeywordsList.push(word.word);
                 const hash = HashService.hashWordForCircuit(word.word);
                 wordHashes.push(hashToNoirField(hash));
                 const bitToSet = 1 << wordIndex;
                 isKeywordBitmask |= bitToSet;
-                tagIds.push(getTagId(word.tag));
+                
+                const tId = getTagId(word.tag);
+                tagIds.push(tId);
                 wordHashesForReturn.push(hash);
                 i++;
                 wordIndex++;
@@ -85,9 +114,10 @@ export namespace CircuitProof {
         const wordCount = wordHashes.filter(h => h !== '0x0').length;
         let keywordCount = 0;
         const keywordPositions: number[] = [];
+        const unsignedIsKeyword = isKeywordBitmask >>> 0;
         
         for (let idx = 0; idx < wordCount; idx++) {
-            const bitIsSet = (isKeywordBitmask >> idx) & 1;
+            const bitIsSet = (unsignedIsKeyword >>> idx) & 1;
             if (bitIsSet === 1) {
                 keywordCount++;
                 keywordPositions.push(idx);
@@ -101,7 +131,7 @@ export namespace CircuitProof {
 
         const noirInputs = {
             keyword_count: keywordCount,
-            is_keyword: isKeywordBitmask,
+            is_keyword: unsignedIsKeyword, 
             keyword_positions: keywordPositionsPadded,
             word_hashes: wordHashes,
             tag_ids: tagIds,
@@ -110,7 +140,8 @@ export namespace CircuitProof {
 
         return {
             inputs: noirInputs,
-            wordHashesForReturn
+            wordHashesForReturn,
+            foundKeywordsList
         };
     }
 
@@ -120,62 +151,60 @@ export namespace CircuitProof {
     ): Promise<FullProofResult> {
         const { Barretenberg, UltraHonkBackend } = await loadBB();
         const normalizedKeywords = keywords.map(k => sanitizeText(k)).filter(k => k.length > 0);
+        
         if (normalizedKeywords.length === 0) {
             throw new Error('At least one keyword is required');
         }
         
         const parsed = HTMLParser.parse(htmlContent);
-        const occurrenceMap = HTMLParser.findKeywordOccurrences(parsed, normalizedKeywords);
-        const wordScorePairs: WordScorePair[] = [];
-
-        for (const keyword of normalizedKeywords) {
-            const data = occurrenceMap.get(keyword);
-            if (!data || data.occurrences === 0) {
-                throw new Error(`Keyword "${keyword}" not found in HTML`);
-            }
-            wordScorePairs.push({
-                word: keyword,
-                score: HTMLParser.calculateKeywordScore(data.weights)
-            });
-        }
 
         try {
-            const { inputs, wordHashesForReturn } = await buildCircuitData(parsed, normalizedKeywords);
+            const { inputs, wordHashesForReturn, foundKeywordsList } = await buildCircuitData(parsed, normalizedKeywords);
             const circuitPath = path.join(ZKPROOF_ROOT, 'target', 'zkseo.json');
 
             if (!fs.existsSync(circuitPath)) {
-                throw new Error(`Circuit file not found at ${circuitPath}. Please run 'nargo compile' first.`);
+                throw new Error(`Circuit file not found. Run 'nargo compile'.`);
             }
 
-            const circuitContent = fs.readFileSync(circuitPath, 'utf-8');
-            const circuit = JSON.parse(circuitContent);
-            const threads = os.cpus().length;
-            const api = await Barretenberg.new({ threads });
+            const circuit = JSON.parse(fs.readFileSync(circuitPath, 'utf-8'));
+            const api = await Barretenberg.new({ threads: os.cpus().length });
             const honkBackend = new UltraHonkBackend(circuit.bytecode, api);
             const noir = new Noir(circuit);
+            
             const { witness } = await noir.execute(inputs);
             const { proof, publicInputs } = await honkBackend.generateProof(witness);
-            const realHtmlRoot = publicInputs[0] || '0x00';
-            const realTotalScoreHex = publicInputs[1] || '0x00';
-            const realTotalScore = parseInt(realTotalScoreHex.replace('0x', ''), 16);
 
-            let vk: Uint8Array;
-            if (typeof honkBackend.getVerificationKey === 'function') {
-                vk = await honkBackend.getVerificationKey();
-            } else {
-                vk = new Uint8Array(0);
+            const realHtmlRoot = publicInputs[0]?.toString() || '0x00';
+            const realTotalScore = parseInt(publicInputs[1]?.toString().replace('0x', ''), 16);
+
+            const rawKeywordScores: number[] = [];
+            for (let j = 0; j < MAX_WORDS; j++) {
+                const scoreHex = publicInputs[2 + j] || '0x00';
+                rawKeywordScores.push(parseInt(scoreHex.toString().replace('0x', ''), 16));
             }
+            
+            const groupedScoresMap = new Map<string, number>();
+            for (let j = 0; j < foundKeywordsList.length; j++) {
+                const kw = foundKeywordsList[j];
+                const score = rawKeywordScores[j];
+                groupedScoresMap.set(kw, (groupedScoresMap.get(kw) || 0) + score);
+            }
+
+            const verifiedKeywordScores = Array.from(groupedScoresMap.entries()).map(([keyword, score]) => ({
+                keyword,
+                score
+            }));
+
+            const vk = typeof honkBackend.getVerificationKey === 'function' ? await honkBackend.getVerificationKey() : new Uint8Array(0);
 
             const proofPackage = {
                 proof_type: 'ultra_honk', 
-                proof_file_path: 'in_memory',
-                verification_key_path: 'in_memory',
                 proof: Array.from(proof),
                 vk: Array.from(vk),
-                public_inputs_raw: [], 
                 public_inputs: { 
-                    html_root: realHtmlRoot.toString(), 
-                    total_score: realTotalScore 
+                    html_root: realHtmlRoot, 
+                    total_score: realTotalScore,
+                    raw_keyword_scores: rawKeywordScores
                 }
             };
 
@@ -185,23 +214,19 @@ export namespace CircuitProof {
                 wordHashes: wordHashesForReturn,
                 success: true,
                 proofSize: proof.length,
-                htmlRoot: realHtmlRoot.toString(),
-                wordScorePairs,
-                totalScore: realTotalScore
+                htmlRoot: realHtmlRoot,
+                keywordScores: verifiedKeywordScores,
+                totalScore: realTotalScore,
+                rawKeywordScores,
             };
 
         } catch (error) {
             console.error('[Proof] Generation failed:', error);
             return {
-                success: false,
-                proof: '',
-                publicInputs: '',
-                wordHashes: [],
-                proofSize: 0,
-                error: String(error),
-                htmlRoot: '',
-                wordScorePairs,
-                totalScore: 0
+                success: false, proof: '', publicInputs: '', wordHashes: [],
+                proofSize: 0, error: String(error), htmlRoot: '',
+                keywordScores: [], totalScore: 0
+                , rawKeywordScores: []
             };
         }
     }
@@ -210,25 +235,12 @@ export namespace CircuitProof {
         htmlContent: string,
         keywords: string[]
     ): Promise<{ htmlRoot: string; totalScore: number; success: boolean }> {
-        try {
-            const result = await generateProof(htmlContent, keywords);
-            if (!result.success) {
-                throw new Error(result.error || "Proof generation failed internally");
-            }
-            return {
-                htmlRoot: result.htmlRoot,
-                totalScore: result.totalScore,
-                success: true
-            };
-        }
-        catch (error) {
-            console.error("Node root calculation failed:", error);
-            return {
-                htmlRoot: '0x00',
-                totalScore: 0,
-                success: false
-            };
-        }
+        const result = await generateProof(htmlContent, keywords);
+        return {
+            htmlRoot: result.htmlRoot || '0x00',
+            totalScore: result.totalScore || 0,
+            success: result.success
+        };
     }
 
     export const verifyProof = ProofVerifier.verifyProof;

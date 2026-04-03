@@ -28,7 +28,7 @@ TEST_SITE_URL
 ## Running the service
 
 ```bash
-pnpm --filter github-action dev
+pnpm --filter backend dev
 ```
 
 ## Use-Case Diagram
