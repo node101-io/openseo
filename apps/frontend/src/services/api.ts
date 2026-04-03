@@ -1,28 +1,35 @@
-import type { SearchResult, SearchResponse } from '@openseo/types';
+import type { SearchResponse } from '@openseo/types';
 
-//const INDEXER_URL_SAFE = 'http://91.99.175.202/safe';
-const INDEXER_URL_SAFE = 'http://localhost:3008';
-const INDEXER_URL_DANGER = 'http://localhost:3012';
-//const INDEXER_URL_DANGER = 'http://91.99.175.202/danger';
+export type IndexerMode = 
+  | 'safe' 
+  | 'danger' 
+  | 'family-friendly' 
+  | 'general' 
+  | 'english' 
+  | 'blockchain';
+
 const FILECOIN_URL =  'https://openseo-filecoin.openseo.workers.dev';
 
-export type IndexerMode = 'safe' | 'danger';
 export type { SearchResult, SearchResponse } from '@openseo/types';
 
-export function getIndexerBaseUrl(mode: IndexerMode): string {
-  return mode === 'danger' ? INDEXER_URL_DANGER : INDEXER_URL_SAFE;
-}
+const LOCAL_PORTS: Record<IndexerMode, number> = {
+  'safe': 3008,
+  'danger': 3012,
+  'family-friendly': 3032,
+  'general': 3033, 
+  'english': 3034,
+  'blockchain': 3035 
+};
 
+export function getIndexerBaseUrl(mode: IndexerMode): string {
+  //return `http://localhost:${LOCAL_PORTS[mode]}`;
+  return `https://indexer.openseo.info/${mode}`;
+}
 export async function fetchAvailableKeywords(
   mode: IndexerMode,
 ): Promise<string[]> {
   try {
-    const baseUrl =
-      mode === "safe"
-        ? // ? "http://91.99.175.202/safe"
-          // : "http://91.99.175.202/danger";
-          "http://localhost:3008"
-        : "http://localhost:3012";
+    const baseUrl = getIndexerBaseUrl(mode);
     const response = await fetch(`${baseUrl}/suggestions`);
     const data = await response.json();
 

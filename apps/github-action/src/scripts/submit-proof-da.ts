@@ -36,7 +36,6 @@ export async function submitProofToDa(params: SubmitProofParams): Promise<void> 
         60000
     );
     const data = (await res.json().catch(() => ({}))) as { success?: boolean; error?: string };
-    console.log("Submit Proof Da:", data);
     if (!res.ok) {
         throw new Error(data?.error || `DA request failed: ${res.status}`);
     }
@@ -67,7 +66,6 @@ async function main() {
         keywordScores: { keyword: string; score: number }[];
         rawKeywordScores: number[];
     };
-    console.log("Keywordlu data:", data);
     await submitProofToDa({
         proof: data.proof,
         root: data.htmlRoot,

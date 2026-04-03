@@ -1,9 +1,9 @@
 import bs58 from "bs58";
 import { ZkProofMetadata, IZkProofMetadata } from './db/models/zk-proof-metadata.js';
 import { mongoService } from './mongo-service.js';
-import { isBlacklisted } from './blacklist.js';
+import { hasListedKeyword } from './list.js';
 import { Connection, Keypair } from '@solana/web3.js';
-import { createProgram, getProgramId } from '@openseo/contracts';
+import { createProgram } from '@openseo/contracts';
 import { ProofVerifier } from '@openseo/zkproof';
 import type { DABroadcastData, IndexerResult } from '@openseo/types';
 
@@ -89,11 +89,11 @@ export class IndexerService {
             console.error('[DB Kontrol Hatası]', error);
         }
 
-        if (isBlacklisted(daData.siteUrl)) {
+        if (!hasListedKeyword(daData.keywords)) {
             return {
                 success: false,
-                message: 'Domain is blacklisted',
-                error: 'This site is not allowed in this indexer'
+                message: 'No matching keywords',
+                error: 'None of the provided keywords are allowed in this indexer'
             };
         }
         
@@ -115,7 +115,6 @@ export class IndexerService {
                 daData.keywordScores
             );
             
-            console.log("verificationResult", verificationResult);
             if (!verificationResult.isValid) {
                 return {
                     success: false,
@@ -135,7 +134,6 @@ export class IndexerService {
                 proof: daData.proof,
                 totalScore: daData.totalScore
             });
-            console.log("Result ", result);
 
             if (result.success) {
                 this.processedRoots.add(daRoot);
@@ -225,7 +223,6 @@ export class IndexerService {
                 totalScore: data.totalScore,
                 verified: true
             });
-            console.log("New Record", newRecord);
             const saved = await newRecord.save();
             return {
                 success: true,

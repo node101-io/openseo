@@ -251,17 +251,15 @@ function connectToDA() {
             const message = JSON.parse(data.toString());
             if (message.type === 'da_broadcast' && message.data) {
                 const broadcastData = message.data;
-                console.log("BroadcastData", broadcastData);
                 const result = await indexerService.handleDABroadcast({
                     root: broadcastData.root,
                     keywords: broadcastData.keywords,
                     keywordScores: broadcastData.keywordScores,
-                        rawKeywordScores: broadcastData.rawKeywordScores,
+                    rawKeywordScores: broadcastData.rawKeywordScores,
                     siteUrl: broadcastData.siteUrl,
                     proof: broadcastData.proof,
                     totalScore: broadcastData.totalScore
                 });
-                console.log("Ws", result);
                 if (result.success) {
                     console.log('[Indexer] Stored proof for', broadcastData.siteUrl);
                 } else {

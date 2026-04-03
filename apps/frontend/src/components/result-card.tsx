@@ -1,6 +1,6 @@
 "use client";
 import { useState, useMemo, useEffect } from "react";
-import { SearchResult } from "../pages/api";
+import { SearchResult } from "../services/api";
 import { verifyProofClientSide } from "../app/proof-component";
 
 function toString(result: SearchResult): string {
@@ -322,7 +322,7 @@ export function ResultCard({
               </div>
 
               {displayState === "success" && isCached && (
-                <span className="text-[11px] text-gray-500/90 font-normal mt-1 leading-none pl-[26px]">
+                <span className="text-xs text-gray-500/90 font-normal mt-1 leading-none text-center pl-1.5">
                   (from cache)
                 </span>
               )}

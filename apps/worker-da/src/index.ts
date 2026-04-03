@@ -101,7 +101,6 @@ export default {
           totalScore: submission.totalScore,
         },
       });
-      console.log("DA Data: ", broadcastPayload);
       const doId = env.DA_BROADCAST.idFromName("default");
       const stub = env.DA_BROADCAST.get(doId);
       let sent = 0;

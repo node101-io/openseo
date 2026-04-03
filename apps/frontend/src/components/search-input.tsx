@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { fetchAvailableKeywords, type IndexerMode } from "../pages/api";
+import { fetchAvailableKeywords, type IndexerMode } from "../services/api";
 
 interface SearchInputProps {
   value: string;

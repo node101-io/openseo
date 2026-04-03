@@ -7,7 +7,7 @@ import {
   searchByKeyword,
   SearchResult,
   type IndexerMode,
-} from "../pages/api";
+} from "../services/api";
 import { verifyProofClientSide } from "./proof-component";
 import { setStoredVerified, hashResult } from "../components/result-card";
 
@@ -144,15 +144,18 @@ export default function Home() {
               <p className="text-xs text-gray-500">Decentralized Search</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <label
-              htmlFor="indexer-mode"
-              className="text-sm text-gray-600 sr-only"
-            >
-              Indexer
-            </label>
-
-            <div className="relative">
+          <div className="flex items-center bg-gray-50/80 hover:bg-gray-100/80 border border-gray-200/80 rounded-full px-3 py-1.5 transition-all duration-200 shadow-sm backdrop-blur-sm">
+            <div className="flex items-center gap-2 cursor-default select-none">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-500 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-600"></span>
+              </span>
+              <span className="text-[11px] font-bold tracking-wider text-gray-500 uppercase">
+                Indexer
+              </span>
+            </div>
+            <div className="w-px h-4 bg-gray-300 mx-3"></div>
+            <div className="relative flex items-center">
               <select
                 id="indexer-mode"
                 value={indexerMode}
@@ -164,17 +167,31 @@ export default function Home() {
                     setIndexerMode(mode);
                   }
                 }}
-                className="w-36 appearance-none rounded-lg border border-gray-200 bg-white pl-4 pr-10 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 cursor-pointer"
+                className="appearance-none bg-transparent pl-0 pr-6 py-0 text-sm font-semibold text-gray-800 focus:outline-none cursor-pointer w-auto"
               >
                 <option value="safe">Safe</option>
                 <option value="danger">Danger</option>
+                <option value="family-friendly">Family Friendly</option>
+                <option value="general">General</option>
+                <option value="english">English</option>
+                <option value="blockchain">Blockchain</option>
               </select>
-              <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
-                <img
-                  src="/filter.svg"
-                  alt="Filter"
-                  className="w-4 h-4 opacity-70"
-                />
+
+              {/* İkon */}
+              <div className="pointer-events-none absolute right-0 text-gray-400">
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
               </div>
             </div>
           </div>
@@ -255,7 +272,8 @@ export default function Home() {
                 </svg>
               </div>
               <h2 className="text-lg font-medium text-gray-900 mb-2">
-                404 Not Found
+                We couldn't find any verified sites
+                <br /> We're still in the demo phase <br />
               </h2>
             </div>
           )}
