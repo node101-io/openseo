@@ -378,7 +378,7 @@ export function ResultCard({
               onClick={() => setHtmlPreviewOpen(false)}
               className="ml-4 px-3 py-1.5 rounded-lg bg-white/20 text-white hover:bg-white/30 text-sm font-medium"
             >
-              Kapat
+              Close
             </button>
           </div>
           <div

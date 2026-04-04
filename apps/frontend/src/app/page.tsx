@@ -173,7 +173,7 @@ export default function Home() {
                 <option value="danger">Danger</option>
                 <option value="family-friendly">Family Friendly</option>
                 <option value="general">General</option>
-                <option value="english">English</option>
+                <option value="english">English-Only</option>
                 <option value="blockchain">Blockchain</option>
               </select>
 
