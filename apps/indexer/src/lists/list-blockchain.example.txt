@@ -1,1 +1,9 @@
 blockchain
+testnet
+transactions
+contracts
+developers
+Scalable
+Low-Cost
+Bitcoins
+network

@@ -32,9 +32,9 @@ export function SearchInput({
     loadKeywords();
   }, [indexerMode]);
 
-  const filteredKeywords = dbKeywords.filter((keyword) =>
-    keyword.toLowerCase().includes(query.toLowerCase()),
-  );
+  const filteredKeywords = dbKeywords
+    .filter((keyword) => keyword.toLowerCase().includes(query.toLowerCase()))
+    .sort((a, b) => a.localeCompare(b));
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
