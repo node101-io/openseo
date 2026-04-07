@@ -118,8 +118,15 @@ export default function Home() {
       setError(response.error || "Search failed");
       setResults([]);
     }
-
     setIsLoading(false);
+  };
+
+  const getScoreForSorting = (result: SearchResult, query: string) => {
+    if (!result.keywordScores || !query) return result.totalScore;
+    const match = result.keywordScores.find(
+      (k) => k.keyword.toLowerCase() === query.toLowerCase(),
+    );
+    return match ? match.score : result.totalScore;
   };
 
   const handleVerifyAllToggle = useCallback(
@@ -136,6 +143,12 @@ export default function Home() {
     },
     [results],
   );
+
+  const sortedResults = [...results].sort((a, b) => {
+    const scoreA = getScoreForSorting(a, searchQuery);
+    const scoreB = getScoreForSorting(b, searchQuery);
+    return scoreB - scoreA;
+  });
 
   return (
     <main className="min-h-screen">
@@ -340,7 +353,7 @@ export default function Home() {
               {/* Results list */}
               {results.length > 0 ? (
                 <div className="space-y-4">
-                  {results.map((result, index) => (
+                  {sortedResults.map((result, index) => (
                     <ResultCard
                       key={result.cid}
                       result={result}
