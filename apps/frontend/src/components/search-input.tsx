@@ -19,6 +19,7 @@ export function SearchInput({
   const [query, setQuery] = useState("");
   const [dbKeywords, setDbKeywords] = useState<string[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
 
   useEffect(() => {
     setQuery(value);
@@ -34,11 +35,18 @@ export function SearchInput({
 
   const filteredKeywords = dbKeywords
     .filter((keyword) => keyword.toLowerCase().includes(query.toLowerCase()))
-    .sort((a, b) => a.localeCompare(b));
+    .sort((a, b) => a.localeCompare(b))
+    .filter((keyword, index, array) => {
+      if (keyword.endsWith("s") && array.includes(keyword.slice(0, -1))) {
+        return false;
+      }
+      return true;
+    });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
     setShowDropdown(true);
+    setSelectedIndex(-1);
   };
 
   const handleSuggestionClick = (suggestion: string) => {
@@ -60,12 +68,40 @@ export function SearchInput({
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
+      if (showDropdown && filteredKeywords.length > 0) {
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          setSelectedIndex((prev) =>
+            prev < filteredKeywords.length - 1 ? prev + 1 : prev,
+          );
+          return;
+        }
+
+        if (e.key === "ArrowUp") {
+          e.preventDefault();
+          setSelectedIndex((prev) => (prev > 0 ? prev - 1 : -1));
+          return;
+        }
+
+        if (e.key === "Enter" && selectedIndex >= 0) {
+          e.preventDefault();
+          const selectedSuggestion = filteredKeywords[selectedIndex];
+          setQuery(selectedSuggestion);
+          setShowDropdown(false);
+          setSelectedIndex(-1);
+          onSearch(selectedSuggestion);
+          return;
+        }
+      }
+
       if (e.key === "Enter" && query.trim() && !isLoading) {
+        e.preventDefault();
         setShowDropdown(false);
+        setSelectedIndex(-1);
         onSearch(query.trim());
       }
     },
-    [query, onSearch, isLoading],
+    [query, onSearch, isLoading, showDropdown, filteredKeywords, selectedIndex],
   );
 
   return (
@@ -141,7 +177,10 @@ export function SearchInput({
             <li
               key={index}
               onClick={() => handleSuggestionClick(suggestion)}
-              className="px-4 py-2.5 cursor-pointer hover:bg-gray-50 flex items-center gap-3 text-gray-700 transition-colors border-b border-gray-50 last:border-0"
+              onMouseEnter={() => setSelectedIndex(index)}
+              className={`px-4 py-2.5 cursor-pointer flex items-center gap-3 text-gray-700 transition-colors border-b border-gray-50 last:border-0 ${
+                selectedIndex === index ? "bg-gray-100" : "hover:bg-gray-50"
+              }`}
             >
               <span className="font-normal text-gray-500 text-sm">
                 {suggestion}

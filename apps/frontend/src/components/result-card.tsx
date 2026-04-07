@@ -251,11 +251,10 @@ export function ResultCard({
                   }}
                 />
               )}
+              <p className="text-md font-medium text-primary-600 truncate">
+                {getDomain(result.siteUrl)}
+              </p>
             </div>
-
-            <p className="text-md font-medium text-primary-600 truncate">
-              {getDomain(result.siteUrl)}
-            </p>
           </div>
 
           <div
