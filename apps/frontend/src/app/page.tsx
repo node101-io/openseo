@@ -67,15 +67,12 @@ export default function Home() {
     setVerifyAllInProgress(true);
     setVerifyAllResults({});
 
-    const next: Record<string, "1" | "0"> = {};
     for (const result of dataToVerify) {
       const hash = await hashResult(result);
-
       const storedStatus = localStorage.getItem(hash);
 
       if (storedStatus === "1") {
-        next[result.cid] = storedStatus as "1";
-        setVerifyAllResults((prev) => ({ ...prev, ...next }));
+        setVerifyAllResults((prev) => ({ ...prev, [result.cid]: "1" }));
         continue;
       }
 
@@ -87,14 +84,17 @@ export default function Home() {
           result.keywordScores,
         );
         const status = response.verified ? 1 : 0;
-        next[result.cid] = status ? "1" : "0";
         setStoredVerified(hash, status);
+        setVerifyAllResults((prev) => ({
+          ...prev,
+          [result.cid]: status ? "1" : "0",
+        }));
       } catch {
-        next[result.cid] = "0";
         setStoredVerified(hash, 0);
+        setVerifyAllResults((prev) => ({ ...prev, [result.cid]: "0" }));
       }
-      setVerifyAllResults((prev) => ({ ...prev, ...next }));
     }
+
     setVerifyAllInProgress(false);
   };
 
@@ -112,7 +112,13 @@ export default function Home() {
     if (response.success) {
       setResults(response.results);
       if (verifyAllEnabled) {
-        runVerification(response.results);
+        const resultsToVerify = [...response.results].sort((a, b) => {
+          const scoreA = getScoreForSorting(a, query);
+          const scoreB = getScoreForSorting(b, query);
+          return scoreB - scoreA;
+        });
+
+        runVerification(resultsToVerify);
       }
     } else {
       setError(response.error || "Search failed");
@@ -129,6 +135,12 @@ export default function Home() {
     return match ? match.score : result.totalScore;
   };
 
+  const sortedResults = [...results].sort((a, b) => {
+    const scoreA = getScoreForSorting(a, searchQuery);
+    const scoreB = getScoreForSorting(b, searchQuery);
+    return scoreB - scoreA;
+  });
+
   const handleVerifyAllToggle = useCallback(
     async (enabled: boolean) => {
       setVerifyAllEnabled(enabled);
@@ -139,16 +151,10 @@ export default function Home() {
         return;
       }
 
-      runVerification(results);
+      runVerification(sortedResults);
     },
-    [results],
+    [sortedResults],
   );
-
-  const sortedResults = [...results].sort((a, b) => {
-    const scoreA = getScoreForSorting(a, searchQuery);
-    const scoreB = getScoreForSorting(b, searchQuery);
-    return scoreB - scoreA;
-  });
 
   return (
     <main className="min-h-screen">
