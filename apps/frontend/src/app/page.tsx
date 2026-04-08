@@ -30,7 +30,7 @@ export default function Home() {
   const [verifyAllResults, setVerifyAllResults] = useState<
     Record<string, "1" | "0">
   >({});
-  const [indexerMode, setIndexerMode] = useState<IndexerMode>("safe");
+  const [indexerMode, setIndexerMode] = useState<IndexerMode>("general");
   const [suggestions, setSuggestions] = useState<string[]>([]);
 
   useEffect(() => {
@@ -51,20 +51,28 @@ export default function Home() {
     loadSuggestions();
   }, [indexerMode]);
 
+  const cleanSuggestions = suggestions
+    .sort((a, b) => a.localeCompare(b))
+    .filter((keyword, index, array) => {
+      if (keyword.endsWith("s") && array.includes(keyword.slice(0, -1))) {
+        return false;
+      }
+      return true;
+    });
+
+  const displayKeywords = cleanSuggestions.slice(0, 8);
+
   const runVerification = async (dataToVerify: SearchResult[]) => {
     if (dataToVerify.length === 0) return;
     setVerifyAllInProgress(true);
     setVerifyAllResults({});
 
-    const next: Record<string, "1" | "0"> = {};
     for (const result of dataToVerify) {
       const hash = await hashResult(result);
-
       const storedStatus = localStorage.getItem(hash);
 
       if (storedStatus === "1") {
-        next[result.cid] = storedStatus as "1";
-        setVerifyAllResults((prev) => ({ ...prev, ...next }));
+        setVerifyAllResults((prev) => ({ ...prev, [result.cid]: "1" }));
         continue;
       }
 
@@ -76,14 +84,17 @@ export default function Home() {
           result.keywordScores,
         );
         const status = response.verified ? 1 : 0;
-        next[result.cid] = status ? "1" : "0";
         setStoredVerified(hash, status);
+        setVerifyAllResults((prev) => ({
+          ...prev,
+          [result.cid]: status ? "1" : "0",
+        }));
       } catch {
-        next[result.cid] = "0";
         setStoredVerified(hash, 0);
+        setVerifyAllResults((prev) => ({ ...prev, [result.cid]: "0" }));
       }
-      setVerifyAllResults((prev) => ({ ...prev, ...next }));
     }
+
     setVerifyAllInProgress(false);
   };
 
@@ -101,15 +112,34 @@ export default function Home() {
     if (response.success) {
       setResults(response.results);
       if (verifyAllEnabled) {
-        runVerification(response.results);
+        const resultsToVerify = [...response.results].sort((a, b) => {
+          const scoreA = getScoreForSorting(a, query);
+          const scoreB = getScoreForSorting(b, query);
+          return scoreB - scoreA;
+        });
+
+        runVerification(resultsToVerify);
       }
     } else {
       setError(response.error || "Search failed");
       setResults([]);
     }
-
     setIsLoading(false);
   };
+
+  const getScoreForSorting = (result: SearchResult, query: string) => {
+    if (!result.keywordScores || !query) return result.totalScore;
+    const match = result.keywordScores.find(
+      (k) => k.keyword.toLowerCase() === query.toLowerCase(),
+    );
+    return match ? match.score : result.totalScore;
+  };
+
+  const sortedResults = [...results].sort((a, b) => {
+    const scoreA = getScoreForSorting(a, searchQuery);
+    const scoreB = getScoreForSorting(b, searchQuery);
+    return scoreB - scoreA;
+  });
 
   const handleVerifyAllToggle = useCallback(
     async (enabled: boolean) => {
@@ -121,9 +151,9 @@ export default function Home() {
         return;
       }
 
-      runVerification(results);
+      runVerification(sortedResults);
     },
-    [results],
+    [sortedResults],
   );
 
   return (
@@ -169,15 +199,13 @@ export default function Home() {
                 }}
                 className="appearance-none bg-transparent pl-0 pr-6 py-0 text-sm font-semibold text-gray-800 focus:outline-none cursor-pointer w-auto"
               >
-                <option value="safe">Safe</option>
+                <option value="blockchain">Blockchain</option>
                 <option value="danger">Danger</option>
+                <option value="english">English-Only</option>
                 <option value="family-friendly">Family Friendly</option>
                 <option value="general">General</option>
-                <option value="english">English</option>
-                <option value="blockchain">Blockchain</option>
+                <option value="safe">Safe</option>
               </select>
-
-              {/* İkon */}
               <div className="pointer-events-none absolute right-0 text-gray-400">
                 <svg
                   className="w-4 h-4"
@@ -331,7 +359,7 @@ export default function Home() {
               {/* Results list */}
               {results.length > 0 ? (
                 <div className="space-y-4">
-                  {results.map((result, index) => (
+                  {sortedResults.map((result, index) => (
                     <ResultCard
                       key={result.cid}
                       result={result}
@@ -368,15 +396,13 @@ export default function Home() {
                     To see how the search works try clicking one of these sample
                     keywords:
                   </p>
-                  {suggestions.length > 0 && (
+                  {displayKeywords.length > 0 && (
                     <div className="flex flex-wrap justify-center gap-3 max-w-2xl mx-auto">
-                      {suggestions.map((topic, index) => (
+                      {displayKeywords.map((topic, index) => (
                         <button
                           key={index}
                           onClick={() => handleSearch(topic)}
-                          className="px-5 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm 
-                                     hover:border-primary-500 hover:text-primary-600 hover:shadow-md hover:-translate-y-0.5
-                                     transition-all duration-200 text-sm font-medium text-gray-700 flex items-center gap-2"
+                          className="px-5 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm hover:border-primary-500 hover:text-primary-600 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 text-sm font-medium text-gray-700 flex items-center gap-2"
                         >
                           {topic}
                         </button>

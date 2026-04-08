@@ -114,6 +114,22 @@ export function ResultCard({
     return match ? match.score : result.totalScore;
   }, [result.keywordScores, searchQuery, result.totalScore]);
 
+  const sortedKeywordScores = useMemo(() => {
+    if (!result.keywordScores) return [];
+
+    return [...result.keywordScores].sort((a, b) => {
+      const aIsSearched =
+        a.keyword.toLowerCase() === searchQuery?.toLowerCase();
+      const bIsSearched =
+        b.keyword.toLowerCase() === searchQuery?.toLowerCase();
+
+      if (aIsSearched && !bIsSearched) return -1;
+      if (!aIsSearched && bIsSearched) return 1;
+
+      return b.score - a.score;
+    });
+  }, [result.keywordScores, searchQuery]);
+
   const [htmlPreviewOpen, setHtmlPreviewOpen] = useState(false);
   const [htmlContent, setHtmlContent] = useState<string | null>(null);
   const [htmlLoading, setHtmlLoading] = useState(false);
@@ -235,11 +251,10 @@ export function ResultCard({
                   }}
                 />
               )}
+              <p className="text-md font-medium text-primary-600 truncate">
+                {getDomain(result.siteUrl)}
+              </p>
             </div>
-
-            <p className="text-md font-medium text-primary-600 truncate">
-              {getDomain(result.siteUrl)}
-            </p>
           </div>
 
           <div
@@ -330,7 +345,7 @@ export function ResultCard({
           </div>
         </div>
         <div className="flex overflow-x-auto gap-2 mt-4 pb-1 scroll-smooth">
-          {result.keywordScores?.map((item, i) => {
+          {sortedKeywordScores.map((item, i) => {
             const isSearched =
               item.keyword.toLowerCase() === searchQuery.toLowerCase();
 
@@ -378,7 +393,7 @@ export function ResultCard({
               onClick={() => setHtmlPreviewOpen(false)}
               className="ml-4 px-3 py-1.5 rounded-lg bg-white/20 text-white hover:bg-white/30 text-sm font-medium"
             >
-              Kapat
+              Close
             </button>
           </div>
           <div

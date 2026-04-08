@@ -1,1 +1,11 @@
 blockchain
+testnet
+transaction
+developer
+scalable
+low-cost
+bitcoin
+network
+solana
+sol
+contract

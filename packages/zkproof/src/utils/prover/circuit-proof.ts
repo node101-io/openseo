@@ -5,7 +5,7 @@ import { ProofResult } from '../common/prover-types.js';
 import { HashService } from './hashing.js';
 import { hashToNoirField } from '../common/hash-utils.js';
 import { sanitizeText, getTagId } from '../common/text-utils.js';
-import { MAX_WORDS } from '../common/constants.js';
+import { MASK_WORDS, MAX_WORDS } from '../common/constants.js';
 import { HTMLParser, ParsedHTML } from '../common/html-parser.js';
 import { ProofVerifier } from '../verifier/proof-verifier.js';
 import { Noir } from '@noir-lang/noir_js';
@@ -60,11 +60,10 @@ export namespace CircuitProof {
         parsed: ParsedHTML,
         targetKeywords: string[]
     ): Promise<{ inputs: any; wordHashesForReturn: string[]; foundKeywordsList: string[] }> {
-        
         const normalizedKeywords = targetKeywords.map(kw => sanitizeText(kw));
         const keywordSet = new Set(normalizedKeywords);
         const wordHashes: string[] = [];
-        let isKeywordBitmask = 0;
+        const isKeywordHex: string[] = new Array(MASK_WORDS).fill('0x00000000');
         const tagIds: number[] = [];
         const wordHashesForReturn: string[] = [];
         const foundKeywordsList: string[] = [];
@@ -73,6 +72,12 @@ export namespace CircuitProof {
         const words = parsed.words;
         let wordIndex = 0;
 
+        function setBit(hexMask: string[], globalPos: number): void {
+            const wordIdx = Math.floor(globalPos / 32);
+            const bitIdx  = globalPos % 32;
+            const u32     = parseInt(hexMask[wordIdx], 16) | (1 << bitIdx);
+            hexMask[wordIdx] = '0x' + (u32 >>> 0).toString(16).padStart(8, '0');
+        }
         while (i < words.length && wordHashes.length < MAX_WORDS) {
             const word = words[i];
             const isKw = keywordSet.has(word.word);
@@ -81,9 +86,7 @@ export namespace CircuitProof {
                 foundKeywordsList.push(word.word);
                 const hash = HashService.hashWordForCircuit(word.word);
                 wordHashes.push(hashToNoirField(hash));
-                const bitToSet = 1 << wordIndex;
-                isKeywordBitmask |= bitToSet;
-                
+                setBit(isKeywordHex, wordIndex);
                 const tId = getTagId(word.tag);
                 tagIds.push(tId);
                 wordHashesForReturn.push(hash);
@@ -112,26 +115,28 @@ export namespace CircuitProof {
         }
 
         const wordCount = wordHashes.filter(h => h !== '0x0').length;
-        let keywordCount = 0;
         const keywordPositions: number[] = [];
-        const unsignedIsKeyword = isKeywordBitmask >>> 0;
         
         for (let idx = 0; idx < wordCount; idx++) {
-            const bitIsSet = (unsignedIsKeyword >>> idx) & 1;
+            const wordIdx = Math.floor(idx / 32);
+            const bitIdx  = idx % 32;
+            const u32 = Number(BigInt.asUintN(32, BigInt(isKeywordHex[wordIdx])));
+            const bitIsSet = (u32 >>> bitIdx) & 1;
             if (bitIsSet === 1) {
-                keywordCount++;
                 keywordPositions.push(idx);
             }
         }
 
         const keywordPositionsPadded: number[] = [...keywordPositions];
+        
         while (keywordPositionsPadded.length < MAX_WORDS) {
             keywordPositionsPadded.push(0);
         }
 
+        const keywordCount = keywordPositions.length;
         const noirInputs = {
             keyword_count: keywordCount,
-            is_keyword: unsignedIsKeyword, 
+            is_keyword: isKeywordHex,
             keyword_positions: keywordPositionsPadded,
             word_hashes: wordHashes,
             tag_ids: tagIds,

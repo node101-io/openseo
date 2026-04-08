@@ -130,23 +130,25 @@ proofBase64: string, cid: string, totalScore: number, keywordScores: { keyword: 
       toFieldHex(total_score)
     ];
         
-    const MAX_WORDS = 32;
+    const MAX_WORDS = 128;
     const proofRawScores = raw_keyword_scores || [];
 
     for (let i = 0; i < MAX_WORDS; i++) {
         publicInputs.push(toFieldHex(proofRawScores[i] || 0));
     }
 
-    const verified = await honkBackend.verifyProof({ proof, publicInputs });    
+    const verified = await honkBackend.verifyProof({ proof, publicInputs });  
+    console.log("Verified", verified);
     const verifyTime = performance.now() - startTime;
-
+      
     return {
       verified,
       verifyTime,
       error: verified ? undefined : 'Proof verification failed'
-    };
+    };  
 
   } catch (error) {
+    console.log("Errorrr:", error);
     console.error('[Verify] ERROR:', error);
     return {
       verified: false,
