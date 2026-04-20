@@ -113,6 +113,6 @@ subgraph OffChain_Layer["Off-Chain Components"]
    classDef Class_03 fill:#C8E6C9
 ```
 
-# Use-Case Diagrams:
+# Use-Case Diagram:
 
 ![use-case](/diagram/use-case.png)
