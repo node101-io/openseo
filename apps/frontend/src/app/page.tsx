@@ -60,7 +60,7 @@ export default function Home() {
       return true;
     });
 
-  const displayKeywords = cleanSuggestions.slice(0, 8);
+  const displayKeywords = cleanSuggestions.slice(0, 10);
 
   const runVerification = async (dataToVerify: SearchResult[]) => {
     if (dataToVerify.length === 0) return;
@@ -147,7 +147,6 @@ export default function Home() {
       localStorage.setItem("autoVerify", enabled ? "true" : "false");
 
       if (!enabled) {
-        setVerifyAllResults({});
         return;
       }
 
@@ -237,8 +236,9 @@ export default function Home() {
                 Search the Decentralized Web
               </h2>
               <p className="text-lg text-gray-600 max-w-xl mx-auto">
-                Find verified websites with zero-knowledge proofs. Results are
-                ranked by SEO score and cryptographically verifiable.
+                Find verified websites with zero-knowledge proofs. <br />{" "}
+                Results are ranked by SEO score and cryptographically
+                verifiable.
               </p>
             </div>
           )}

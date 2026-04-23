@@ -129,7 +129,7 @@ export function SearchInput({
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             onFocus={() => setShowDropdown(true)}
-            placeholder="Search ..."
+            placeholder="Search"
             disabled={isLoading}
             className="search-input w-full pl-12 pr-30 py-2 text-lg border-2 border-gray-200 rounded-2xl 
                        focus:outline-none focus:border-gray-500 
