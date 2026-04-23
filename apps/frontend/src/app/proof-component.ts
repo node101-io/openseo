@@ -138,7 +138,6 @@ proofBase64: string, cid: string, totalScore: number, keywordScores: { keyword: 
     }
 
     const verified = await honkBackend.verifyProof({ proof, publicInputs });  
-    console.log("Verified", verified);
     const verifyTime = performance.now() - startTime;
       
     return {
@@ -148,7 +147,6 @@ proofBase64: string, cid: string, totalScore: number, keywordScores: { keyword: 
     };  
 
   } catch (error) {
-    console.log("Errorrr:", error);
     console.error('[Verify] ERROR:', error);
     return {
       verified: false,

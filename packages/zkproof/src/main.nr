@@ -81,7 +81,6 @@ fn main(
     let mut root: Field = 0;
     let mut found: u32 = 0;
     let mut score: Field = 0;
-
     let mut kw_scores: [Field; MAX_WORDS] = [0; MAX_WORDS]; //score for every keyword
 
     // create expected bitmask from keyword positions
@@ -91,15 +90,12 @@ fn main(
             let pos = keyword_positions[i];
             // Verify position is valid
             assert(pos < word_count);
+            kw_scores[i] = get_weight(tag_ids[pos]);
             // Set the corresponding bit in expected bitmask
             let word_idx = pos / 32;
             let bit_idx = pos % 32;
             expected_mask[word_idx] |= 1 << bit_idx;
         }
-    }
-
-    for i in 0..MASK_WORDS {
-        assert(is_keyword[i] == expected_mask[i]);
     }
 
     // Verify bitmask matches the expected bitmask from positions
@@ -117,12 +113,6 @@ fn main(
                 // Calculate score from tag id
                 let weight = get_weight(tag_ids[i]);
                 score += weight;
-
-                for k in 0..MAX_WORDS {
-                    if (k < keyword_count) & (keyword_positions[k] == i) {
-                        kw_scores[k] = weight;
-                    }
-                }
                 // H(root, H(word_hash, weight))
                 let word_score_hash = std::hash::pedersen_hash([word_hashes[i], weight]);
                 root = std::hash::pedersen_hash([root, word_score_hash]);
@@ -139,7 +129,7 @@ fn main(
     // Verify no bits are set beyond word_count
     for i in 0..MASK_WORDS {
         let wc = word_count;
-        let lower = i * 32;
+        let lower = i * 32; //i=1 32-63
         let upper = (i + 1) * 32;
 
         let mut allowed: u32 = 0xFFFFFFFF;

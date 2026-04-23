@@ -1,302 +1,968 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+  <title>An Interactive Timeline Journey through History</title>    
+  <meta name="description" content="Explore history now! Use our Interactive Timeline, Map, and Infographic guides to journey through time. Discover every major event at history/timeline-maps.">
+  
+  <meta name="robots" content="index, follow">
+  
+  <!-- FB -->
+   
+  <meta property="og:title" content="An Interactive Timeline Journey through History">
+  <meta property="og:description" content="Explore history now! Use our Interactive Timeline, Map, and Infographic guides to journey through time. Discover every major event at history/timeline-maps.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="index.html">
+  <meta property="og:image" content="https://www.lahistoriaconmapas.com/history/images/interactive-infographic-world-history-3500bc-2026-milestones.webp">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Technical infographic displaying a world history timeline and interactive map of global milestones from 3500BC to 2026.">
+  <meta property="og:site_name" content="LcM">
+  <meta property="og:locale" content="en_ES">
+  
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="An Interactive Timeline Journey through History">
+  <meta name="twitter:description" content="Explore history now! Use our Interactive Timeline, Map, and Infographic guides to journey through time. Discover every major event at history/timeline-maps.">
+  <meta name="twitter:image" content="https://www.lahistoriaconmapas.com/history/images/interactive-infographic-world-history-3500bc-2026-milestones.webp">
+  
+  <!-- Optimizing Loading -->
+  <link rel="preload" href="/history/images/interactive-infographic-world-history-3500bc-2026-milestones.wepb" as="image">
+  <link rel="preload" href="/logo.png" as="image">
+  <link rel="preload" href="https://www.lahistoriaconmapas.com/timeline/timeline3/css/timeline.css" as="style">  
+  <link rel="preconnect" href="https://www.youtube.com">
+  
+  <!-- CCSS -->
+  <link rel="stylesheet" href="https://www.lahistoriaconmapas.com/timeline/timeline3/css/timeline.css">
+  <link rel="stylesheet" href="https://www.lahistoriaconmapas.com/timeline/timeline3/css/fonts/font.default.css">      
+  <style>				
+					.event-block {
+					  max-width: 1240px;
+					  margin: 0 auto;
+					  padding: 20px;
+					}
+					.event-title {
+					  font-size: 1.75rem;
+					  line-height: 1.3;
+					  margin: 48px 0 20px;
+					  color: #8fce00;
+					  padding-bottom: 8px;
+					  border-bottom: 3px solid #8fce00;
+					  font-weight: 700;
+					}
+					.event-title_h3 {
+					  font-size: 1.15rem;
+					  line-height: 1.3;
+					  margin: 48px 0 20px;
+					  color: #0096cc;
+					  padding-bottom: 8px;
+					  border-bottom: 3px solid #0096cc;
+					  font-weight: 700;
+					  margin-left: 100px;
+					}
+					.event-text {
+					  font-size: 1.15em !important;
+					  line-height: 1.75 !important;
+					  text-align: justify;
+					  margin-bottom: 32px;
+					  color: #1a1a1a;
+					}
+					.event-text a {
+					  color: #0066cc;
+					  text-decoration: underline;
+					}
+					@media (max-width: 768px) {
+					  .event-title {
+						font-size: 1.55rem;
+						margin: 40px 0 16px;
+					  }
+					  .event-text {
+						font-size: 1.1em !important;
+					  }
+					  .event-block { padding: 16px; }
+					}
+					@media (max-width: 480px) {
+					  .event-title { font-size: 1.45rem; }
+					  .event-text { font-size: 1.05em !important; }
+					}
+				.faq-section { max-width: 1240px; margin: 60px auto; padding: 0 20px; }
+				.faq-heading { font-size: 2.2rem; text-align: center; color: #0066cc; margin-bottom: 40px; }
+				.faq-item { margin-bottom: 32px; background: #f8fbff; padding: 20px; border-radius: 12px; border-left: 5px solid #0066cc; }
+				.faq-question { font-size: 1.4rem; margin: 0 0 12px 0; color: #1a1a1a; font-weight: 700; }
+				.faq-answer { font-size: 1.15em; line-height: 1.7; color: #333; }
+				@media (max-width: 768px) {
+				  .faq-heading { font-size: 1.9rem; }
+				  .faq-question { font-size: 1.3rem; }
+				  .faq-answer { font-size: 1.1em; }
+				}
+				.hero-image-container {
+				  height: 100%;
+				  width: auto;
+				  margin: 0 auto 40px;
+				  border-radius: 16px;
+				  overflow: hidden;
+				  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+				}
+				.hero-image {
+				  width: auto;
+				  height: auto;
+				  display: block;
+				  object-fit: cover;
+				  aspect-ratio: 16/9;
+				  transition: transform 0.4s ease;
+				}
+				.hero-image:hover {
+				  transform: scale(1.03);
+				}
+				@media (max-width: 768px) {
+				  .hero-image-container { border-radius: 12px; margin-bottom: 30px; }
+				}
+				body {
+					margin: 0;
+					font-family: 'Segoe UI', Roboto, sans-serif;
+					color: #1a1a1a;
+				}
+				header {
+					height: 50vh;
+					min-height: 50px;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					text-align: center;
+					color: white;
+				}
+				.header-glass {
+					backdrop-filter: blur(12px);
+					-webkit-backdrop-filter: blur(12px);
+					padding: 40px 80px;
+					border-radius: 20px;
+					border: 1px solid rgba(255, 255, 255, 0.2);
+					box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+				}
+				h1 {
+					font-size: 4.8rem;
+					margin: 0;
+					font-weight: 800;
+					text-shadow: 0 4px 15px rgba(0,0,0,0.7);
+				}
+				.subtitle {
+					font-size: 1.7rem;
+					margin-top: 15px;
+				}
+				main {
+					max-width: 1240px;
+					margin: 60px auto;
+					padding: 0 20px;
+				}
+				#timeline-embed {
+					height: 650px !important;              
+					width: 100% !important;
+				}
+				.tl-timeline .tl-slide .tl-media .tl-media-content,
+				.tl-timeline .tl-text .tl-text-content,
+				.tl-timeline .tl-text h2.tl-headline,
+				.tl-timeline .tl-text .tl-headline-date {
+					color: #1a1a1a !important;
+				}
+				
+				.tl-slidenav-previous .tl-slidenav-content-container .tl-slidenav-icon 
+				{
+					color: blue;
+				}
+				.tl-slidenav-next .tl-slidenav-content-container .tl-slidenav-icon
+				{
+					color: blue;
+				}
+				.tl-timeaxis-tick-text
+				{
+					color: blue;
+				}
+				.tl-timemarker.tl-timemarker-active .tl-timemarker-content-container .tl-timemarker-content .tl-timemarker-text h2.tl-headline
+				{
+					color: red;
+				}	
+				.tl-timeline .tl-timenav-slider
+				{
+					background-image: url('https://www.lahistoriaconmapas.com/history/images/fondo.jpg');
+				}	
+				
+				.tl-headline-date {
+					color: #0066cc !important;
+					font-size: 1.6em !important;
+					font-weight: 700 !important;
+					border-bottom: 3px solid #0066cc !important;
+					padding-bottom: 8px !important;
+					margin-bottom: 15px !important;
+				}
+				.tl-text-content p {
+					text-align: justify !important;
+					font-size: 1.15em !important;
+					line-height: 1.7 !important;				
+				}
+				
+				
+				.breadcrumb-container ol li a {
+					color: #007bff;
+					transition: color 0.3s ease;
+				}
+				.breadcrumb-container ol li a:hover {
+					color: #0056b3;
+					text-decoration: underline;
+				}
+				.breadcrumb-container ol li span {
+					color: #6c757d; /* Color gris para el texto no clicable */
+				}
+				
+				
+				@media print {
+					nav, .breadcrumb-container, header, footer, #pinterest-buttons {
+						display: none !important;
+					}
+					#timeline-embed, #safavid-cities-table, #conclusion {
+						width: 100% !important;
+						margin: 0 !important;
+					}
+				}
+				
+				
+				.toc-wrapper {
+					background: #f8f9fa;
+					border: 1px solid #e9ecef;
+					border-radius: 8px;
+					padding: 20px;
+					margin: 20px 0;
+					max-width: 100%;
+				}
 
-<title>Solana blockchain monitors on chain contract transactions_Solana Tutorial_GTokenTool</title>
-<meta name="keywords" content="Solana Tutorial"/>
-<meta name="description" content="To monitor on-chain contract transactions on the Solana blockchain, you can implement the following approaches:Method 1: Polling Transa..."/>
-<meta name="author" content="admin">
-<link rel="stylesheet" rev="stylesheet" href="https://en.gtokentool.com/zb_users/theme/ytecn_noble/static/css/layui.css" type="text/css">
-<link rel="stylesheet" rev="stylesheet" href="https://en.gtokentool.com/zb_users/theme/ytecn_noble/static/css/public.css" type="text/css">
-<link rel="stylesheet" rev="stylesheet" href="https://en.gtokentool.com/zb_users/theme/ytecn_noble/style/style.css?2025-05-09" type="text/css" media="all" />
-<script src="https://en.gtokentool.com/zb_system/script/jquery-latest.min.js?v=173540"></script>
-<script src="https://en.gtokentool.com/zb_system/script/zblogphp.js?v=173540"></script>
-<script src="https://en.gtokentool.com/zb_system/script/c_html_js_add.php?hash=&v=173540"></script>
-<script src="https://en.gtokentool.com/zb_users/theme/ytecn_noble/script/custom.js"></script>
-<script src="https://en.gtokentool.com/zb_users/theme/ytecn_noble/static/js/layui.js"></script>
-<link rel="manifest" href="/manifest.json">
-<link rel="stylesheet" type="text/css" href="https://en.gtokentool.com/zb_users/plugin/bottommeun/css/style.css"/>
-<style>.bottommeun ul li{background:#0d5182;}.bottommeun ul li:hover{background:#e60039;}</style><link rel="canonical" href="https://en.gtokentool.com/Solana-blockchain-monitors-on-chain-contract-transactions/" />
-<script type="application/ld+json">
-{
-    "@context": "https://schema.org/",
-    "@type": "article",
-    "headline": "Solana blockchain monitors on chain contract transactions",
-    "description": "To monitor on-chain contract transactions on the Solana blockchain, you can implement the following approaches:Method 1: Polling Transaction Logs via RPC No……",
-    "url": "https://en.gtokentool.com/Solana-blockchain-monitors-on-chain-contract-transactions/",
-    "image": "https://en.gtokentool.com/zb_users/upload/2025/04/",
-    "datePublished": "2025-04-11T19:30:04+08:00",
-    "dateModified": "2025-04-11T19:30:04+08:00",
-    "author": {
-        "@type": "Person",
-        "name": "admin",
-        "url": "https://en.gtokentool.com/"
-    }
-}
-</script>
-<script type="application/ld+json">
-{
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    "itemListElement": [
-        {
-            "@type": "ListItem",
-            "position": 1,
-            "name": "GTokenTool Blog",
-            "item": "https://en.gtokentool.com/"
-        },
-        {
-            "@type": "ListItem",
-            "position": 2,
-            "name": "Solana Tutorial",
-            "item": "https://en.gtokentool.com/category/SolanaTutorial/"
-        },
-        {
-            "@type": "ListItem",
-            "position": 3,
-            "name": "Solana blockchain monitors on chain contract transactions",
-            "item": "https://en.gtokentool.com/Solana-blockchain-monitors-on-chain-contract-transactions/"
-        }
-    ]
-}
-</script>
-    <link rel="stylesheet" href="https://en.gtokentool.com/zb_users/theme/ytecn_noble/static/css/article.css" type="text/css">
-  <link rel="stylesheet" href="https://en.gtokentool.com/zb_users/theme/ytecn_noble/static/css/kudown.css">
-  <link rel="stylesheet" href="https://en.gtokentool.com/zb_users/theme/ytecn_noble/static/css/jquery.fancybox.min.css">
-  </head>
+				.toc-header {
+					display: flex;
+					justify-content: space-between;
+					align-items: center;
+					border-bottom: 2px solid #2980b9;
+					margin-bottom: 15px;
+				}
+
+				#toc-title {
+					font-size: 1.4em;
+					margin: 0;
+					color: #2c3e50;
+				}
+
+				#toc-toggle-btn {
+					background: #2980b9;
+					color: white;
+					border: none;
+					padding: 5px 15px;
+					border-radius: 4px;
+					cursor: pointer;
+					font-size: 0.9em;
+				}
+
+				.toc-list {
+					list-style: none;
+					padding: 0;
+				}
+
+				.toc-list > li {
+					font-weight: bold;
+					margin-top: 10px;
+				}
+
+				.toc-list a {
+					text-decoration: none;
+					color: #2980b9;
+				}
+
+				.toc-list a:hover {
+					text-decoration: underline;
+				}
+
+				/* Sangrado para H3 */
+				.toc-list ul {
+					list-style: circle;
+					padding-left: 25px;
+					margin-top: 5px;
+				}
+
+				.toc-list ul li {
+					font-weight: normal;
+					font-size: 0.95em;
+					margin-bottom: 5px;
+				}
+				
+				.related-post-card img {
+					transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+					will-change: transform;
+				}
+
+				.related-post-card img:hover {
+					transform: scale(1.08); /* Zoom sutil del 8% */
+				}
+				
+				
+				
+				.zoom-map { cursor: zoom-in; transition: opacity 0.3s; }
+				.zoom-map:hover { opacity: 0.9; }
+
+				/* Contenedor del Modal (Lightbox) */
+				#map-modal {
+					display: none;
+					position: fixed;
+					z-index: 9999;
+					padding-top: 50px;
+					left: 0; top: 0;
+					width: 100%; height: 100%;
+					background-color: rgba(0,0,0,0.9);
+					cursor: zoom-out;
+				}
+
+				#modal-img {
+					margin: auto;
+					display: block;
+					max-width: 90%;
+					max-height: 85vh;
+					border: 3px solid #fff;
+					border-radius: 4px;
+					box-shadow: 0 0 20px rgba(0,0,0,0.5);
+				}
+
+				#modal-caption {
+					margin: auto;
+					display: block;
+					width: 80%;
+					text-align: center;
+					color: #ccc;
+					padding: 15px 0;
+					font-family: Arial, sans-serif;
+				}
+
+				.close-modal {
+					position: absolute;
+					top: 15px; right: 35px;
+					color: #f1f1f1;
+					font-size: 40px;
+					font-weight: bold;
+					cursor: pointer;
+				}
+	</style>
+  
+  
+  <!-- Timeline -->
+  <script src="https://www.lahistoriaconmapas.com/timeline/timeline3/js/timeline.js"></script>
+  
+	
+	
+	
+</head>
+
+
 <body>
-  <header>
-    <div class="header-top jdnsorhtgu">
-    <div class="container gdonjthru">
-        <div class="fl mqafzcswet"></div>
-        <div class="fr dsotrugjnh">
-            <ul class="clearfix mfqaetszwc">
-                <li><span class="time grjtdohu"></span></li>
-                                                                </li>
+
+	<!-- Body Header  -->
+	<header style="background-image: url('https://www.lahistoriaconmapas.com/history/images/interactive-infographic-world-history-3500bc-2026-milestones.webp'); background-size: cover;">
+		<div class="header-glass">
+			<h1>Visual Map and Infographic of World History: 3500BC - 2026</h1>
+			<p class="subtitle">Explore History via Visual Map and Infographic</p>
+		</div>
+	</header>
+
+
+	<!-- Body Main -->
+	<main>
+	
+		<!-- Breadcrumb -->
+		<nav aria-label="Breadcrumb" class="breadcrumb-container" style="margin-bottom: 20px; font-family: sans-serif; font-size: 14px;">
+			<ol itemscope itemtype="https://schema.org/BreadcrumbList" style="list-style: none; padding: 0; display: flex; flex-wrap: wrap;">				
+				<li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" style="display: flex; align-items: center;">
+					<a itemprop="item" href="https://www.lahistoriaconmapas.com/history/timeline-maps/index.html" style="text-decoration: none; color: #007bff;">
+						<span itemprop="name">Home</span>
+					</a>
+					<meta itemprop="position" content="1" />
+					<span style="margin: 0 10px; color: #666;">&gt;</span>
+				</li>
+
+				<li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" style="display: flex; align-items: center;">
+					<a itemprop="item" href="https://www.lahistoriaconmapas.com/history/timeline-maps/index.html" style="text-decoration: none; color: #007bff;">
+						<span itemprop="name">History</span>
+					</a>
+					<meta itemprop="position" content="2" />
+					<span style="margin: 0 10px; color: #666;">&gt;</span>
+				</li>
+
+				<li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" style="display: flex; align-items: center;">
+					<a itemprop="item" href="https://www.lahistoriaconmapas.com/history/timeline-maps/" style="text-decoration: none; color: #007bff;">
+						<span itemprop="name">Timeline Maps</span>
+					</a>
+					<meta itemprop="position" content="3" />
+					<span style="margin: 0 10px; color: #666;">&gt;</span>
+				</li>
+
+				<li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" style="display: flex; align-items: center;">
+					<span itemprop="name" style="color: #666;">An Interactive Timeline Journey through History</span>
+					<meta itemprop="position" content="4" />
+				</li>				
+			</ol>
+		</nav>
+		
+		
+		
+					
+		<!-- Timeline Container -->
+		<div class="timeline-container">
+			<div id="timeline-embed" class="tl-timeline tl-layout-landscape"></div>
+		</div>
+		
+		
+		<!-- Sinopsis -->
+		<center>
+			<div class="timeline-synopsis-container" style="max-width: 900px; margin: 30px auto;">
+				<blockquote style="text-align: justify; border-left: 5px solid #2980b9; padding: 20px; background-color: #f9f9f9; font-style: italic;">
+					<p style="font-size: 1.3em; line-height: 1.8; color: #333;">Discover the most comprehensive <strong>chronological record</strong> of our past.
+					From the rise of <b>ancient civilizations</b> to the turning points of the modern era, explore how the <b>industrial revolution</b> and global milestones shaped humanity. This portal integrates an interactive <a href="https://en.wikipedia.org/wiki/World_history" target="_blank" rel="noopener">world history</a> experience through our specialized map and infographic resources.</p>
+				</blockquote>
+			</div>
+		</center>
+
+		
+		
+		<!-- Infograph -->
+		<center>			
+			<div class="hero-image-container">
+				<img src="https://www.lahistoriaconmapas.com/history/images/interactive-infographic-world-history-3500bc-2026-milestones.webp"
+					 alt="Technical infographic displaying a world history timeline and interactive map of global milestones from 3500BC to 2026."
+					 title="Explore World History Milestones Chronologically"
+					 style="width: 100%; height: auto;"
+					 loading="lazy"
+					 onmouseover="this.style.transform='scale(1.03)'"
+					 onmouseout="this.style.transform='scale(1)'"
+					 class="zoom-map" 
+					 style="width:100%; max-width:600px;"
+					 onclick="openMapZoom(this)">
+				<p style="font-size: 0.9em; color: #555; font-style: italic; margin-top: 10px;">Discover ancient civilizations and the industrial revolution through this visual guide. Our chronological record tracks every major global event from antiquity to the modern era.</p> </center>
+			</div>
+		</center>
+					
+		
+		
+				
+		
+<div class="event-block">
+    <p style="color: #2c3e50; font-family: 'Arial', sans-serif; font-size: 1.8em; margin-bottom: 10px;">Continue Exploring Historical Evolutions</p>
+	
+    <section id="related-geopolitical-histories" style="margin: 5px 0; border-top: 2px solid #3498db; padding-top: 30px;">
+
+
+		<div class="related-post-card" style="display: flex; flex-wrap: wrap; background: #fff; border: 1px solid #e1e4e8; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.08); transition: transform 0.3s ease;">
+            <div style="flex: 1; min-width: 300px; max-height: 400px; overflow: hidden;">
+                <a href="https://www.lahistoriaconmapas.com/history/timeline-maps/pedro-sanchez-cronologia-trayectoria-timeline-2014-2026.html">
+                    <img src="https://www.lahistoriaconmapas.com/history/images/Sanchez_e_Iglesias_firma.jpg" 
+                         alt="" 
+                         style="width: 100%; height: 100%; object-fit: cover; display: block; border: none;"
+                         onmouseover="this.style.transform='scale(1.03)'"
+                         onmouseout="this.style.transform='scale(1)'">
+                </a>
+            </div>
+
+            <div style="flex: 1.5; padding: 30px; min-width: 300px; display: flex; flex-direction: column; justify-content: center;">
+                <span style="color: #e67e22; text-transform: uppercase; font-size: 12px; font-weight: bold; letter-spacing: 1px;">Pedro Sánchez</span>
+                <h2 style="margin: 10px 0; font-size: 1.5em; line-height: 1.3;">
+                    <a href="https://www.lahistoriaconmapas.com/history/timeline-maps/pedro-sanchez-cronologia-trayectoria-timeline-2014-2026.html" 
+                       style="text-decoration: none; color: #2c3e50; transition: color 0.3s;"
+                       onmouseover="this.style.color='#3498db'"
+                       onmouseout="this.style.color='#2c3e50'">
+                       Pedro Sánchez y la Evolución de su Gobierno: Cronología 2014-2026
+                    </a>
+                </h2>
+                <p style="font-size: 15px; color: #636e72; line-height: 1.7; margin-bottom: 20px;">
+                    Hitos clave y evolución política del Presidente
+                </p>
+                <a href="https://www.lahistoriaconmapas.com/history/timeline-maps/safavid-empire-timeline-map-evolution.html" 
+                   style="align-self: flex-start; padding: 12px 25px; background-color: #3498db; color: #fff; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 14px; transition: background 0.3s;">
+                   Cronología 2014-2026 &rarr;
+                </a>
+            </div>
+        </div>
+		
+		
+		<div class="related-post-card" style="display: flex; flex-wrap: wrap; background: #fff; border: 1px solid #e1e4e8; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.08); transition: transform 0.3s ease;">
+            <div style="flex: 1; min-width: 300px; max-height: 400px; overflow: hidden;">
+                <a href="https://www.lahistoriaconmapas.com/history/timeline-maps/american-liberty-interactive-timeline-1776-2026.html">
+                    <img src="https://www.lahistoriaconmapas.com/history/images/map-us-expansion-1784-1865.webp" 
+                         alt="Infographic Map: Safavid Empire Timeline and Territorial Evolution Analysis" 
+                         style="width: 100%; height: 100%; object-fit: cover; display: block; border: none;"
+                         onmouseover="this.style.transform='scale(1.03)'"
+                         onmouseout="this.style.transform='scale(1)'">
+                </a>
+            </div>
+
+            <div style="flex: 1.5; padding: 30px; min-width: 300px; display: flex; flex-direction: column; justify-content: center;">
+                <span style="color: #e67e22; text-transform: uppercase; font-size: 12px; font-weight: bold; letter-spacing: 1px;">USA Origins</span>
+                <h2 style="margin: 10px 0; font-size: 1.5em; line-height: 1.3;">
+                    <a href="https://www.lahistoriaconmapas.com/history/timeline-maps/american-liberty-interactive-timeline-1776-2026.html" 
+                       style="text-decoration: none; color: #2c3e50; transition: color 0.3s;"
+                       onmouseover="this.style.color='#3498db'"
+                       onmouseout="this.style.color='#2c3e50'">
+                       American Revolution Interactive Timeline Map: 1776–2026
+                    </a>
+                </h2>
+                <p style="font-size: 15px; color: #636e72; line-height: 1.7; margin-bottom: 20px;">
+                    Celebrate the Semiquincentennial 2026 by exploring the foundational history of the United States. This journey highlights the role of Thomas Jefferson and the Continental Congress in shaping a new nation. Use our historical infographic to visualize the transformation of the 13 Colonies into a global power. Learn more about the Declaration of Independence in this immersive experience. 
+                </p>
+                <a href="https://www.lahistoriaconmapas.com/history/timeline-maps/safavid-empire-timeline-map-evolution.html" 
+                   style="align-self: flex-start; padding: 12px 25px; background-color: #3498db; color: #fff; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 14px; transition: background 0.3s;">
+                   Explore American Revolution Interactive Timeline Map &rarr;
+                </a>
+            </div>
+        </div>
+		
+		
+
+        <div class="related-post-card" style="display: flex; flex-wrap: wrap; background: #fff; border: 1px solid #e1e4e8; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.08); transition: transform 0.3s ease;">
+            <div style="flex: 1; min-width: 300px; max-height: 400px; overflow: hidden;">
+                <a href="https://www.lahistoriaconmapas.com/history/timeline-maps/safavid-empire-timeline-map-evolution.html">
+                    <img src="https://www.lahistoriaconmapas.com/history/images/safavid-ottoman-wars-rivalry-territorial-map.webp" 
+                         alt="Infographic Map: Safavid Empire Timeline and Territorial Evolution Analysis" 
+                         style="width: 100%; height: 100%; object-fit: cover; display: block; border: none;"
+                         onmouseover="this.style.transform='scale(1.03)'"
+                         onmouseout="this.style.transform='scale(1)'">
+                </a>
+            </div>
+
+            <div style="flex: 1.5; padding: 30px; min-width: 300px; display: flex; flex-direction: column; justify-content: center;">
+                <span style="color: #e67e22; text-transform: uppercase; font-size: 12px; font-weight: bold; letter-spacing: 1px;">Persian Origins</span>
+                <h2 style="margin: 10px 0; font-size: 1.5em; line-height: 1.3;">
+                    <a href="https://www.lahistoriaconmapas.com/history/timeline-maps/safavid-empire-timeline-map-evolution.html" 
+                       style="text-decoration: none; color: #2c3e50; transition: color 0.3s;"
+                       onmouseover="this.style.color='#3498db'"
+                       onmouseout="this.style.color='#2c3e50'">
+                       Safavid Empire: Timeline and Map Evolution
+                    </a>
+                </h2>
+                <p style="font-size: 15px; color: #636e72; line-height: 1.7; margin-bottom: 20px;">
+                    Trace the 200-year history of the Safavid Empire. Explore the maps that defined modern Iran's borders and the chronological milestones from Shah Ismail to the fall of Isfahan.
+                </p>
+                <a href="https://www.lahistoriaconmapas.com/history/timeline-maps/safavid-empire-timeline-map-evolution.html" 
+                   style="align-self: flex-start; padding: 12px 25px; background-color: #3498db; color: #fff; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 14px; transition: background 0.3s;">
+                   Explore Safavid Map Evolution &rarr;
+                </a>
+            </div>
+        </div>
+       
+       
+        
+    
+        <div class="related-post-card" style="display: flex; flex-wrap: wrap; background: #fff; border: 1px solid #e1e4e8; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.08); transition: transform 0.3s ease;">
+            <div style="flex: 1; min-width: 300px; max-height: 400px; overflow: hidden;">
+                <a href="https://www.lahistoriaconmapas.com/history/timeline-maps/us-iran-relations-interactive-timeline-1979-2026.html">
+                    <img src="https://www.lahistoriaconmapas.com/history/images/us-iran-conflict-history-maximum-pressure-escalation-2016-2023.webp" 
+                         alt="Interactive Geopolitical Timeline of US-Iran Relations and Conflict History 1979-2026" 
+                         style="width: 100%; height: 100%; object-fit: cover; display: block; border: none;"
+                         onmouseover="this.style.transform='scale(1.03)'"
+                         onmouseout="this.style.transform='scale(1)'">
+                </a>
+            </div>
+
+            <div style="flex: 1.5; padding: 30px; min-width: 300px; display: flex; flex-direction: column; justify-content: center;">
+                <span style="color: #e67e22; text-transform: uppercase; font-size: 12px; font-weight: bold; letter-spacing: 1px;">Geopolitical Standoff</span>
+                <h2 style="margin: 10px 0; font-size: 1.5em; line-height: 1.3;">
+                    <a href="https://www.lahistoriaconmapas.com/history/timeline-maps/us-iran-relations-interactive-timeline-1979-2026.html" 
+                       style="text-decoration: none; color: #2c3e50; transition: color 0.3s;"
+                       onmouseover="this.style.color='#3498db'"
+                       onmouseout="this.style.color='#2c3e50'">
+                       US-Iran Relations: Interactive Timeline (1979-2026)
+                    </a>
+                </h2>
+                <p style="font-size: 15px; color: #636e72; line-height: 1.7; margin-bottom: 20px;">
+                    Trace the 200-year history of the Safavid Empire. Explore the maps that defined modern Iran's borders and the chronological milestones from Shah Ismail to the fall of Isfahan.
+                </p>
+                <a href="https://www.lahistoriaconmapas.com/history/timeline-maps/us-iran-relations-interactive-timeline-1979-2026.html" 
+                   style="align-self: flex-start; padding: 12px 25px; background-color: #3498db; color: #fff; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 14px; transition: background 0.3s;">
+                   View Interactive Timeline &rarr;
+                </a>
+            </div>
+        </div>
+        
+        </section>
+		
+</div>
+		
+		
+	</main>
+
+
+	<!-- LD -->
+	<script type="application/ld+json">
+	{
+		"@context": "https://schema.org",
+		"@graph": 
+		[
+		
+			{
+			  "@type": "BreadcrumbList",
+			  "itemListElement": [{
+				"@type": "ListItem",
+				"position": 1,
+				"name": "Home",
+				"item": "https://www.lahistoriaconmapas.com/"
+			  },{
+				"@type": "ListItem",
+				"position": 2,
+				"name": "History",
+				"item": "https://www.lahistoriaconmapas.com/history/"
+			  },{
+				"@type": "ListItem",
+				"position": 3,
+				"name": "Timeline Maps",
+				"item": "https://www.lahistoriaconmapas.com/history/timeline-maps/"
+			  },{
+				"@type": "ListItem",
+				"position": 4,
+				"name": "An Interactive Timeline Journey through History"
+			  }]
+			},
+						  
+			{
+				  "@type": "WebPage",
+				  "@id": "https://www.lahistoriaconmapas.com/history/timeline-maps/index.html#webpage",
+				  "url": "https://www.lahistoriaconmapas.com/history/timeline-maps/index.html",
+				  "name": "An Interactive Timeline Journey through History",
+				  "isPartOf": { "@id": "https://www.lahistoriaconmapas.com/#website" },
+				  "inLanguage": "en-US",
+				  "description": "Explore history now! Use our Interactive Timeline, detailed Map, and Infographic guides to journey through time. Discover every major event in one place."
+			},
+				
+			
+			{ 
+				"@type": "Article",
+				"@id": "https://www.lahistoriaconmapas.com/history/timeline-maps/index.html#article",
+				"isPartOf": { "@id": "https://www.lahistoriaconmapas.com/history/timeline-maps/index.html#webpage" },
+				"headline": "An Interactive Timeline Journey through History",
+				"alternativeHeadline": "Explore History via Visual Map and Infographic",
+				"keywords": ["Interactive timeline, Historical cartography, Visual storytelling, World History, Ancient Civilizations, Roman Empire, Renaissance, Industrial Revolution, Global milestones, Chronological events, Historical mapping, Educational infographics"],
+				"description": "Explore history now! Use our Interactive Timeline, detailed Map, and Infographic guides to journey through time. Discover every major event in one place.",
+				"datePublished": "2026-02-04T00:00:00+08:00",
+				"dateModified": "2026-02-04T00:00:00+08:00",
+				"inLanguage": "en-US",
+				
+				"author": 
+					{
+						"@type": "Person",
+						"name": "LcH",
+						"url": "https://www.lahistoriaconmapas.com"
+					},
+				
+				"logo": 
+					{
+						  "@type": "ImageObject",
+						  "url": "https://www.lahistoriaconmapas.com/logo.png",
+						  "width": 512,
+						  "height": 512,
+						  "caption": "LcM - La Historia con Mapas Official Logo"
+					},
+
+				"image": 
+					{
+						"@type": "ImageObject",
+						"contentUrl": "https://www.lahistoriaconmapas.com/history/images/interactive-infographic-world-history-3500bc-2026-milestones.webp",
+						"width": 1200,
+						"height": 630,
+						"license": "https://www.lahistoriaconmapas.com/license",
+						"acquireLicensePage": "https://www.lahistoriaconmapas.com/contact",
+						"creditText": "La Historia con Mapas",
+						"copyrightNotice": "La Historia con Mapas © 2026",
+						"caption": "Discover ancient civilizations and the industrial revolution through this visual guide. Our chronological record tracks every major global event from antiquity to the modern era.",
+						"description": "Technical infographic displaying a world history timeline and interactive map of global milestones from 3500BC to 2026.",
+						"name": "Explore World History Milestones Chronologically",
+						"datePublished": "2026-02-04",
+						"author": 
+							{
+								"@type": "Organization",
+								"name": "LcM"
+							}
+					},
+		  
+				"mainEntityOfPage": 
+					{
+						"@type": "WebPage",
+						"@id": "https://www.lahistoriaconmapas.com/history/timeline-maps/index.html"
+					}		  
+			}
+		]
+	} 
+	</script>
+
+
+	<!-- Timeline Data -->
+	<script>
+		var timeline_data = 
+		{
+			title: 
+			  {
+				text: 
+				{
+				  headline: "A Global Chronology of Human Progress",
+				  text: "Navigate our digital archives through cartographic shifts and visual records from 3500BC to 2026. Discover the evolution of societies in this immersive historical journey."
+				}
+			  },
+		  
+		    events: 
+			[
+  {    
+    "start_date": { "year": -3500, "month": 1, "day": 1 },
+    "text": {
+      "headline": "The Emergence of Cuneiform and Urban Centers",
+      "text": "The foundations of human civilization were established in Mesopotamia with the invention of the first systematic writing method. This <strong>primordial script</strong> allowed early city-states to manage complex bureaucracies and record legislative decrees for the first time. As agricultural surpluses grew, the <b>Sumerian culture</b> transformed nomadic settlements into sophisticated metropolitan hubs. These ancestral pioneers developed advanced irrigation systems that redirected the flow of the Tigris and Euphrates rivers. You can explore the architectural evolution of these <a href='https://www.worldhistory.org/mesopotamia/' style='color:blue;'>early societies</a>, which laid the groundwork for all subsequent <strong>urban governance</strong> and mathematical systems used today."
+    }
+  },
+  {    
+    "start_date": { "year": -2560, "month": 1, "day": 1 },
+    "text": {
+      "headline": "The Architectural Zenith of the Old Kingdom",
+      "text": "The completion of the Great Pyramid of Giza represents the pinnacle of <b>monumental masonry</b> and engineering precision in ancient Egypt. This funerary complex served as a divine vessel for the pharaoh, reflecting the absolute power of the Nile-based monarchy. Laborers and architects utilized celestial alignments to orient these limestone structures with incredible accuracy. The <strong>theocratic administration</strong> managed a vast workforce, ensuring that logistical chains remained unbroken during decades of construction. This era of stability fostered a unique artistic canon and <strong>hieroglyphic tradition</strong>. Understanding these <a href='https://en.wikipedia.org/wiki/Egyptian_pyramids' style='color:blue;'>megalithic wonders</a> is essential to grasping the spiritual depth of the Mediterranean's earliest dominant empire."
+    }
+  },
+  {    
+    "start_date": { "year": -508, "month": 1, "day": 1 },
+    "text": {
+      "headline": "Foundations of Participatory Governance in Athens",
+      "text": "The democratic reforms introduced by Cleisthenes initiated a radical shift in how civic power was distributed among the Greek populace. By organizing citizens into regional tribes rather than family clans, the <b>Attic lawmakers</b> neutralized old aristocratic monopolies. This <strong>political blueprint</strong> introduced the concept of isonomia, or equality before the law, which remains a cornerstone of modern republicanism. Intellectual discourse flourished in the agora, where philosophers debated the nature of justice and ethics. This <strong>Classical Hellenic</strong> era also saw the rise of tragic drama and rational inquiry. The legacy of this <a href='https://www.britannica.com/topic/Athenian-democracy' style='color:blue;'>civic experiment</a> continues to influence the democratic structures of the western hemisphere."
+    }
+  },
+  {    
+    "start_date": { "year": 27, "month": 1, "day": 1 },
+    "text": {
+      "headline": "The Inauguration of the Imperial Pax Romana",
+      "text": "The transition from a fractured republic to a consolidated empire under Augustus Caesar brought an unprecedented era of relative tranquility and trade. This <b>Mediterranean hegemony</b> was maintained through a formidable network of roads and a standardized legal code that unified diverse provinces. Professional legionnaires guarded the frontiers, while maritime routes were cleared of piracy to facilitate the movement of grain and luxury goods. The <strong>Augustan administrative</strong> reforms professionalized the civil service and renovated the infrastructure of Rome itself. This <strong>Latin cultural</strong> expansion integrated Celtic and Semitic traditions into a cohesive legal framework. Scholars often study this <a href='https://en.wikipedia.org/wiki/Pax_Romana' style='color:blue;'>golden age</a> to analyze the sustainability of long-term geopolitical stability."
+    }
+  },
+  {    
+    "start_date": { "year": 1440, "month": 1, "day": 1 },
+    "text": {
+      "headline": "The Gutenberg Revolution and Information Literacy",
+      "text": "The invention of the movable type printing press triggered a monumental shift in the dissemination of knowledge across the European continent. By automating the production of manuscripts, the <b>Mainz inventor</b> shattered the clerical monopoly over literacy and education. This <strong>mechanical innovation</strong> allowed scientific theories and dissenting religious views to spread faster than ever before. The resulting surge in book production fueled the flames of the Renaissance and later the Scientific Revolution. <strong>Intellectual democratization</strong> became a reality as vernacular languages gained prestige over traditional Latin. The impact of the <a href='https://www.history.com/topics/inventions/printing-press' style='color:blue;'>typography press</a> is widely considered the most influential event of the second millennium."
+    }
+  },
+  {    
+    "start_date": { "year": 1492, "month": 10, "day": 12 },
+    "text": {
+      "headline": "Transoceanic Contact and the Columbian Exchange",
+      "text": "The arrival of European expeditions in the Americas initiated a permanent biological and cultural bridge between the Eastern and Western hemispheres. This <strong>intercontinental convergence</strong> triggered a massive transfer of crops, animals, and pathogens that altered global demographics forever. While <b>Iberian explorers</b> sought new trade routes to Asia, they inadvertently discovered a vast landmass rich in resources. The resulting exchange introduced potatoes and maize to Europe while bringing horses and wheat to the New World. This <strong>maritime expansion</strong> laid the foundations for modern globalism. You can study the ecological impact of this <a href='https://www.britannica.com/event/Columbian-exchange' style='color:blue;'>biological revolution</a> to understand today's interconnected food systems."
+    }
+  },
+  {    
+    "start_date": { "year": 1517, "month": 10, "day": 31 },
+    "text": {
+      "headline": "The Protestant Reformation and Ecclesiastical Fragmentation",
+      "text": "Martin Luther’s public challenge to clerical practices sparked a theological schism that redefined the political landscape of Central Europe. By questioning the sale of indulgences, the <b>German monk</b> promoted the idea of individual scriptural interpretation over institutional authority. This <strong>religious upheaval</strong> led to decades of conflict but also encouraged higher literacy rates as bibles were printed in common vernaculars. The <strong>theological decentralization</strong> weakened the Holy Roman Empire’s grip on its territories, fostering the rise of sovereign nation-states. The lasting legacy of this <a href='https://en.wikipedia.org/wiki/Reformation' style='color:blue;'>clerical protest</a> can be seen in the pluralistic religious traditions of the contemporary Western world."
+    }
+  },
+  {    
+    "start_date": { "year": 1543, "month": 5, "day": 24 },
+    "text": {
+      "headline": "The Heliocentric Shift in Astronomical Thought",
+      "text": "The posthumous publication of Nicolaus Copernicus's work challenged the geocentric model that had dominated intellectual circles for over a millennium. By placing the sun at the center of the solar system, the <b>Polish polymath</b> ignited the Scientific Revolution. This <strong>cosmological realignment</strong> required a fundamental reassessment of physics and mathematics, later refined by Kepler and Galileo. The shift toward <strong>empirical observation</strong> rather than purely philosophical speculation changed the human understanding of our place in the universe. Detailed records of this <a href='https://plato.stanford.edu/entries/copernicus/' style='color:blue;'>astronomical transition</a> illustrate the difficult birth of modern objective science against traditional dogmatic resistance."
+    }
+  },
+  {    
+    "start_date": { "year": 1648, "month": 10, "day": 24 },
+    "text": {
+      "headline": "The Peace of Westphalia and Sovereign Diplomacy",
+      "text": "The series of treaties signed in 1648 effectively ended the Thirty Years' War and established the modern concept of territorial sovereignty. This <b>diplomatic milestone</b> recognized that each state has exclusive authority over its own territory and domestic affairs. By formalizing <strong>international relations</strong> between equal entities, the treaties reduced the influence of pan-European religious empires. This <strong>statist framework</strong> became the backbone of global law, emphasizing non-interference and border integrity. The principles born from this <a href='https://www.history.com/topics/reforms/peace-of-westphalia' style='color:blue;'>legal consensus</a> still govern the United Nations and modern geopolitical interactions between independent nations today."
+    }
+  },
+  {    
+    "start_date": { "year": 1687, "month": 7, "day": 5 },
+    "text": {
+      "headline": "The Principia and the Laws of Universal Motion",
+      "text": "Isaac Newton’s formalization of gravitational forces provided a unified mathematical explanation for both terrestrial and celestial mechanics. This <b>scientific treatise</b> introduced the three laws of motion, which remain fundamental to engineering and physics. By applying <strong>calculus-based logic</strong> to physical phenomena, Newton proved that the same rules govern a falling apple and the orbiting moon. The <strong>deterministic worldview</strong> inspired by these findings fueled the Enlightenment, encouraging thinkers to seek natural laws in economics and social structures. Exploring the <a href='https://en.wikipedia.org/wiki/Philosophi%C3%A6_Naturalis_Principia_Mathematica' style='color:blue;'>mathematical principles</a> of this era reveals the origins of our current technological and industrial capabilities."
+    }
+  },
+  {    
+    "start_date": { "year": 1751, "month": 7, "day": 1 },
+    "text": {
+      "headline": "The Enlightenment’s Great Encyclopedic Project",
+      "text": "The ambitious attempt by Diderot and d'Alembert to categorize all human knowledge sought to liberate the mind through secular education. This <b>rationalistic compendium</b> challenged traditional censorship by making technical and philosophical information accessible to the growing middle class. The <strong>intellectual synthesis</strong> presented in these volumes advocated for social reform and the application of reason to governance. By documenting <strong>artisan techniques</strong> alongside high philosophy, the project elevated the value of practical labor and innovation. The impact of this <a href='https://en.wikipedia.org/wiki/Encyclop%C3%A9die' style='color:blue;'>literary monument</a> helped dissolve the absolute authority of the Old Regime before the coming revolutions."
+    }
+  },
+  {    
+    "start_date": { "year": 1776, "month": 7, "day": 4 },
+    "text": {
+      "headline": "The Birth of Constitutional Liberalism in America",
+      "text": "The formal separation of the thirteen colonies from British rule established the first modern republic founded on Enlightenment ideals. This <b>political insurrection</b> was justified by the concept of unalienable rights and the consent of the governed. The resulting <strong>democratic experiment</strong> challenged the divine right of kings and introduced a system of checks and balances. This <strong>revolutionary precedent</strong> inspired subsequent movements for liberty across Europe and Latin America. Analyzing the <a href='https://www.archives.gov/founding-docs/declaration-transcript' style='color:blue;'>founding documents</a> of this era provides insight into the tension between individual freedom and the necessity of a unified federal authority."
+    }
+  },
+  {    
+    "start_date": { "year": 1789, "month": 7, "day": 14 },
+    "text": {
+      "headline": "The Collapse of Absolute Monarchy in France",
+      "text": "The storming of the Bastille signaled the end of feudal privileges and the rise of a new social order based on citizenship. This <b>radical upheaval</b> replaced the estate system with the Declaration of the Rights of Man and of the Citizen. The <strong>republican fervor</strong> that followed transformed every aspect of French life, from the legal code to the measurement system. This <strong>secular transformation</strong> eventually led to the Napoleonic wars, spreading liberal ideals across the continent through conquest. The dramatic events of this <a href='https://www.britannica.com/event/French-Revolution' style='color:blue;'>social cataclysm</a> remain the primary case study for the dynamics of mass political mobilization."
+    }
+  },
+  {    
+    "start_date": { "year": 1791, "month": 8, "day": 21 },
+    "text": {
+      "headline": "The Haitian Revolution and the End of Colonial Slavery",
+      "text": "The massive uprising in Saint-Domingue resulted in the only successful slave revolt in history that led to the founding of a state. This <b>abolitionist triumph</b> challenged the racial hierarchies of the Atlantic world and terrified slave-holding empires elsewhere. Led by Toussaint Louverture, the <strong>insurgent forces</strong> defeated the world's most powerful militaries to secure their freedom. The <strong>decolonial victory</strong> forced a global reconsideration of the morality and economic viability of chattel slavery. Studying this <a href='https://en.wikipedia.org/wiki/Haitian_Revolution' style='color:blue;'>black liberation movement</a> is crucial for understanding the true scope of Enlightenment universalism and its inherent contradictions."
+    }
+  },
+  {    
+    "start_date": { "year": 1804, "month": 12, "day": 2 },
+    "text": {
+      "headline": "The Napoleonic Code and Modern Civil Law",
+      "text": "The enactment of a unified civil code in France replaced a patchwork of local customs with a clear, written legal framework. This <b>legislative reform</b> emphasized the equality of male citizens before the law and the protection of private property. As Napoleon’s armies moved across Europe, this <strong>legal standardization</strong> was exported to conquered territories, influencing the judicial systems of dozens of nations. The <strong>meritocratic principles</strong> embedded in the code helped dismantle the last remnants of feudalism in many regions. The influence of this <a href='https://www.history.com/topics/france/napoleon' style='color:blue;'>juridical legacy</a> remains evident in the civil law traditions of Europe, Latin America, and beyond."
+    }
+  },
+{    
+    "start_date": { "year": 1815, "month": 6, "day": 18 },
+    "text": {
+      "headline": "The Congress of Vienna and the Concert of Europe",
+      "text": "Following the Napoleonic Wars, European powers convened to reorganize the continent and establish a long-term balance of power. This <b>diplomatic restoration</b> sought to suppress revolutionary fervor and restore traditional monarchies across the fractured landscape. The <strong>multilateral consensus</strong> created a framework for international stability that prevented general conflict for nearly a century. This era of <strong>political conservatism</strong> emphasized territorial integrity and collective security among the great powers. By redrawing borders, the participants aimed to neutralize French expansionism forever. Scholars analyze this <a href='https://www.britannica.com/event/Congress-of-Vienna' style='color:blue;'>diplomatic settlement</a> as the precursor to modern global governance and institutional peace-building."
+    }
+  },
+  {    
+    "start_date": { "year": 1837, "month": 5, "day": 24 },
+    "text": {
+      "headline": "The Telegraph and the Birth of Instantaneous Communication",
+      "text": "The successful demonstration of the electric telegraph by Samuel Morse revolutionized the speed at which information traversed the globe. This <b>telecommunications breakthrough</b> effectively collapsed geographical distances, allowing commercial and military data to move in seconds rather than weeks. The <strong>binary-based signaling</strong> system facilitated the expansion of railroads and the synchronization of global markets. This <strong>information leap</strong> transformed journalism and diplomacy, creating a more interconnected world. For the first time, human thought could travel faster than physical transportation. The legacy of this <a href='https://en.wikipedia.org/wiki/Electrical_telegraph' style='color:blue;'>electronic pioneer</a> is the direct ancestor of our current digital internet infrastructure."
+    }
+  },
+  {    
+    "start_date": { "year": 1848, "month": 2, "day": 21 },
+    "text": {
+      "headline": "The Springtime of Nations and Romantic Nationalism",
+      "text": "A wave of revolutionary uprisings swept across Europe, fueled by demands for constitutional government and ethnic self-determination. This <b>proletarian unrest</b> and middle-class dissatisfaction targeted the autocratic structures established decades prior. While many of these <strong>insurrectionary movements</strong> were eventually suppressed, they sowed the seeds for future democratic reforms and national unifications. The <strong>ideological ferment</strong> of this period saw the rise of socialism and the consolidation of liberal thought. These events proved that the desire for popular sovereignty was irrepressible. Exploring this <a href='https://www.history.com/topics/european-history/revolutions-of-1848' style='color:blue;'>revolutionary cycle</a> reveals the complex birth of the modern nation-state system."
+    }
+  },
+  {    
+    "start_date": { "year": 1859, "month": 11, "day": 24 },
+    "text": {
+      "headline": "The Darwinian Theory of Biological Adaptation",
+      "text": "The publication of 'On the Origin of Species' provided a scientific mechanism for the diversity of life through natural selection. This <b>biological paradigm</b> shattered traditional views on the fixity of species and human origins. Darwin’s <strong>evolutionary framework</strong> emphasized survival through advantageous traits over vast geological timescales. This <strong>scientific naturalism</strong> fundamentally altered the fields of biology, paleontology, and even social philosophy. Despite initial controversy, the theory became the unifying principle of the life sciences. Understanding this <a href='https://en.wikipedia.org/wiki/On_the_Origin_of_Species' style='color:blue;'>intellectual earthquake</a> is vital to comprehending the secularization of modern scientific inquiry and our place in the biosphere."
+    }
+  },
+  {    
+    "start_date": { "year": 1861, "month": 3, "day": 17 },
+    "text": {
+      "headline": "The Risorgimento and Italian Statehood",
+      "text": "The proclamation of the Kingdom of Italy marked the culmination of a long struggle to unify the diverse states of the peninsula. This <b>nationalistic consolidation</b>, led by figures like Cavour and Garibaldi, merged various regional monarchies into a single constitutional entity. The <strong>unification process</strong> required both military conquest and diplomatic maneuvering against Austrian influence. This <strong>peninsular integration</strong> created a new major power in the Mediterranean, altering the European balance of power significantly. The movement emphasized a shared cultural and linguistic heritage as the basis for modern citizenship. This <a href='https://www.britannica.com/event/Risorgimento' style='color:blue;'>sovereign rebirth</a> remains a primary example of 19th-century state-building and identity formation."
+    }
+  },
+  {    
+    "start_date": { "year": 1869, "month": 11, "day": 17 },
+    "text": {
+      "headline": "The Suez Canal and Global Maritime Logistics",
+      "text": "The opening of the Suez Canal created a vital water passage between the Mediterranean and the Red Sea, bypassing the African continent. This <b>engineering feat</b> drastically reduced travel times for trade between Europe and the Indo-Pacific region. The <strong>geopolitical significance</strong> of the waterway made it a focal point of imperial strategy and commercial competition for decades. This <strong>logistical shortcut</strong> accelerated the integration of global markets and the expansion of steamship travel. It symbolized the industrial age's victory over physical geography. Detailed records of this <a href='https://en.wikipedia.org/wiki/Suez_Canal' style='color:blue;'>artificial artery</a> illustrate the intense intersection of technology, finance, and international power politics."
+    }
+  },
+  {    
+    "start_date": { "year": 1871, "month": 1, "day": 18 },
+    "text": {
+      "headline": "The Proclamation of the German Empire",
+      "text": "Following the Franco-Prussian War, the unification of German states under Prussian leadership transformed the geopolitical heart of Europe. This <b>centralized hegemony</b> established a formidable industrial and military power that challenged existing global hierarchies. The <strong>unification by fire</strong> was orchestrated by Otto von Bismarck through a policy of 'blood and iron.' This <strong>Teutonic expansion</strong> led to a rapid period of economic growth and technological advancement known as the Gründerzeit. The creation of this empire forced all other nations to reevaluate their strategic alliances. Studying this <a href='https://www.history.com/topics/germany/german-unification' style='color:blue;'>power shift</a> is essential for understanding the tensions that eventually led to the twentieth century’s global conflicts."
+    }
+  },
+  {    
+    "start_date": { "year": 1879, "month": 10, "day": 22 },
+    "text": {
+      "headline": "The Incandescent Bulb and Urban Electrification",
+      "text": "The development of a commercially viable electric light bulb by Thomas Edison signaled the end of the gaslight era and the beginning of the 24-hour city. This <b>technological illumination</b> revolutionized domestic life, industrial productivity, and public safety. The <strong>electrical grid</strong> infrastructure that followed became the lifeblood of modern civilization, powering everything from streetcars to factory machinery. This <strong>domesticated energy</strong> changed human sleep patterns and the very nature of social spaces. It was the crowning achievement of the Second Industrial Revolution. The impact of this <a href='https://en.wikipedia.org/wiki/Incandescent_light_bulb' style='color:blue;'>luminous invention</a> can be seen today in the persistent glow of our global metropolitan areas."
+    }
+  },
+  {    
+    "start_date": { "year": 1884, "month": 11, "day": 15 },
+    "text": {
+      "headline": "The Berlin Conference and the Scramble for Africa",
+      "text": "European leaders met to formalize the rules for the colonization and trade of the African continent, largely ignoring existing indigenous territories. This <b>imperial partition</b> led to a rapid and often violent expansion of European control over nearly the entire landmass. The <strong>colonial boundaries</strong> drawn during these meetings frequently ignored ethnic and linguistic realities, creating long-term regional instability. This <strong>extractive era</strong> focused on the harvesting of rubber, minerals, and ivory for European industries. It represents the height of High Imperialism and its devastating social consequences. Analyzing the <a href='https://en.wikipedia.org/wiki/Berlin_Conference' style='color:blue;'>cartographic division</a> of this era is crucial for understanding the contemporary geopolitical challenges facing African nations."
+    }
+  },
+  {    
+    "start_date": { "year": 1896, "month": 4, "day": 6 },
+    "text": {
+      "headline": "The Revival of the International Olympic Games",
+      "text": "The first modern Olympic Games held in Athens sought to revive the ancient Greek tradition of athletic competition as a means of fostering international peace. This <b>sporting renaissance</b> reflected the 19th-century fascination with classical antiquity and the rise of organized physical culture. The <strong>athletic diplomacy</strong> aimed to channel nationalistic rivalries into peaceful competition on the field. While the first event was modest, it established the foundation for the world's most significant recurring global gathering. This <strong>cultural institution</strong> has since become a platform for both political protest and human excellence. The history of this <a href='https://olympics.com/en/olympic-games/athens-1896' style='color:blue;'>global tournament</a> showcases the evolving nature of international cooperation and collective identity."
+    }
+  }
+  ]
+		};
+
+		window.timeline = new TL.Timeline('timeline-embed', timeline_data, {hash_bookmark: true, height: 650});
+	</script>
+
+	<!-- Adsense + GA -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-KJN14FNB7K"></script> <script> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-KJN14FNB7K'); </script>
+	<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6474409966591060" crossorigin="anonymous"></script>
+
+	<!-- Pinterest -->
+	<script async defer src="//assets.pinterest.com/js/pinit.js" data-pin-hover="true"></script>
+	
+
+	<!-- Functional Zoom: Lightbox Effect -->
+	<div id="map-modal" class="modal-overlay" onclick="this.style.display='none'">
+        <span class="close-button">&times;</span>
+        <img id="modal-img" src="" alt="">
+        <div id="modal-caption"></div>
+    </div>
+	
+	<script>function openMapZoom(element) {
+        console.log("Iniciando zoom para:", element.src); // Esto confirmará si el clic funciona
+        var modal = document.getElementById("map-modal");
+        var modalImg = document.getElementById("modal-img");
+        var captionText = document.getElementById("modal-caption");
+
+        if (modal) {
+            modal.style.display = "block";
+            modalImg.src = element.src;
+            captionText.innerHTML = element.alt;
+        } else {
+            alert("Error: No se encontró el elemento 'map-modal' en la página.");
+        }
+    }
+	</script>
+		
+</body>
+
+
+
+<footer style="background: #1a1a1a; color: #fff; padding: 40px 20px; font-family: sans-serif;">
+    <div style="display: flex; justify-content: space-around; flex-wrap: wrap; max-width: 1200px; margin: auto;">
+        
+        <div style="flex: 1; min-width: 250px; margin-bottom: 20px;">
+            <img src="logo-lcm.png" alt="La Historia con Mapas Logo" style="width: 150px;">
+            <p style="font-size: 14px; color: #ccc; margin-top: 15px;">
+                Specializing in interactive historical timelines and cartographic evolution. Explore the past through data and maps.
+            </p>
+        </div>
+
+        <div style="flex: 1; min-width: 200px; margin-bottom: 20px;">
+            <h4 style="border-bottom: 2px solid #007bff; display: inline-block;">Historical Eras</h4>
+            <ul style="list-style: none; padding: 0; font-size: 14px;">
+                <li><a href="/ancient-history/" style="color: #ccc; text-decoration: none;">Ancient Civilizations</a></li>
+                <li><a href="/middle-ages-maps/" style="color: #ccc; text-decoration: none;">Middle Ages</a></li>
+                <li><a href="/modern-empires/" style="color: #ccc; text-decoration: none;">Modern Empires</a></li>
             </ul>
         </div>
-    </div>
-</div>
-<div id="mnavh"><span class="navicon azwmstfqc"></span></div>
-<div class="header-important drthjongsu">
-    <div class="container layui-clear zaqwcfset">
-        <a href="https://en.gtokentool.com/" class="logo gdshujntor"><img src="https://en.gtokentool.com/zb_users/upload/2025/04/20250402153053174357905376892.png" alt="GTokenTool"></a>
-                <div class="layui-form search jtugrdhsno">
-            <form class="layui-form gnshjdtuor" action="https://en.gtokentool.com/search.php" method="get">
-                <input type="text" name="q" placeholder="Please enter keywords" lay-reqtext="The search term cannot be empty" lay-verify="required"
-                    class="text dotshjungr">
-                <input type="submit" class="submit iconfont gtdhronsu" value="&#xe6b4;">
-            </form>
-        </div>
-    </div>
-</div>
-<nav class="web-nav header-nav hudsrjtgo">
-    <div class="container layui-clear ichen-nav gothsdnur">
-        <ul class="layui-nav nav-ul zstmcawfqe" id="starlist">
-            <li class="dsunthgjor"><a href="https://en.gtokentool.com/">Home Page</a></li><li class="ghuortdsn"><a href="https://en.gtokentool.com/category/CoinIssuanceTutorial/">Coin Issuance Tools</a></li><li class="mzwtqfces"><a href="https://en.gtokentool.com/category/SolanaTutorial/">Solana Tutorial</a></li><li class="drostghnu"><a href="https://en.gtokentool.com/category/WalletInstallation/">Wallet Installation</a></li><li class="afwezmcsqt"><a href="https://en.gtokentool.com/category/Blockchainknowledge/">Blockchain knowledge</a></li><li class="stfwemaczq"><a href="https://en.gtokentool.com/category/video/">Video</a></li>        </ul>
-    </div>
-</nav>
-  </header>
-  <article class="content-true jthuorgnsd">
-        <section class="container layui-clear dsjonturgh">
-      <div class="index-container layui-clear msftezcaqw">
-        <div class="ichen-cnnic article_content layui-clear gdjrnutho">
-        <div class="ichen-cnnic crumb-nav jdosrthgnu"><i class="layui-icon layui-icon-home gnjurtdhso"></i>
-        current location：<a href="https://en.gtokentool.com/">Home</a> 
->> <a href="https://en.gtokentool.com/category/SolanaTutorial/" title="viewSolana TutorialAll articles in">Solana Tutorial</a> >> Solana blockchain monitors on chain contract transactions</div>          <div class="ichen-cnnic left hrdngtjosu">
-            <h1 class="article-title dsoughrtj">Solana blockchain monitors on chain contract transactions</h1>
-            <div class="article-bq layui-clear dgnrouhts">
-              <b class="bq-wg gonsdrthu"></b>
-              <span class="bq-zz hudongrjt"><i class="layui-icon layui-icon-username durgtsjnho"></i>admin</span>
-              <time><i class="layui-icon layui-icon-time cqxvphkmz"></i> 2025-04-11 19:25:18</time>
-              <b class="bq-wg gnosrdhtju"><i class="layui-icon layui-icon-release hujsngrtod"></i> <a href="https://en.gtokentool.com/category/SolanaTutorial/" target="_blank"
-                  title="The column to which this article belongs：Solana Tutorial">Solana Tutorial</a></b>
 
-              <b class="bq-wg hdourgtnjs"><i class="layui-icon layui-icon-fire hjgdrtonu"></i> 490</b>
-            </div>
-            <div class="article-content dnhgrstoju">
-              <p>To monitor on-chain contract transactions on the Solana blockchain, you can implement the following approaches:</p><center><img src="/zb_users/upload/auto_pic/95.jpg" alt="Solana blockchain monitors on chain contract transactions"></center><p><br/></p><h2>Method 1: Polling Transaction Logs via RPC Nodes</h2><p>By connecting to Solana&#39;s RPC nodes, you can poll transaction logs for specific contracts. Common steps include:&nbsp;&nbsp;</p><p><br/></p><p>1. Connect to a Solana RPC Node:&nbsp;&nbsp;</p><p>&nbsp; &nbsp;Use a public node like https://api.mainnet-beta.solana.com.&nbsp;&nbsp;</p><p><br/></p><p>2. Retrieve the Program ID:&nbsp;&nbsp;</p><p>&nbsp; &nbsp;Identify the smart contract address (Program ID) you want to monitor.&nbsp;&nbsp;</p><p><br/></p><p>3. Call getSignaturesForAddress:&nbsp;&nbsp;</p><p>&nbsp; &nbsp;Use this RPC method to fetch a list of signatures related to the Program ID.&nbsp;&nbsp;</p><p><br/></p><p>4. Fetch Transaction Details with `getConfirmedTransaction:&nbsp;&nbsp;</p><p></p><p>Retrieve full transaction details for specific signatures to extract relevant data.&nbsp;&nbsp;</p><p><br/></p><p>This is a basic method but may introduce latency due to polling.&nbsp;&nbsp;</p><h2>Method 2: Real-Time Monitoring via WebSocket&nbsp;</h2><p>Solana supports WebSocket for real-time transaction or account updates:&nbsp;&nbsp;</p><p><br/></p><p>1. Connect to a WebSocket Endpoint:&nbsp;&nbsp;</p><p>&nbsp; &nbsp;Use wss://api.mainnet-beta.solana.com.&nbsp;&nbsp;</p><p><br/></p><p>2. Subscribe to Contract Events:&nbsp;&nbsp;</p><p>&nbsp; &nbsp;Use `programSubscribe` or `accountSubscribe` to monitor changes for a specific Program ID or account.&nbsp;&nbsp;</p><p><br/></p><p>3. Process Real-Time Data:&nbsp;&nbsp;</p><p>&nbsp; &nbsp;The WebSocket connection automatically pushes updates when transactions occur, enabling immediate processing.&nbsp;&nbsp;</p><h2>Method 3: Third-Party Tools/Services&nbsp;</h2><p>Simplify monitoring using specialized services:&nbsp;&nbsp;</p><p><br/></p><p>1. The Graph:&nbsp;&nbsp;</p><p>&nbsp; &nbsp;While primarily for Ethereum, it supports Solana. Create subgraphs to track specific contract events.&nbsp;&nbsp;</p><p><br/></p><p>2. Helius:&nbsp;&nbsp;</p><p>&nbsp; &nbsp;A Solana-focused indexing service for listening to on-chain events, transactions, and complex queries.&nbsp;&nbsp;</p><p><br/></p><p>3. QuickNode or Alchemy:&nbsp;&nbsp;</p><p>&nbsp; &nbsp;These RPC providers offer enhanced APIs and WebSocket interfaces for streamlined monitoring.&nbsp;&nbsp;</p><h2>Code Example&nbsp;</h2><p>Below is a JavaScript snippet for WebSocket-based monitoring:&nbsp;&nbsp;</p><p><br/></p><p>javascript</p><p>const WebSocket = require(&#39;ws&#39;);</p><p><br/></p><p>// Connect to Solana WebSocket RPC</p><p>const ws = new WebSocket(&#39;wss://api.mainnet-beta.solana.com&#39;);</p><p><br/></p><p>// Subscribe to Program ID on connection</p><p>ws.on(&#39;open&#39;, () =&gt; {</p><p>&nbsp; const subscriptionMessage = {</p><p>&nbsp; &nbsp; jsonrpc: &quot;2.0&quot;,</p><p>&nbsp; &nbsp; id: 1,</p><p>&nbsp; &nbsp; method: &quot;programSubscribe&quot;,</p><p>&nbsp; &nbsp; params: [</p><p>&nbsp; &nbsp; &nbsp; &quot;YourProgramIDHere&quot;, // Replace with your Program ID</p><p>&nbsp; &nbsp; &nbsp; { encoding: &quot;jsonParsed&quot; }</p><p>&nbsp; &nbsp; ]</p><p>&nbsp; };</p><p>&nbsp; ws.send(JSON.stringify(subscriptionMessage));</p><p>});</p><p><br/></p><p>// Handle incoming data</p><p>ws.on(&#39;message&#39;, (data) =&gt; {</p><p>&nbsp; console.log(&#39;Received:&#39;, data);</p><p>});</p><h2>Summary</h2><p>- RPC Node Polling: Simple but delayed; suitable for infrequent queries.&nbsp;&nbsp;</p><p>- WebSocket Subscriptions: Real-time updates; ideal for event-driven applications.&nbsp;&nbsp;</p><p>- Third-Party Services: Tools like Helius or QuickNode simplify complex monitoring tasks.&nbsp;&nbsp;</p><p><br/></p><p>Choose based on your use case: polling for simplicity, WebSocket for real-time needs, or third-party services for advanced requirements.</p>            </div>
-                        <p style="color: red;">If you have any questions or uncertainties, please join the official Telegram group: <a href="https://t.me/GToken_EN" target="_blank">https://t.me/GToken_EN</a></p>
-<section class="widget tmqaewsfzc">
-    <div class="widget-box soyiso htjgonusdr">
-
-            <div class="searchs hgotsdjnur">
-                <div class="tit dnjrgutsho"> <strong><center>Recommended Solana Tutorial</center></strong> </div>
-                
-               <a href="https://docs.gtokentool.com/en/solana/pre-sale-creation" target="_blank">SOLANA Pre-sale Creation Tutorial</a>&nbsp;
-<a href="https://docs.gtokentool.com/en/solana/phantom-wallet-installation" target="_blank">Phantom Wallet Installation Tutorial</a>&nbsp;
-<a href="https://docs.gtokentool.com/en/solana/token-creation" target="_blank">Solana Token Creation Tutorial</a>&nbsp;
-<a href="https://docs.gtokentool.com/en/solana/token-2022-creation" target="_blank">Solana Token-2022 Creation Tutorial</a>&nbsp;
-<a href="https://docs.gtokentool.com/en/solana/mint-nft" target="_blank">Solana Mint NFT Tutorial</a>&nbsp;
-<a href="https://docs.gtokentool.com/en/solana/openbook-marketplace-id-creation" target="_blank">OpenBook Marketplace ID</a>&nbsp;
-<a href="https://docs.gtokentool.com/en/solana/openbook-market-id-query" target="_blank">OpenBook Market ID</a>&nbsp;
-<a href="https://docs.gtokentool.com/en/solana/revoke-token-authority" target="_blank">Solana Revoke Token Authority Tutorial</a>&nbsp;
-<a href="https://docs.gtokentool.com/en/solana/jup-volume-bot" target="_blank">Solana volume Robot</a>&nbsp;
-<a href="https://docs.gtokentool.com/en/solana/batch-transfer-sol" target="_blank">Solana Batch Transfer</a>&nbsp;
-<a href="https://docs.gtokentool.com/en/solana/batch-generates-wallet-addresses" target="_blank">Solana Batch Generates Wallet addresses</a>&nbsp;
-<a href="https://docs.gtokentool.com/en/solana/batch-collection" target="_blank">Solana Batch Collection Tutorial</a>&nbsp;
-<a href="https://docs.gtokentool.com/en/solana/vanity-wallet-generation" target="_blank">Solana Vanity Wallet Generation Tutorial</a>&nbsp;
-<a href="https://docs.gtokentool.com/en/solana/token-snapshot" target="_blank">Solana Token Snapshot Tutorial</a>&nbsp;
-<a href="https://docs.gtokentool.com/en/solana/burn-token" target="_blank">Solana Burn Token Tutorial</a>&nbsp;
-<a href="https://docs.gtokentool.com/en/solana/burn-liquidity" target="_blank">Solana Burn Liquidity Tutorial</a>&nbsp;
-<a href="https://docs.gtokentool.com/en/solana/remove-liquidity" target="_blank">Solana remove Liquidity</a>&nbsp;
-<a href="https://docs.gtokentool.com/en/solana/pump-token-issuance-and-bundled-buy" target="_blank">PUMP Token Issuance and Bundled Buy Tutorial</a>&nbsp;
-<a href="https://docs.gtokentool.com/en/solana/pump-bundled-buy" target="_blank">Pump Bundled Buy Tutorial</a>&nbsp;
-<a href="https://docs.gtokentool.com/en/solana/pump-bundled-sell" target="_blank">Pump Bundled Sell Tutorial</a>&nbsp;
-<a href="https://docs.gtokentool.com/en/solana/pump-micro-trading" target="_blank">Pump Micro Trading Tutorial</a>&nbsp;
-<a href="https://docs.gtokentool.com/en/solana/pump.fun-volume-bot" target="_blank">Pump.fun volume bot</a>&nbsp;
-<a href="https://docs.gtokentool.com/en/solana/raydium-v2-add-remove-liquidity" target="_blank">Raydium V2 add liquidity Tutorial</a>&nbsp;
-<a href="https://docs.gtokentool.com/en/solana/meteora-pool" target="_blank">Meteora pool tutorial</a>&nbsp;
-<a href="https://docs.gtokentool.com/en/solana/multi-to-multi-transfer" target="_blank">Solana Tutorial for Multi-to-Multi Transfer</a>&nbsp;
-<a href="https://docs.gtokentool.com/en/solana/clone-token" target="_blank">Solana Clone Token Tutorial</a>&nbsp;
-<a href="https://docs.gtokentool.com/en/solana/rent-bulk-withdrawal" target="_blank">Solana Rent Bulk Withdrawal Tutorial</a>
-            </div>
-
-    </div>
-</section>
- 
-<div class="mzsm tsaezfqcw">
-    <p><strong style="text-wrap-mode: wrap;">GTokenTool</strong></p>
-    <p>GTokenTool<span style="text-wrap-mode: wrap;">&nbsp;is the most comprehensive one click coin issuance tool, supporting multiple public chains such as TON, SOL, BSC, etc. Function:&nbsp;</span><a href="http://www.gtokentool.com/tokenfactory" target="_blank" style="text-wrap-mode: wrap;">Create tokens</a><span style="text-wrap-mode: wrap;"></span><span style="text-wrap-mode: wrap;">,&nbsp;</span><a href="https://robot-nuu.vercel.app/#/marketbot" target="_blank" style="text-wrap-mode: wrap;">market value management</a><span style="text-wrap-mode: wrap;">,&nbsp;</span><a href="https://gtokentool.com/sendertoken" target="_blank" style="text-wrap-mode: wrap;">batch airdrops</a><span style="text-wrap-mode: wrap;">,&nbsp;</span><a href="https://www.gtokentool.com/launchpad/create" target="_blank" style="text-wrap-mode: wrap;">token pre-sales</a><span style="text-wrap-mode: wrap;">、</span><span style="text-wrap-mode: wrap;">&nbsp;</span><a href="https://www.gtokentool.com/idov2" target="_blank" style="text-wrap-mode: wrap;">IDO</a><span style="text-wrap-mode: wrap;">、&nbsp;</span><a href="https://www.gtokentool.com/createlock" target="_blank" style="text-wrap-mode: wrap;">Lock</a><span style="text-wrap-mode: wrap;">,&nbsp;</span><a href="https://www.gtokentool.com/mining" target="_blank" style="text-wrap-mode: wrap;">pledge mining</a><span style="text-wrap-mode: wrap;">, etc. Provide a visual interface that allows users to quickly create, deploy, and manage their own cryptocurrencies without writing code.</span></p>
-</div>
-<div class="article-fx gushorntdj" style="margin-bottom: 13px;"></div>
-<div class="article-pre-next htsuodrng">
-    <ul>
-                <li><a href="https://en.gtokentool.com/Solana%20Token%20Creator%20%7C%20Lowest%20Online%20Price/" title="Solana Token Creator | Lowest Online Price"><i><em>Previous article</em><img
-                        src="https://docs.gtokentool.com/~gitbook/image?url=https%3A%2F%2F303994609-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FjvjuVZbKY9RY73UABdWK%252Fuploads%252Fjqoa4X9xoorVMJnYcVWP%252FSnipaste_2025-03-31_15-06-31.png%3Falt%3Dmedia%26token%3D82566893-fd08-4bbd-8050-906a2a682470&width=768&dpr=4&quality=100&sign=f9fa9986&sv=2" alt="Solana Token Creator | Lowest Online Price" title="Solana Token Creator | Lowest Online Price"
-                        alt="Solana Token Creator | Lowest Online Price"></i>
-                <h3>Solana Token Creator | Lowest Online Price</h3>
-                <p>Solana Token Creator | Lowest Online Price</p>
-            </a></li>
-                        <li><a href="https://en.gtokentool.com/What-is-rent-on-Solana-and-how-to-calculate-rent/" title="What is rent on Solana and how to calculate rent"><i><em>Next article</em><img
-                        src="https://en.gtokentool.com/zb_users/cache/thumbs/d6599653ca861294e8b640252ea57d82-120-88-1.jpg" alt="What is rent on Solana and how to calculate rent" title="What is rent on Solana and how to calculate rent"
-                        alt="What is rent on Solana and how to calculate rent"></i>
-                <h3>What is rent on Solana and how to calculate rent</h3>
-                <p>What is rent on Solana and how to calculate rent</p>
-            </a></li>
+        <div style="flex: 1; min-width: 200px; margin-bottom: 20px;">
+            <h4 style="border-bottom: 2px solid #007bff; display: inline-block;">Featured Timelines</h4>
+            <ul style="list-style: none; padding: 0; font-size: 14px;">
+                <li><a href="/safavid-empire-timeline/" style="color: #ccc; text-decoration: none;">Safavid Empire Evolution</a></li>
+                <li><a href="/roman-conquests-map/" style="color: #ccc; text-decoration: none;">Roman Empire Growth</a></li>
+                <li><a href="/world-war-ii-timeline/" style="color: #ccc; text-decoration: none;">World War II Events</a></li>
             </ul>
-</div>
-<div class="title grsjhuotdn">Similar recommendations</div>
-<ul class="tltj layui-clear hnutgjrosd">
-                <li>
-            <a href="https://en.gtokentool.com/Comparison-of-Solana-Coin-Issuance-Platforms/" class="layui-clear dgjnruthso">
-                <div class="img pzvhkcmbxq"><img src="https://en.gtokentool.com/zb_users/cache/thumbs/a78951922f86146c96e993580f31d4d4-80-80-1.jpg" alt="​Comparison of Top SOL Token Creation Platforms: Best Tools for Launching on Solana" /></div>
-                <div class="infos gsujrdtnho">
-                    <h3>​Comparison of Top SOL Token Creation Platforms: Best Tools for Launching on Solana</h3><i>view</i>
-                </div>
-            </a>
-        </li>
-    </ul>            
-          </div>
-          <div class="ichen-cnnic right horsugntd">
-          
-
-<div class="title layui-clear dnujogthr">Classification</div><ul class="nav emzscafwtq" id="divCatalog">
-  <li><a title="Coin Issuance Tools" href="https://en.gtokentool.com/category/CoinIssuanceTutorial/">Coin Issuance Tools</a></li>
-<li><a title="Solana Tutorial" href="https://en.gtokentool.com/category/SolanaTutorial/">Solana Tutorial</a></li>
-<li><a title="Wallet Installation" href="https://en.gtokentool.com/category/WalletInstallation/">Wallet Installation</a></li>
-<li><a title="Blockchain knowledge" href="https://en.gtokentool.com/category/Blockchainknowledge/">Blockchain knowledge</a></li>
-<li><a title="Video" href="https://en.gtokentool.com/category/video/">Video</a></li>
-</ul>
-<div class="title layui-clear setzwfcaqm">recent</div><ul class="twdd layui-clear hourtgnjd">
-  <li><a href="https://en.gtokentool.com/What-are-the-mainstream-Layer-1-blockchains/" target="_blank" class="layui-clear hurgdtjso">
-      <div class="list-img gojndthsru"><img src="https://en.gtokentool.com/zb_users/cache/thumbs/90cf39800fa70eb3abc442c519717874-120-88-1.png" alt="What are the mainstream Layer 1 blockchains, and what are their respective characteristics? "></div>
-      <div class="info gdujtsnroh">
-        <h3>What are the mainstream Layer 1 blockchains, and what are their respective characteristics? </h3>
-        <font>2026-04-07</font>
-      </div>
-    </a></li>
-<li><a href="https://en.gtokentool.com/How-Do-Layer-1-Blockchains-Stay-Secure/" target="_blank" class="layui-clear gtjrnsdhou">
-      <div class="list-img hstnuogjdr"><img src="https://en.gtokentool.com/zb_users/cache/thumbs/9c72eec306d84851898fdcb0dbd3acb1-120-88-1.jpg" alt="How Do Layer 1 Blockchains Stay Secure? Can Hackers Actually Attack Them? "></div>
-      <div class="info gjshntduro">
-        <h3>How Do Layer 1 Blockchains Stay Secure? Can Hackers Actually Attack Them? </h3>
-        <font>2026-04-07</font>
-      </div>
-    </a></li>
-<li><a href="https://en.gtokentool.com/What-Consensus-Mechanisms-Do-Layer-1-Blockchains-Use/" target="_blank" class="layui-clear ztmsfaqcew">
-      <div class="list-img gdthrsujno"><img src="https://en.gtokentool.com/zb_users/cache/thumbs/ee453a41f1d9d6ca175e95af5639de63-120-88-1.jpg" alt="What Consensus Mechanisms Do Layer 1 Blockchains Use? And What Are the Differences? "></div>
-      <div class="info hsgdjnturo">
-        <h3>What Consensus Mechanisms Do Layer 1 Blockchains Use? And What Are the Differences? </h3>
-        <font>2026-04-07</font>
-      </div>
-    </a></li>
-<li><a href="https://en.gtokentool.com/Layer-1-vs-Layer-2-Blockchains/" target="_blank" class="layui-clear gjrhsduto">
-      <div class="list-img mfezatcqsw"><img src="https://en.gtokentool.com/zb_users/cache/thumbs/56f87fc3b00b941b45cf2d2fc0077483-120-88-1.jpg" alt="Layer 1 vs Layer 2 Blockchains: What’s the Difference? Which One Is Better? "></div>
-      <div class="info gnsojthrud">
-        <h3>Layer 1 vs Layer 2 Blockchains: What’s the Difference? Which One Is Better? </h3>
-        <font>2026-04-06</font>
-      </div>
-    </a></li>
-<li><a href="https://en.gtokentool.com/What-s-the-Difference-Between-Layer-1-and-Regular-Blockchains/" target="_blank" class="layui-clear qcwzseftam">
-      <div class="list-img dogjhtrsnu"><img src="https://en.gtokentool.com/zb_users/cache/thumbs/1c0ca90c52950fc99fad316e4043cf35-120-88-1.jpg" alt="How Layer 1 Blockchains Work: What’s the Difference Between Layer 1 and Regular Blockchains? "></div>
-      <div class="info jduothsnrg">
-        <h3>How Layer 1 Blockchains Work: What’s the Difference Between Layer 1 and Regular Blockchains? </h3>
-        <font>2026-04-06</font>
-      </div>
-    </a></li>
-<li><a href="https://en.gtokentool.com/What-Exactly-Is-Layer-1/" target="_blank" class="layui-clear ghorntsdu">
-      <div class="list-img hgortunjd"><img src="https://en.gtokentool.com/zb_users/cache/thumbs/a10890711dc8166ca87b3581e481452c-120-88-1.jpg" alt="What Exactly Is Layer 1? Why Is It Called “Layer 1”? A Complete Beginner’s Guide to Blockchain"></div>
-      <div class="info dosnuthgjr">
-        <h3>What Exactly Is Layer 1? Why Is It Called “Layer 1”? A Complete Beginner’s Guide to Blockchain</h3>
-        <font>2026-04-06</font>
-      </div>
-    </a></li>
-<li><a href="https://en.gtokentool.com/Running-a-Node-vs-Staking-What-s-the-Difference/" target="_blank" class="layui-clear jgnhtdruos">
-      <div class="list-img ghotsdrun"><img src="https://en.gtokentool.com/zb_users/cache/thumbs/bebdf452a2f7f71d757c7918fdc2641d-120-88-1.jpg" alt="Running a Node vs. Staking: What's the Difference? Are Validator Nodes More Profitable on PoS Chains"></div>
-      <div class="info hogrtdju">
-        <h3>Running a Node vs. Staking: What's the Difference? Are Validator Nodes More Profitable on PoS Chains</h3>
-        <font>2026-04-03</font>
-      </div>
-    </a></li>
-<li><a href="https://en.gtokentool.com/Which-One-Is-Better-for-Beginners/" target="_blank" class="layui-clear swmeqzftc">
-      <div class="list-img dtorjngshu"><img src="https://en.gtokentool.com/zb_users/cache/thumbs/19797629bbe391f58d1c61b949f67110-120-88-1.jpg" alt="Light Nodes vs. Full Nodes: Which One Is Better for Beginners? Are Light Nodes Safe?"></div>
-      <div class="info dgtnrojush">
-        <h3>Light Nodes vs. Full Nodes: Which One Is Better for Beginners? Are Light Nodes Safe?</h3>
-        <font>2026-04-03</font>
-      </div>
-    </a></li>
-<li><a href="https://en.gtokentool.com/What-s-the-Real-Difference/" target="_blank" class="layui-clear hndtuogsr">
-      <div class="list-img grsdjhtuo"><img src="https://en.gtokentool.com/zb_users/cache/thumbs/8c5b49ba5cdb6582076cc18cc20c7b91-120-88-1.jpg" alt="Nodes vs. Miners/Validators: What's the Real Difference? A Beginner's Guide"></div>
-      <div class="info wmafetzqsc">
-        <h3>Nodes vs. Miners/Validators: What's the Real Difference? A Beginner's Guide</h3>
-        <font>2026-04-03</font>
-      </div>
-    </a></li>
-<li><a href="https://en.gtokentool.com/What-Do-Nodes-Actually-Do-in-a-Blockchain-Network/" target="_blank" class="layui-clear dhtsnrojug">
-      <div class="list-img hnuogrtds"><img src="https://en.gtokentool.com/zb_users/cache/thumbs/2ea6ec720f5680f961fa2931370b2971-120-88-1.jpg" alt="What Do Nodes Actually Do in a Blockchain Network？How Do They Verify Transactions  Keep the Ledger"></div>
-      <div class="info grthodunsj">
-        <h3>What Do Nodes Actually Do in a Blockchain Network？How Do They Verify Transactions  Keep the Ledger</h3>
-        <font>2026-04-02</font>
-      </div>
-    </a></li>
-</ul>
-          </div>
         </div>
-      </div>
-    </section>      </article>
-  <footer>
-  <div class="layui-clear container ghotrudn">
-    <div class="left mzwqscftae">
-      <p>Copyright en.gtokentool.com Rights Reserved. The best web3.0 content platform on the Internet 
-<script type="text/javascript">
-    (function(c,l,a,r,i,t,y){
-        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-    })(window, document, "clarity", "script", "u5dkj860ip");
-</script></p>
-      <ul class="layui-clear drutghjosn">
-              </ul>
+
     </div>
-    <div class="right mwecszfqt">
-                </div>
-  </div>
+    
+    <hr style="border: 0; border-top: 1px solid #333; margin: 20px 0;">
+    
+    <div style="text-align: center; font-size: 12px; color: #888;">
+        <p>© 2026 La Historia con Mapas. All rights reserved. | <a href="/privacy-policy/" style="color: #888;">Privacy Policy</a> | <a href="/terms-of-service/" style="color: #888;">Terms</a></p>
+    </div>
 </footer>
-<script src="https://en.gtokentool.com/zb_users/theme/ytecn_noble/static/js/public.js"></script>
 
-<div class="bottommeun40 gothnursd"></div><div class="bottommeun jtsrughndo"><ul class="bmnum3 zemsacfqtw"><li><a target="_blank" href="https://docs.gtokentool.com/en"><i class="iconfont jntgdhrou">&#xe60d1;</i>Home</a></li><li><a target="_blank" href="https://robotv2.gtokentool.com"><i class="iconfont szwmaeqfct">&#xe60f1;</i>Bot</a></li><li><a target="_blank" href="https://t.me/GToken_EN"><i class="iconfont jdtsnguhro">&#xe61e1;</i>Telgamer</a></li></ul></div><script type="text/javascript" src="https://en.gtokentool.com/zb_users/plugin/bottommeun/js/hnysnet.js"></script>
-<script src="https://en.gtokentool.com/zb_users/plugin/copycode/clipboard.min.js"></script><script src="https://en.gtokentool.com/zb_users/plugin/copycode/copycode.js" type="text/javascript"/></script>  <script src="https://en.gtokentool.com/zb_users/theme/ytecn_noble/static/js/jquery.fancybox.min.js"></script>
-<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"9ff35d04ebab417cbbd801b59ec87fc1","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
-</html><!--345.81 ms , 11 queries , 3687kb memory , 0 error-->
+
+
+</html>
