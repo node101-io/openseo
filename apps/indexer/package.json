@@ -17,13 +17,13 @@
     "@openseo/types": "workspace:*",
     "@openseo/zkproof": "workspace:*",
     "@solana/web3.js": "^1.95.0",
-    "axios": "^1.13.2",
+    "axios": "^1.18.0",
     "bs58": "^6.0.0",
     "cors": "^2.8.6",
     "express": "^4.19.2",
     "mongodb": "^7.0.0",
-    "mongoose": "^9.1.4",
-    "ws": "^8.19.0"
+    "mongoose": "^9.7.2",
+    "ws": "^8.21.0"
   },
   "devDependencies": {
     "@types/bs58": "^5.0.0",
