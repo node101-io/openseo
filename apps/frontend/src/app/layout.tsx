@@ -7,6 +7,7 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'OpenSEO - Decentralized Search',
   description: 'Search with zero-knowledge proof verification',
+  robots: { index: false },
 };
 
 export default function RootLayout({
